@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   build:
+    if: github.head_ref != 'agent/v4-frontiers-fixes'
     runs-on: ubuntu-latest
     steps:
       - name: Check out target branch
@@ -167,3 +168,111 @@ jobs:
             git commit -m 'Add verified unlock-all Frontiers build [skip ci]'
             git push origin HEAD:"${TARGET_BRANCH}"
           fi
+
+  finalize-v4:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v4-frontiers-fixes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out V4 branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export verified V4 and apply final patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v4src /tmp/v4import /tmp/v4out /tmp/v4verify
+          mkdir -p /tmp/v4src /tmp/v4import/scripts /tmp/v4out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4src assets/kingdom-rush-frontiers-v4.swf >/tmp/v4-export.log 2>&1 || true
+          test -f '/tmp/v4src/scripts/Level.as'
+          python3 .github/v4-finalize.py /tmp/v4src/scripts /tmp/v4import
+
+      - name: Rebuild V4
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v4.swf /tmp/v4out/kingdom-rush-frontiers-v4.swf /tmp/v4import >/tmp/v4-import.log 2>&1
+          test -s /tmp/v4out/kingdom-rush-frontiers-v4.swf
+          head -c 3 /tmp/v4out/kingdom-rush-frontiers-v4.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify final V4
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v4verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -selectclass 'Level,§_-2i§,§_-BQ§,TowerHolder,§_-LZ§,§true break§,TowerDwarfRiflemen,TowerSoldierPirates,§_-Zs§' -export script /tmp/v4verify /tmp/v4out/kingdom-rush-frontiers-v4.swf >/tmp/v4-verify.log 2>&1 || true
+          grep -F 'Level.qolHeroEnabled[heroName] = true' /tmp/v4verify/scripts/Level.as
+          grep -F 'RESET FOR CUSTOM' /tmp/v4verify/scripts/Level.as
+          grep -F 'qolUpdateContainer' /tmp/v4verify/scripts/Level.as
+          grep -F 'var heavy:Boolean' /tmp/v4verify/scripts/Level.as
+          grep -F 'h.level = 10' '/tmp/v4verify/scripts/§_-2i§.as'
+          grep -F 'qolProgressMode' '/tmp/v4verify/scripts/§_-BQ§.as'
+          grep -F 'Dwarf Hall — 225' /tmp/v4verify/scripts/TowerHolder.as
+          grep -F 'qol_specials3' '/tmp/v4verify/scripts/§_-LZ§.as'
+          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' '/tmp/v4verify/scripts/§true break§.as'
+          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' /tmp/v4verify/scripts/TowerDwarfRiflemen.as
+          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' /tmp/v4verify/scripts/TowerSoldierPirates.as
+          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' '/tmp/v4verify/scripts/§_-Zs§.as'
+
+      - name: Publish final V4
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/v4out/kingdom-rush-frontiers-v4.swf assets/kingdom-rush-frontiers-v4.swf
+          cat > assets/V4-BUILD.txt <<'EOF'
+          Kingdom Rush Frontiers — V4 Sandbox + Stability (final)
+          Based on the verified V3/V4 SWF chain and re-export verified with FFDec 26.2.1.
+
+          - All 9 heroes start enabled in levels and can be toggled individually.
+          - New/legacy saves default to all 65 tower-upgrade stars spent/maxed and all heroes level 10 with every hero skill maxed.
+          - RESET FOR CUSTOM clears tower/hero skill spending while retaining the full 65-star pool and level-10 heroes. Custom mode persists, so later manual choices are not overwritten.
+          - Gold uses a numeric text field and Add button.
+          - Next-wave flags appear immediately; Send All Waves is paced across frames.
+          - Special catalog includes Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow, Totem, Archmage, Necromancer, DWAARP and Battle-Mecha direct builds with displayed costs.
+          - Special placements use the corrected build-spot center.
+          - Pause controls, radial items and all three map-special towers react on mouse-down for more reliable touch input.
+          - Heavy-enemy performance reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only under high entity/bullet counts; gameplay updates stay full-rate.
+          - V3 unlock-all, speed, custom enemy round and mobile changes remain included.
+          EOF
+          sha256sum assets/kingdom-rush-frontiers-v3.swf assets/kingdom-rush-frontiers-v4.swf > assets/V4-SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-v4.swf assets/V4-BUILD.txt assets/V4-SHA256SUMS.txt
+          git commit -m 'Finalize Frontiers V4 max-reset, touch and performance [skip ci]'
+          git pull --rebase origin agent/v4-frontiers-fixes
+          git push origin HEAD:agent/v4-frontiers-fixes
+
+      - name: Record V4 failure details
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          {
+            echo 'V4 finalization failed.'
+            echo '--- export tail ---'; tail -100 /tmp/v4-export.log 2>/dev/null
+            echo '--- import tail ---'; tail -100 /tmp/v4-import.log 2>/dev/null
+            echo '--- verify tail ---'; tail -100 /tmp/v4-verify.log 2>/dev/null
+          } > assets/V4-FINALIZE-FAIL.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/V4-FINALIZE-FAIL.txt
+          git commit -m 'Record V4 finalization failure [skip ci]' || true
+          git pull --rebase origin agent/v4-frontiers-fixes || true
+          git push origin HEAD:agent/v4-frontiers-fixes || true
