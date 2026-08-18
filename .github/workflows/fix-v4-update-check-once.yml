@@ -1,0 +1,48 @@
+name: Surface finalized V4 updates once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/fix-v4-update-check-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Make stored-build update state explicit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('mod/index.html')
+          text = p.read_text(encoding='utf-8')
+          start = text.index('async function inspect(){')
+          end = text.index('\nfunction choose(){', start)
+          replacement = '''async function inspect(){try{const r=await readGame();lastRecord=r;const v4Ready=await remoteAvailable(V4_SWF_URL);if(r&&r.blob){resumeBtn.hidden=false;const storedHash=r.hash||'';const latest=storedHash===V4_SHA;if(!latest&&v4Ready){installV4Btn.textContent='Update to latest V4';document.getElementById('v4Btn').textContent='Update to latest V4';statusEl.textContent='Update available: your stored build is older than the latest verified V4. Tap Update to latest V4.';}else if(latest){installV4Btn.textContent='Reinstall latest V4';document.getElementById('v4Btn').textContent='Reinstall latest V4';statusEl.textContent='Latest V4 is already stored on this device.';}else{statusEl.textContent='Stored build ready: '+(r.name||CANONICAL_SWF_NAME)+(r.source?' ('+r.source+')':'')+'. Latest V4 is still publishing.';}hashEl.textContent=(storedHash?'Stored SHA-256: '+storedHash+' • ':'')+'Latest V4: '+V4_SHA;return}const [v3Ready,v2Ready,cleanReady]=await Promise.all([remoteAvailable(V3_SWF_URL),remoteAvailable(V2_SWF_URL),remoteAvailable(CLEAN_SWF_URL)]);if(v4Ready)statusEl.textContent='V4 is verified and ready. Tap Install V4 Sandbox + Stability.';else if(v3Ready)statusEl.textContent='V3 is ready; V4 is still publishing.';else if(v2Ready)statusEl.textContent='QoL v2 is ready; newer builds are still publishing.';else if(cleanReady)statusEl.textContent='Clean build is ready; mod assets are still publishing.';else statusEl.textContent='Game assets are still publishing. Reload and try again.'}catch(e){statusEl.textContent='Storage unavailable: '+(e.message||e)}}'''
+          text = text[:start] + replacement + text[end:]
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Publish hotfix and remove one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/fix-v4-update-check-once.yml
+          git add mod/index.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Surface V4 updates for stored builds'
+          git pull --rebase origin main
+          git push origin HEAD:main
