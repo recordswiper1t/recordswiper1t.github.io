@@ -1,2 +1,2 @@
 0ac03b3832bbc79bdeadb5fe980b63aad3d5690dd114e294180c720ec55909c2  assets/kingdom-rush-frontiers-v3.swf
-d603b4d554347e0c55964061607d6524dc7d7eae53d44966347006be0487c0f1  assets/kingdom-rush-frontiers-v4.swf
+9744706b367e5b2fb36947614cd92f4957a87db1832a10b058477cf313930bdb  assets/kingdom-rush-frontiers-v4.swf

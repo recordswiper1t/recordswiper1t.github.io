@@ -1,10 +1,13 @@
-Kingdom Rush Frontiers — V4 Sandbox + Stability
-Based on the verified V3 SWF.
-Replaces hero count with per-hero toggles for all 9 hero implementations in this Flash build.
-Starts sessions with tower upgrades and hero skill trees maxed; pause tools can reset/max them.
-Replaces +100 gold with a numeric amount field and Add button.
-Shows the next-wave flag immediately after the previous wave is sent.
-Paces Send All Waves across frames instead of activating every remaining wave in one frame.
-Expands the special tower page from 2 to 8 buildable towers, with costs.
-Fixes special-tower Y placement and TowerHolder mouse-listener cleanup.
-Built and re-export verified with FFDec 26.2.1.
+Kingdom Rush Frontiers — V4 Sandbox + Stability (final)
+Based on the verified V3/V4 SWF chain and re-export verified with FFDec 26.2.1.
+
+- All 9 heroes start enabled in levels and can be toggled individually.
+- New/legacy saves default to all 65 tower-upgrade stars spent/maxed and all heroes level 10 with every hero skill maxed.
+- RESET FOR CUSTOM clears tower/hero skill spending while retaining the full 65-star pool and level-10 heroes. Custom mode persists, so later manual choices are not overwritten.
+- Gold uses a numeric text field and Add button.
+- Next-wave flags appear immediately; Send All Waves is paced across frames.
+- Special catalog includes Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow, Totem, Archmage, Necromancer, DWAARP and Battle-Mecha direct builds with displayed costs.
+- Special placements use the corrected build-spot center.
+- Pause controls, radial items and all three map-special towers react on mouse-down for more reliable touch input.
+- Heavy-enemy performance reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only under high entity/bullet counts; gameplay updates stay full-rate.
+- V3 unlock-all, speed, custom enemy round and mobile changes remain included.
