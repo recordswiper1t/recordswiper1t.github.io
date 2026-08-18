@@ -1,0 +1,3 @@
+size=58867750
+signature=CWS
+source=https://archive.org/download/kingdom-rush-frontie-15717/kingdom-rush-frontie-15717.swf
