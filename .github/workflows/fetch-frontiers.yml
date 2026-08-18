@@ -1,0 +1,42 @@
+name: Fetch Frontiers SWF
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fetch-frontiers.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download exact Internet Archive SWF
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://archive.org/download/kingdom-rush-frontie-15717/kingdom-rush-frontie-15717.swf'
+          curl -fL --retry 5 --retry-delay 2 --connect-timeout 20 "$url" -o kingdom-rush-frontie-15717.swf
+          test -s kingdom-rush-frontie-15717.swf
+          size=$(stat -c '%s' kingdom-rush-frontie-15717.swf)
+          sig=$(head -c 3 kingdom-rush-frontie-15717.swf)
+          case "$sig" in FWS|CWS|ZWS) ;; *) echo "Unexpected SWF signature: $sig" >&2; exit 1;; esac
+          sha256sum kingdom-rush-frontie-15717.swf | tee SHA256SUMS.txt
+          sha1sum kingdom-rush-frontie-15717.swf | tee SHA1SUMS.txt
+          md5sum kingdom-rush-frontie-15717.swf | tee MD5SUMS.txt
+          printf 'size=%s\nsignature=%s\nsource=%s\n' "$size" "$sig" "$url" | tee BUILD.txt
+
+      - name: Upload SWF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdom-rush-frontie-15717-archive-org
+          path: |
+            kingdom-rush-frontie-15717.swf
+            SHA256SUMS.txt
+            SHA1SUMS.txt
+            MD5SUMS.txt
+            BUILD.txt
+          if-no-files-found: error
+          compression-level: 0
