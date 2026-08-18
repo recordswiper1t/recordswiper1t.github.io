@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Kingdom Rush Frontiers</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#game{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}#menu{position:fixed;z-index:10;right:max(8px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));width:42px;height:42px;border:1px solid rgba(255,255,255,.25);border-radius:12px;background:rgba(15,15,15,.75);color:white;font-size:24px;backdrop-filter:blur(10px)}#panel{position:fixed;z-index:9;right:max(8px,env(safe-area-inset-right));top:calc(max(8px,env(safe-area-inset-top)) + 48px);display:none;gap:8px;width:205px;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(15,15,15,.92);backdrop-filter:blur(12px)}#panel.open{display:grid}.btn{appearance:none;border:0;border-radius:10px;padding:11px 12px;background:#d7a94d;color:#1f1708;font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center;text-decoration:none}.secondary{background:#2d2d2d;color:#fff;border:1px solid #4b4b4b}#hint{position:fixed;z-index:8;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border-radius:9px;background:rgba(0,0,0,.68);color:#ddd;font-size:11px;pointer-events:none;opacity:.75;white-space:nowrap}
+</style>
+</head>
+<body>
+<iframe id="game" src="https://www.kongregate.com/en/games/ironhidegames/kingdom-rush-frontiers/embed" allow="fullscreen; autoplay; clipboard-read; clipboard-write" allowfullscreen title="Kingdom Rush Frontiers"></iframe>
+<button id="menu" aria-label="Game controls">⋯</button>
+<div id="panel">
+<a class="btn" href="https://www.kongregate.com/en/games/ironhidegames/kingdom-rush-frontiers/embed">Open direct — best saves</a>
+<button class="btn secondary" id="reload">Reload game</button>
+<button class="btn secondary" id="full">Full screen</button>
+</div>
+<div id="hint">Long-press inside the game for Ruffle save controls</div>
+<script>
+const panel=document.getElementById('panel'),game=document.getElementById('game');
+document.getElementById('menu').onclick=()=>panel.classList.toggle('open');
+document.getElementById('reload').onclick=()=>{panel.classList.remove('open');game.src=game.src};
+document.getElementById('full').onclick=()=>{panel.classList.remove('open');if(game.requestFullscreen)game.requestFullscreen().catch(()=>{})};
+setTimeout(()=>{const h=document.getElementById('hint');if(h)h.style.display='none'},6500);
+</script>
+</body>
+</html>
