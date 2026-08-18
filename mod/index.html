@@ -6,261 +6,95 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#10120f">
-<meta name="format-detection" content="telephone=no">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
 <title>Kingdom Rush Frontiers — Mod Lab</title>
 <style>
-:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;min-height:100dvh;background:#10120f;color:#f5f0dc}body{overflow:hidden}button,.button{appearance:none;border:0;border-radius:12px;padding:12px 15px;font:inherit;font-weight:700;background:#d3a64b;color:#1b160d;cursor:pointer;text-decoration:none;text-align:center}.secondary{background:#2c312a!important;color:#f5f0dc!important;border:1px solid #4c5548!important}.danger{background:#4b2622!important;color:#ffe7df!important;border:1px solid #7f3b33!important}button:disabled{opacity:.48;cursor:default}#setup{height:100dvh;overflow:auto;padding:calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 30px);background:radial-gradient(circle at 50% 10%,#37432e 0,#1b2018 42%,#10120f 100%)}.wrap{width:min(680px,100%);margin:0 auto}.card{padding:20px;border:1px solid #46503f;border-radius:20px;background:rgba(18,22,16,.95);box-shadow:0 18px 60px rgba(0,0,0,.32);margin-bottom:14px}h1{margin:0 0 8px;font-size:clamp(28px,8vw,46px);line-height:.98;letter-spacing:-.03em}h2{margin:0 0 10px;font-size:20px}p{color:#cfd6c8;line-height:1.45;margin:8px 0}.muted{color:#9ea898;font-size:13px}.good{color:#bcd7a7}.warn{color:#f0ce83}.actions{display:grid;gap:9px;margin-top:16px}.status{min-height:20px;margin-top:10px;color:#e4d5a8;font-size:14px;overflow-wrap:anywhere}.hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#b9c5b4;overflow-wrap:anywhere}.divider{height:1px;background:#343c30;margin:17px 0}#fileInput{display:none}#playerShell{display:none;position:fixed;inset:0;width:100vw;height:100dvh;background:#000}#player{position:absolute;inset:0;width:100%;height:100%;background:#000;display:grid;place-items:center;touch-action:manipulation}ruffle-player{display:block;width:100%!important;height:100%!important}#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:rgba(20,20,20,.74);color:#fff;font-size:23px;backdrop-filter:blur(10px)}#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 48px);right:max(8px,env(safe-area-inset-right));display:none;gap:8px;width:210px;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(15,15,15,.92);backdrop-filter:blur(12px)}#panel.open{display:grid}#panel button,#panel .button{padding:10px 11px;font-size:13px}#notice{position:fixed;z-index:90;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;width:min(92vw,560px);padding:12px 14px;border-radius:12px;background:rgba(20,20,20,.94);border:1px solid rgba(255,255,255,.18);font-size:14px;line-height:1.35;text-align:center}#notice.show{display:block}#loading{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:#000}#loading.show{display:grid}.spinner{width:42px;height:42px;margin:0 auto 14px;border:4px solid #333;border-top-color:#d7a94d;border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}.loadingBox{text-align:center;padding:24px}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#293025;border:1px solid #46503f;color:#d9e7d3;font-size:12px;font-weight:700}
-@media (orientation:landscape) and (max-height:520px){#menuToggle{opacity:.5}#menuToggle:focus,#menuToggle:hover{opacity:1}}
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;background:#10120f;color:#f5f0dc}body{overflow:hidden}button,.button{appearance:none;border:0;border-radius:12px;padding:12px 15px;font:inherit;font-weight:700;background:#d3a64b;color:#1b160d;cursor:pointer;text-decoration:none;text-align:center}.secondary{background:#2c312a!important;color:#f5f0dc!important;border:1px solid #4c5548!important}button:disabled{opacity:.5}#setup{height:100dvh;overflow:auto;padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 30px);background:radial-gradient(circle at 50% 10%,#37432e 0,#1b2018 42%,#10120f 100%)}.wrap{width:min(680px,100%);margin:0 auto}.card{padding:20px;border:1px solid #46503f;border-radius:20px;background:rgba(18,22,16,.96);margin-bottom:14px}h1{margin:6px 0 8px;font-size:clamp(28px,8vw,46px);line-height:1}h2{margin:0 0 9px;font-size:20px}p{color:#cfd6c8;line-height:1.45}.muted{color:#9ea898;font-size:13px}.good{color:#bcd7a7}.warn{color:#f0ce83}.actions{display:grid;gap:9px;margin-top:15px}.status{margin-top:11px;color:#e4d5a8;font-size:14px;overflow-wrap:anywhere}.hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#b9c5b4;overflow-wrap:anywhere}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#293025;border:1px solid #46503f;color:#d9e7d3;font-size:12px;font-weight:700}#fileInput{display:none}#playerShell{display:none;position:fixed;inset:0;background:#000}#player{position:absolute;inset:0;display:grid;place-items:center;background:#000}ruffle-player{display:block;width:100%!important;height:100%!important}#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:rgba(20,20,20,.74);color:#fff;font-size:23px}#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 48px);right:max(8px,env(safe-area-inset-right));display:none;gap:8px;width:215px;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(15,15,15,.94)}#panel.open{display:grid}#panel button,#panel .button{padding:10px 11px;font-size:13px}#notice{position:fixed;z-index:90;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;width:min(92vw,560px);padding:12px 14px;border-radius:12px;background:rgba(20,20,20,.95);border:1px solid rgba(255,255,255,.18);font-size:14px;text-align:center}#notice.show{display:block}#loading{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:#000}#loading.show{display:grid}.spinner{width:42px;height:42px;margin:0 auto 14px;border:4px solid #333;border-top-color:#d7a94d;border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}.loadingBox{text-align:center;padding:24px}
 </style>
 </head>
 <body>
-<main id="setup">
-  <div class="wrap">
-    <section class="card">
-      <span class="pill">Persistent mod build</span>
-      <h1>Kingdom Rush Frontiers</h1>
-      <p>This mode runs <strong>your own SWF locally in Ruffle</strong>. The selected game file is stored on this device and Ruffle save data stays on this GitHub Pages origin.</p>
-      <div class="actions">
-        <button id="resumeButton" hidden>Play stored build</button>
-        <button id="chooseButton">Choose your Kingdom Rush Frontiers .swf</button>
-        <a class="button secondary" href="/">Open stable online player</a>
-      </div>
-      <input id="fileInput" type="file" accept=".swf,application/x-shockwave-flash">
-      <div id="setupStatus" class="status" role="status" aria-live="polite">Checking this device…</div>
-      <div id="hashLine" class="hash"></div>
-      <p class="muted">The SWF is stored only in this browser. Do not clear Safari website data for this site unless you have exported your Ruffle save backup.</p>
-    </section>
+<main id="setup"><div class="wrap">
+<section class="card">
+<span class="pill">Archive.org persistent build</span>
+<h1>Kingdom Rush Frontiers</h1>
+<p>This installs the exact <strong>Internet Archive</strong> SWF used by the archive item, stores it on this device, and runs it locally in Ruffle so progress can stay under this GitHub Pages origin.</p>
+<div class="actions">
+<button id="installBtn">Install Archive.org build</button>
+<button id="resumeBtn" hidden>Play stored build</button>
+<button id="refreshBtn" class="secondary" hidden>Re-download clean Archive.org build</button>
+<button id="chooseBtn" class="secondary">Use a modified SWF instead</button>
+<a class="button secondary" href="/">Stable online player</a>
+</div>
+<input id="fileInput" type="file" accept=".swf,application/x-shockwave-flash">
+<div id="status" class="status">Checking this device…</div>
+<div id="hash" class="hash"></div>
+<p class="muted">Source: archive.org item <strong>kingdom-rush-frontie-15717</strong>. The original SWF is about 58.9 MB, so the first install can take a little while on mobile data.</p>
+</section>
+<section class="card">
+<h2>Progress + mods</h2>
+<p class="good"><strong>The game file and progress are separate.</strong> The SWF lives in IndexedDB; Ruffle keeps Flash SharedObject saves in site storage. Replacing the SWF with a compatible modified build does not intentionally delete those saves.</p>
+<p>For tower-stat work, we will patch a copy of this exact Archive.org build, then load the modified copy with <strong>Use a modified SWF instead</strong>. The player keeps the canonical movie name <code>kingdom-rush-frontiers.swf</code> so compatible builds use the same save identity.</p>
+<p class="warn">Use ⋯ → <strong>Saves / backup</strong> while playing and export a Ruffle save occasionally. Clearing Safari website data can erase browser storage.</p>
+</section>
+</div></main>
 
-    <section class="card">
-      <h2>How modding works</h2>
-      <p>Start with a copy of the game you are entitled to use. We can edit that exact SWF — for example tower damage, range, fire rate, upgrade costs and other constants — then you replace the stored file here with the modified SWF.</p>
-      <p class="good"><strong>Your progress is kept separately from the SWF file.</strong> Replacing the stored build does not intentionally delete the Ruffle save data, and this player always uses the same canonical movie name so compatible builds can continue the same progress.</p>
-      <div class="actions">
-        <button id="downloadButton" class="secondary" disabled>Download stored SWF</button>
-        <button id="replaceButton" class="secondary" disabled>Replace with modified SWF</button>
-      </div>
-      <div class="divider"></div>
-      <p class="muted">The SHA-256 shown above identifies your exact game build. Tower-stat patch locations are version-specific, so that hash lets us make edits safely instead of guessing offsets.</p>
-    </section>
-
-    <section class="card">
-      <h2>Save safety</h2>
-      <p>While playing, open the <strong>⋯</strong> menu and choose <strong>Saves / backup</strong>. If iPhone does not open Ruffle's menu from the button, press and hold inside the game, then use Ruffle's Save Manager to export a backup.</p>
-      <p class="warn"><strong>Important:</strong> Safari can remove site storage when website data is cleared. Keep occasional save exports if the progress matters.</p>
-    </section>
-  </div>
-</main>
-
-<section id="playerShell" aria-label="Kingdom Rush Frontiers mod player">
-  <div id="player"></div>
-  <div id="loading"><div class="loadingBox"><div class="spinner"></div><div id="loadingText">Starting mod build…</div></div></div>
-  <button id="menuToggle" aria-label="Open controls">⋯</button>
-  <div id="panel">
-    <button id="savesBtn">Saves / backup</button>
-    <button id="fullBtn" class="secondary">Full screen</button>
-    <button id="reloadBtn" class="secondary">Reload build</button>
-    <button id="changeBtn" class="secondary">Replace SWF</button>
-    <button id="setupBtn" class="secondary">Mod info / file</button>
-    <a class="button secondary" href="/">Stable online player</a>
-  </div>
-  <div id="notice"></div>
+<section id="playerShell">
+<div id="player"></div>
+<div id="loading"><div class="loadingBox"><div class="spinner"></div><div id="loadingText">Starting…</div></div></div>
+<button id="menuToggle" aria-label="Open controls">⋯</button>
+<div id="panel">
+<button id="savesBtn">Saves / backup</button>
+<button id="fullBtn" class="secondary">Full screen</button>
+<button id="reloadBtn" class="secondary">Reload stored build</button>
+<button id="replaceBtn" class="secondary">Use modified SWF</button>
+<button id="infoBtn" class="secondary">Build info</button>
+<a class="button secondary" href="/">Stable online player</a>
+</div>
+<div id="notice"></div>
 </section>
 
 <script src="https://unpkg.com/@ruffle-rs/ruffle@0.4.1"></script>
 <script>
-(() => {
-  'use strict';
-  const DB_NAME='kr-frontiers-mod-lab';
-  const DB_VERSION=1;
-  const STORE='files';
-  const GAME_KEY='active-build';
-  const CANONICAL_SWF_NAME='kingdom-rush-frontiers.swf';
-  const setup=document.getElementById('setup');
-  const playerShell=document.getElementById('playerShell');
-  const playerHost=document.getElementById('player');
-  const fileInput=document.getElementById('fileInput');
-  const chooseButton=document.getElementById('chooseButton');
-  const resumeButton=document.getElementById('resumeButton');
-  const replaceButton=document.getElementById('replaceButton');
-  const downloadButton=document.getElementById('downloadButton');
-  const setupStatus=document.getElementById('setupStatus');
-  const hashLine=document.getElementById('hashLine');
-  const menuToggle=document.getElementById('menuToggle');
-  const panel=document.getElementById('panel');
-  const notice=document.getElementById('notice');
-  const loading=document.getElementById('loading');
-  const loadingText=document.getElementById('loadingText');
-  let rufflePlayer=null;
-  let noticeTimer=null;
-  let lastRecord=null;
-
-  function setStatus(msg){setupStatus.textContent=msg||''}
-  function toast(msg,ms=4300){clearTimeout(noticeTimer);notice.textContent=msg;notice.classList.add('show');noticeTimer=setTimeout(()=>notice.classList.remove('show'),ms)}
-  function showLoading(msg){loadingText.textContent=msg||'Loading…';loading.classList.add('show')}
-  function hideLoading(){loading.classList.remove('show')}
-
-  function openDb(){
-    return new Promise((resolve,reject)=>{
-      const req=indexedDB.open(DB_NAME,DB_VERSION);
-      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'})};
-      req.onsuccess=()=>resolve(req.result);
-      req.onerror=()=>reject(req.error);
-    });
-  }
-
-  async function readGame(){
-    const db=await openDb();
-    return new Promise((resolve,reject)=>{
-      const tx=db.transaction(STORE,'readonly');
-      const req=tx.objectStore(STORE).get(GAME_KEY);
-      req.onsuccess=()=>resolve(req.result||null);
-      req.onerror=()=>reject(req.error);
-      tx.oncomplete=()=>db.close();
-    });
-  }
-
-  async function writeGame(file,buffer,hash){
-    const blob=new Blob([buffer],{type:'application/x-shockwave-flash'});
-    const db=await openDb();
-    await new Promise((resolve,reject)=>{
-      const tx=db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put({id:GAME_KEY,name:file.name||CANONICAL_SWF_NAME,blob,hash,savedAt:Date.now()});
-      tx.oncomplete=resolve;
-      tx.onerror=()=>reject(tx.error);
-      tx.onabort=()=>reject(tx.error);
-    });
-    db.close();
-  }
-
-  function looksLikeSwf(buffer){
-    if(!buffer||buffer.byteLength<8)return false;
-    const b=new Uint8Array(buffer,0,3);
-    const sig=String.fromCharCode(b[0],b[1],b[2]);
-    return sig==='FWS'||sig==='CWS'||sig==='ZWS';
-  }
-
-  async function sha256(buffer){
-    if(!crypto||!crypto.subtle)return 'unavailable';
-    const digest=await crypto.subtle.digest('SHA-256',buffer);
-    return Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
-  }
-
-  async function requestDurableStorage(){
-    try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(_){}
-  }
-
-  function playerOptions(extra={}){
-    return Object.assign({
-      autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,
-      fullScreenAspectRatio:'landscape',scale:'showAll',quality:'high',allowScriptAccess:false,
-      openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,
-      warnOnUnsupportedContent:false,swfFileName:CANONICAL_SWF_NAME,base:location.origin+'/mod/'
-    },extra);
-  }
-
-  function makePlayer(){
-    const source=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();
-    if(!source)throw new Error('Ruffle failed to load.');
-    rufflePlayer=source.createPlayer();
-    rufflePlayer.id='krf-mod-player';
-    playerHost.replaceChildren(rufflePlayer);
-    return rufflePlayer;
-  }
-
-  async function launchBuffer(buffer){
-    if(!looksLikeSwf(buffer))throw new Error('That file does not look like a valid SWF.');
-    showLoading('Starting your stored build…');
-    setup.style.display='none';
-    playerShell.style.display='block';
-    panel.classList.remove('open');
-    await requestDurableStorage();
-    const player=rufflePlayer||makePlayer();
-    await player.ruffle().load(playerOptions({data:buffer}));
-    hideLoading();
-  }
-
-  async function launchStored(){
-    const record=await readGame();
-    if(!record||!record.blob)throw new Error('No stored SWF found.');
-    lastRecord=record;
-    await launchBuffer(await record.blob.arrayBuffer());
-  }
-
-  async function inspectStored(){
-    try{
-      const record=await readGame();
-      lastRecord=record;
-      if(record&&record.blob){
-        resumeButton.hidden=false;
-        replaceButton.disabled=false;
-        downloadButton.disabled=false;
-        chooseButton.textContent='Choose a different base SWF';
-        setStatus('Stored build ready: '+(record.name||CANONICAL_SWF_NAME));
-        hashLine.textContent=record.hash?'SHA-256: '+record.hash:'';
-      }else{
-        setStatus('No local game file is stored yet. Choose your SWF once, then this page can resume it later.');
-        hashLine.textContent='';
-      }
-    }catch(e){setStatus('Local storage unavailable: '+(e.message||e))}
-  }
-
-  async function acceptFile(file){
-    setStatus('Checking and storing the SWF…');
-    const buffer=await file.arrayBuffer();
-    if(!looksLikeSwf(buffer))throw new Error('Choose a real .swf file (FWS/CWS/ZWS signature not found).');
-    const hash=await sha256(buffer);
-    await writeGame(file,buffer,hash);
-    await requestDurableStorage();
-    lastRecord={name:file.name,blob:new Blob([buffer]),hash};
-    hashLine.textContent='SHA-256: '+hash;
-    await launchBuffer(buffer);
-  }
-
-  function chooseFile(){panel.classList.remove('open');fileInput.click()}
-  chooseButton.addEventListener('click',chooseFile);
-  replaceButton.addEventListener('click',chooseFile);
-  document.getElementById('changeBtn').addEventListener('click',chooseFile);
-  fileInput.addEventListener('change',async()=>{
-    const file=fileInput.files&&fileInput.files[0];
-    fileInput.value='';
-    if(!file)return;
-    try{await acceptFile(file)}catch(e){hideLoading();setup.style.display='block';playerShell.style.display='none';setStatus(e.message||String(e))}
-  });
-
-  resumeButton.addEventListener('click',()=>launchStored().catch(e=>{hideLoading();setup.style.display='block';playerShell.style.display='none';setStatus(e.message||String(e))}));
-
-  downloadButton.addEventListener('click',async()=>{
-    try{
-      const record=lastRecord||await readGame();
-      if(!record||!record.blob)throw new Error('No stored SWF.');
-      const url=URL.createObjectURL(record.blob);
-      const a=document.createElement('a');
-      a.href=url;a.download=record.name||CANONICAL_SWF_NAME;document.body.appendChild(a);a.click();a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),2000);
-    }catch(e){setStatus(e.message||String(e))}
-  });
-
-  function openRuffleMenu(){
-    if(!rufflePlayer){toast('Start the local build first.');return}
-    try{
-      const rect=rufflePlayer.getBoundingClientRect();
-      const ev=new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:rect.left+Math.min(100,rect.width/2),clientY:rect.top+Math.min(100,rect.height/2),button:2,buttons:2,view:window});
-      rufflePlayer.dispatchEvent(ev);
-      toast('If Ruffle did not open its menu, press and hold inside the game. Use Save Manager to export/import progress backups.');
-    }catch(_){toast('Press and hold inside the game, then use Ruffle Save Manager.');}
-  }
-
-  menuToggle.addEventListener('click',()=>panel.classList.toggle('open'));
-  document.getElementById('savesBtn').addEventListener('click',()=>{panel.classList.remove('open');openRuffleMenu()});
-  document.getElementById('fullBtn').addEventListener('click',()=>{
-    panel.classList.remove('open');
-    try{if(rufflePlayer&&rufflePlayer.ruffle().fullscreenEnabled)rufflePlayer.ruffle().requestFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen()}catch(_){}
-  });
-  document.getElementById('reloadBtn').addEventListener('click',()=>{panel.classList.remove('open');launchStored().catch(e=>toast(e.message||String(e)))});
-  document.getElementById('setupBtn').addEventListener('click',()=>{panel.classList.remove('open');playerShell.style.display='none';setup.style.display='block';inspectStored()});
-
-  window.addEventListener('load',()=>inspectStored());
+(()=>{
+'use strict';
+const ARCHIVE_SWF_URL='https://archive.org/download/kingdom-rush-frontie-15717/kingdom-rush-frontie-15717.swf';
+const DB_NAME='kr-frontiers-mod-lab', DB_VERSION=1, STORE='files', GAME_KEY='active-build';
+const CANONICAL_SWF_NAME='kingdom-rush-frontiers.swf';
+const setup=document.getElementById('setup'), playerShell=document.getElementById('playerShell'), playerHost=document.getElementById('player');
+const fileInput=document.getElementById('fileInput'), statusEl=document.getElementById('status'), hashEl=document.getElementById('hash');
+const installBtn=document.getElementById('installBtn'), resumeBtn=document.getElementById('resumeBtn'), refreshBtn=document.getElementById('refreshBtn');
+const panel=document.getElementById('panel'), notice=document.getElementById('notice'), loading=document.getElementById('loading'), loadingText=document.getElementById('loadingText');
+let player=null, lastRecord=null, toastTimer=null;
+function toast(m,ms=4500){clearTimeout(toastTimer);notice.textContent=m;notice.classList.add('show');toastTimer=setTimeout(()=>notice.classList.remove('show'),ms)}
+function showLoading(m){loadingText.textContent=m;loading.classList.add('show')} function hideLoading(){loading.classList.remove('show')}
+function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function readGame(){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(GAME_KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);tx.oncomplete=()=>db.close()})}
+async function writeGame(blob,name,hash,source){const db=await openDb();await new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({id:GAME_KEY,blob,name,hash,source,savedAt:Date.now()});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)});db.close()}
+function looksLikeSwf(buf){if(!buf||buf.byteLength<8)return false;const b=new Uint8Array(buf,0,3),s=String.fromCharCode(...b);return ['FWS','CWS','ZWS'].includes(s)}
+async function sha256(buf){const d=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function persist(){try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(_){}}
+function makePlayer(){const r=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!r)throw new Error('Ruffle failed to load.');player=r.createPlayer();player.id='krf-mod-player';playerHost.replaceChildren(player);return player}
+function opts(extra={}){return Object.assign({autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:'high',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,swfFileName:CANONICAL_SWF_NAME,base:location.origin+'/mod/'},extra)}
+async function launchBuffer(buf){if(!looksLikeSwf(buf))throw new Error('Stored file is not a valid SWF.');showLoading('Starting Kingdom Rush Frontiers…');setup.style.display='none';playerShell.style.display='block';panel.classList.remove('open');await persist();const p=player||makePlayer();await p.ruffle().load(opts({data:buf}));hideLoading()}
+async function launchStored(){const r=await readGame();if(!r||!r.blob)throw new Error('No stored build found.');lastRecord=r;await launchBuffer(await r.blob.arrayBuffer())}
+async function installArchive(){
+  installBtn.disabled=true; refreshBtn.disabled=true; statusEl.textContent='Downloading exact Archive.org SWF…';
+  try{
+    const resp=await fetch(ARCHIVE_SWF_URL,{mode:'cors',cache:'no-store'}); if(!resp.ok)throw new Error('Archive.org returned HTTP '+resp.status);
+    const buf=await resp.arrayBuffer(); if(!looksLikeSwf(buf))throw new Error('Archive download was not a valid SWF.');
+    const h=await sha256(buf), blob=new Blob([buf],{type:'application/x-shockwave-flash'});
+    await writeGame(blob,'kingdom-rush-frontie-15717.swf',h,'archive.org'); await persist();
+    lastRecord={blob,name:'kingdom-rush-frontie-15717.swf',hash:h,source:'archive.org'}; hashEl.textContent='SHA-256: '+h; statusEl.textContent='Archive.org build installed on this device.';
+    resumeBtn.hidden=false; refreshBtn.hidden=false; installBtn.hidden=true; await launchBuffer(buf);
+  }catch(e){statusEl.textContent='Could not download the SWF directly: '+(e.message||e)+'. You can still use the modified/local SWF button.'; installBtn.disabled=false;refreshBtn.disabled=false;throw e}
+}
+async function acceptLocal(file){statusEl.textContent='Checking modified SWF…';const buf=await file.arrayBuffer();if(!looksLikeSwf(buf))throw new Error('Choose a valid SWF.');const h=await sha256(buf),blob=new Blob([buf],{type:'application/x-shockwave-flash'});await writeGame(blob,file.name||CANONICAL_SWF_NAME,h,'local/modified');await persist();lastRecord={blob,name:file.name,hash:h,source:'local/modified'};hashEl.textContent='SHA-256: '+h;statusEl.textContent='Modified build stored.';await launchBuffer(buf)}
+async function inspect(){try{const r=await readGame();lastRecord=r;if(r&&r.blob){resumeBtn.hidden=false;refreshBtn.hidden=false;installBtn.hidden=true;statusEl.textContent='Stored build ready: '+(r.name||CANONICAL_SWF_NAME)+(r.source?' ('+r.source+')':'');hashEl.textContent=r.hash?'SHA-256: '+r.hash:''}else{statusEl.textContent='No build stored yet. Install the Archive.org build once.'}}catch(e){statusEl.textContent='Storage unavailable: '+(e.message||e)}}
+function choose(){panel.classList.remove('open');fileInput.click()}
+installBtn.onclick=()=>installArchive().catch(e=>toast(e.message||String(e)));refreshBtn.onclick=()=>installArchive().catch(e=>toast(e.message||String(e)));resumeBtn.onclick=()=>launchStored().catch(e=>{hideLoading();setup.style.display='block';playerShell.style.display='none';statusEl.textContent=e.message||String(e)});document.getElementById('chooseBtn').onclick=choose;document.getElementById('replaceBtn').onclick=choose;
+fileInput.onchange=async()=>{const f=fileInput.files&&fileInput.files[0];fileInput.value='';if(!f)return;try{await acceptLocal(f)}catch(e){hideLoading();setup.style.display='block';playerShell.style.display='none';statusEl.textContent=e.message||String(e)}};
+document.getElementById('menuToggle').onclick=()=>panel.classList.toggle('open');document.getElementById('reloadBtn').onclick=()=>{panel.classList.remove('open');launchStored().catch(e=>toast(e.message||String(e)))};document.getElementById('infoBtn').onclick=()=>{panel.classList.remove('open');playerShell.style.display='none';setup.style.display='block';inspect()};document.getElementById('fullBtn').onclick=()=>{panel.classList.remove('open');try{if(player&&player.ruffle().fullscreenEnabled)player.ruffle().requestFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(_){}};
+document.getElementById('savesBtn').onclick=()=>{panel.classList.remove('open');if(!player){toast('Start the stored build first.');return}try{const r=player.getBoundingClientRect();player.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+100,clientY:r.top+100,button:2,buttons:2,view:window}));toast('If the menu did not open, press and hold inside the game, then choose Ruffle Save Manager.')}catch(_){toast('Press and hold inside the game, then choose Ruffle Save Manager.')}};
+window.addEventListener('load',inspect);
 })();
 </script>
 </body>
