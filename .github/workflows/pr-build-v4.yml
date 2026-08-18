@@ -1,21 +1,20 @@
-name: Build Frontiers v4
+name: PR Build Frontiers v4
 
 on:
-  push:
-    branches: [agent/v4-frontiers-fixes]
-    paths:
-      - '.github/workflows/pr-build-v4.yml'
-      - 'tools/build-v4.py'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   build:
+    if: github.head_ref == 'agent/v4-frontiers-fixes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-java@v5
@@ -54,6 +53,8 @@ jobs:
           python3 tools/build-v4.py verify /tmp/verify/scripts
 
       - name: Publish verified V4 build
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
           cp /tmp/out/kingdom-rush-frontiers-v4.swf assets/kingdom-rush-frontiers-v4.swf
@@ -74,8 +75,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/kingdom-rush-frontiers-v4.swf assets/V4-BUILD.txt assets/V4-SHA256SUMS.txt
           git commit -m 'Add verified Frontiers v4 build [skip ci]' || exit 0
-          git pull --rebase origin agent/v4-frontiers-fixes
-          git push origin HEAD:agent/v4-frontiers-fixes
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
 
       - name: Upload logs on failure
         if: failure()
