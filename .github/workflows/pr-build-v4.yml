@@ -1,0 +1,90 @@
+name: Build Frontiers v4
+
+on:
+  push:
+    branches: [agent/v4-frontiers-fixes]
+    paths:
+      - '.github/workflows/pr-build-v4.yml'
+      - 'tools/build-v4.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export and patch V3 ActionScript
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v4scripts /tmp/import /tmp/verify /tmp/out
+          mkdir -p /tmp/v4scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4scripts assets/kingdom-rush-frontiers-v3.swf > /tmp/export-v4.log 2>&1 || true
+          python3 tools/build-v4.py patch /tmp/v4scripts/scripts /tmp/import
+
+      - name: Rebuild V4 SWF
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v3.swf /tmp/out/kingdom-rush-frontiers-v4.swf /tmp/import > /tmp/import-v4.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v4.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v4.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify V4
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -selectclass 'Level,§_-2i§,§_-BQ§,GameUpgrades,TowerHolder,§_-LZ§' -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v4.swf > /tmp/verify-v4.log 2>&1 || true
+          python3 tools/build-v4.py verify /tmp/verify/scripts
+
+      - name: Publish verified V4 build
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v4.swf assets/kingdom-rush-frontiers-v4.swf
+          cat > assets/V4-BUILD.txt <<'EOF'
+          Kingdom Rush Frontiers — V4 Sandbox + Stability
+          Based on the verified V3 SWF.
+          Replaces hero count with per-hero toggles for all 9 hero implementations in this Flash build.
+          Starts sessions with tower upgrades and hero skill trees maxed; pause tools can reset/max them.
+          Replaces +100 gold with a numeric amount field and Add button.
+          Shows the next-wave flag immediately after the previous wave is sent.
+          Paces Send All Waves across frames instead of activating every remaining wave in one frame.
+          Expands the special tower page from 2 to 8 buildable towers, with costs.
+          Fixes special-tower Y placement and TowerHolder mouse-listener cleanup.
+          Built and re-export verified with FFDec 26.2.1.
+          EOF
+          sha256sum assets/kingdom-rush-frontiers-v3.swf assets/kingdom-rush-frontiers-v4.swf > assets/V4-SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-v4.swf assets/V4-BUILD.txt assets/V4-SHA256SUMS.txt
+          git commit -m 'Add verified Frontiers v4 build [skip ci]' || exit 0
+          git pull --rebase origin agent/v4-frontiers-fixes
+          git push origin HEAD:agent/v4-frontiers-fixes
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v4-build-logs
+          path: |
+            /tmp/export-v4.log
+            /tmp/import-v4.log
+            /tmp/verify-v4.log
+          if-no-files-found: ignore
+          retention-days: 1
