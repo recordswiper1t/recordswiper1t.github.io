@@ -36,6 +36,14 @@ jobs:
           rm -rf /tmp/v3scripts /tmp/import /tmp/verify /tmp/out
           mkdir -p /tmp/v3scripts /tmp/import/scripts /tmp/out
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 -export script /tmp/v3scripts assets/kingdom-rush-frontiers-qol-v2.swf > /tmp/export-v3.log 2>&1 || true
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/build-v3.py')
+          s=p.read_text()
+          s=s.replace('Open the sandbox special-tower page."}))\'','Open the sandbox special-tower page."})\'')
+          s=s.replace('Close this page; tap the build spot again for normal towers.\\"}))));','Close this page; tap the build spot again for normal towers.\\"})));')
+          p.write_text(s)
+          PY
           python3 tools/build-v3.py patch /tmp/v3scripts/scripts /tmp/import
 
       - name: Rebuild v3 SWF
