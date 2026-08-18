@@ -1,0 +1,67 @@
+name: Clean finalized Frontiers V4 scaffolding
+
+on:
+  push:
+    branches:
+      - agent/v4-frontiers-fixes
+    paths:
+      - '.github/workflows/v4-cleanup-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v4-frontiers-fixes
+          fetch-depth: 0
+
+      - name: Sync installer copy and remove temporary build machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('mod/index.html')
+          text = p.read_text(encoding='utf-8')
+          sums = Path('assets/V4-SHA256SUMS.txt').read_text(encoding='utf-8').splitlines()
+          v4_hash = next(line.split()[0] for line in sums if line.rstrip().endswith('assets/kingdom-rush-frontiers-v4.swf'))
+
+          replacements = {
+              '<li><strong>Maxed by default:</strong> a session starts with all six star-upgrade trees and every hero skill tree maxed. Use <strong>Trees: MAXED (reset)</strong> to reset everything and receive the exact spendable stars/hero points again; press it again to max them.</li>':
+              '<li><strong>Maxed by default:</strong> all 9 heroes start enabled at level 10, with the six star-upgrade trees and every hero skill tree maxed. Use <strong>RESET FOR CUSTOM</strong> to clear tower/hero-skill spending while keeping the full 65-star pool and level-10 heroes; custom mode persists. Use <strong>MAX ALL</strong> to max them again.</li>',
+              '<li><strong>Special towers:</strong> the radial page expands from 2 to <strong>8 buildable choices</strong>: Dwarf Riflemen, Pirate Barracks, Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200. Dwarf/Pirate placements now have explicit costs; the six advanced towers use their built-in game costs.</li>':
+              '<li><strong>Special towers:</strong> the radial catalog now has <strong>9 buildable choices</strong>: Dwarf Bastion/Riflemen (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200. The six normal specializations use their built-in game costs.</li>',
+              '<li><strong>Touch + performance:</strong> V4 pause buttons respond on press, the player is re-focused on pointer-down, touch devices use medium render quality, and a leaked TowerHolder mouse listener is cleaned up correctly.</li>':
+              '<li><strong>Touch + performance:</strong> pause controls, radial items and the three map-special towers respond on mouse-down for more reliable touch input. Under very heavy enemy/bullet load, V4 reuses update snapshots and throttles cosmetic layers while keeping gameplay updates full-rate.</li>',
+              'On an empty build spot, use <strong>More…</strong> to reach the two special-tower pages.':
+              'On an empty build spot, use <strong>More…</strong> to reach the three special-tower pages.',
+          }
+          for old, new in replacements.items():
+              if text.count(old) != 1:
+                  raise SystemExit(f'installer cleanup anchor count {text.count(old)} for: {old[:70]}')
+              text = text.replace(old, new, 1)
+
+          old_hash = 'd603b4d554347e0c55964061607d6524dc7d7eae53d44966347006be0487c0f1'
+          if text.count(old_hash) != 1:
+              raise SystemExit(f'old V4 hash anchor count: {text.count(old_hash)}')
+          text = text.replace(old_hash, v4_hash, 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+
+          git show origin/main:.github/workflows/publish-unlock-all.yml > .github/workflows/publish-unlock-all.yml
+          rm -f .github/v4-finalize.py
+          rm -f .github/workflows/v4-finalize-ready.yml
+          rm -f assets/V4-FINALIZE-FAIL.txt
+          rm -f .github/workflows/v4-cleanup-once.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Clean V4 finalization scaffolding and sync installer [skip ci]'
+          git pull --rebase origin agent/v4-frontiers-fixes
+          git push origin HEAD:agent/v4-frontiers-fixes
