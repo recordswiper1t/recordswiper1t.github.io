@@ -1,0 +1,169 @@
+name: Build and publish Frontiers unlock-all
+
+on:
+  push:
+    branches:
+      - agent/finish-unlock-all
+    paths:
+      - '.github/workflows/publish-unlock-all.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export ActionScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-scripts /tmp/import /tmp/verify /tmp/out
+          mkdir -p /tmp/krf-scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-scripts assets/kingdom-rush-frontie-15717.swf \
+            > /tmp/export.log 2>&1 || true
+          test -f '/tmp/krf-scripts/scripts/Level.as'
+          test -f '/tmp/krf-scripts/scripts/§if const function§.as'
+
+      - name: Patch tower and hero gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_function(text, signature, body):
+              start = text.find(signature)
+              if start < 0:
+                  raise SystemExit(f'function signature not found: {signature}')
+              brace = text.find('{', start)
+              if brace < 0:
+                  raise SystemExit('opening brace not found')
+              depth = 0
+              end = None
+              for i in range(brace, len(text)):
+                  c = text[i]
+                  if c == '{':
+                      depth += 1
+                  elif c == '}':
+                      depth -= 1
+                      if depth == 0:
+                          end = i + 1
+                          break
+              if end is None:
+                  raise SystemExit('closing brace not found')
+              indent = '      '
+              replacement = signature + '\r\n' + indent + '{\r\n' + indent + '   ' + body + '\r\n' + indent + '}'
+              return text[:start] + replacement + text[end:]
+
+          level = Path('/tmp/krf-scripts/scripts/Level.as')
+          text = level.read_text(encoding='utf-8', errors='strict')
+          text = replace_function(
+              text,
+              'public function §_-bY§(param1:*, param2:*) : Boolean',
+              'return false;'
+          )
+          level.write_text(text, encoding='utf-8', newline='')
+
+          heroes = Path('/tmp/krf-scripts/scripts/§if const function§.as')
+          text = heroes.read_text(encoding='utf-8', errors='strict')
+          text = text.replace('public static const UNLOCK_STAGE_MIRAGE:Number = 3;', 'public static const UNLOCK_STAGE_MIRAGE:Number = -999;')
+          text = text.replace('public static const UNLOCK_STAGE_CRONAN:Number = 6;', 'public static const UNLOCK_STAGE_CRONAN:Number = -999;')
+          text = replace_function(
+              text,
+              'public function checkPremiumContent(param1:String) : Boolean',
+              'return false;'
+          )
+          heroes.write_text(text, encoding='utf-8', newline='')
+
+          Path('/tmp/import/scripts').mkdir(parents=True, exist_ok=True)
+          Path('/tmp/import/scripts/Level.as').write_bytes(level.read_bytes())
+          Path('/tmp/import/scripts/§if const function§.as').write_bytes(heroes.read_bytes())
+
+          assets = Path('/tmp/krf-scripts/_assets')
+          if assets.exists():
+              import shutil
+              shutil.copytree(assets, Path('/tmp/import/_assets'), dirs_exist_ok=True)
+          PY
+
+      - name: Import patched scripts
+        shell: bash
+        run: |
+          set -o pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort \
+            -importScript assets/kingdom-rush-frontie-15717.swf /tmp/out/kingdom-rush-frontiers-unlock-all.swf /tmp/import \
+            > /tmp/import.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-unlock-all.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-unlock-all.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Verify patched output
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -selectclass 'Level,§if const function§' \
+            -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-unlock-all.swf \
+            > /tmp/verify.log 2>&1 || true
+          grep -F 'return false;' '/tmp/verify/scripts/Level.as'
+          grep -F 'UNLOCK_STAGE_MIRAGE:Number = -999' '/tmp/verify/scripts/§if const function§.as'
+          grep -F 'UNLOCK_STAGE_CRONAN:Number = -999' '/tmp/verify/scripts/§if const function§.as'
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/verify/scripts/§if const function§.as').read_text(errors='replace')
+          sig = 'public function checkPremiumContent(param1:String) : Boolean'
+          i = p.find(sig)
+          assert i >= 0
+          assert 'return false;' in p[i:i+350]
+          PY
+
+      - name: Publish verified mod into site assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-unlock-all.swf assets/kingdom-rush-frontiers-unlock-all.swf
+          {
+            echo 'Kingdom Rush Frontiers — Unlock All'
+            echo 'All tower upgrade gates disabled.'
+            echo 'Mirage/Cronan stage gates disabled.'
+            echo 'Premium hero purchase gate disabled.'
+            echo 'Built and re-export verified with FFDec 26.2.1.'
+          } > assets/UNLOCK-ALL-BUILD.txt
+          sha256sum assets/kingdom-rush-frontie-15717.swf assets/kingdom-rush-frontiers-unlock-all.swf > assets/UNLOCK-ALL-SHA256SUMS.txt
+
+      - name: Commit verified mod to branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-unlock-all.swf assets/UNLOCK-ALL-BUILD.txt assets/UNLOCK-ALL-SHA256SUMS.txt
+          if git diff --cached --quiet; then
+            echo 'Verified mod already matches repository.'
+          else
+            git commit -m 'Add verified unlock-all Frontiers build [skip ci]'
+            git push origin HEAD:agent/finish-unlock-all
+          fi
