@@ -1,0 +1,342 @@
+package
+{
+   import §_-aQ§.*;
+   import fl.lang.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.filters.*;
+   import flash.geom.Point;
+   
+   [Embed(source="/_assets/assets.swf", symbol="symbol600")]
+   public class TowerHolder extends §extends const true§
+   {
+      
+      public var §_-EV§:Point;
+      
+      public var canBuildBarracks:Boolean;
+      
+      public var rallyPoint:§_-u1§;
+      
+      public var yAdjust:int = 36;
+      
+      public var §const final§:Sprite;
+      
+      public var cRoot:Level;
+      
+      public var game:MovieClip;
+      
+      public function TowerHolder(param1:int, param2:int, param3:Point, param4:Boolean = true)
+      {
+         super();
+         addFrameScript(0,this.frame1,1,this.frame2,2,this.frame3);
+         this.x = param1;
+         this.y = param2 - this.yAdjust;
+         this.§_-EV§ = param3;
+         this.canBuildBarracks = param4;
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+      }
+      
+      public function init(param1:Event) : void
+      {
+         this.cRoot = Level(this.parent.parent);
+         this.game = MovieClip(this.parent.parent.parent);
+         this.gotoAndStop(this.cRoot.terrainType);
+         this.addEventListener(MouseEvent.MOUSE_DOWN,this.clickEvent,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OVER,this.rollOverEvents,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,this.rollOutEvents,false,0,true);
+      }
+      
+      public function onFrameUpdate() : void
+      {
+      }
+      
+      public function pause() : void
+      {
+      }
+      
+      public function unPause() : void
+      {
+      }
+      
+      public function showRangeNew(param1:int, param2:int) : void
+      {
+         this.cRoot.towerRangeNew.width = param1;
+         this.cRoot.towerRangeNew.height = param2;
+         this.cRoot.towerRangeNew.x = this.x;
+         this.cRoot.towerRangeNew.y = this.y - 10 + this.yAdjust;
+         this.cRoot.towerRangeNew.visible = true;
+      }
+      
+      public function §get const§(param1:int, param2:int) : void
+      {
+         this.cRoot.§_-WL§.width = param1;
+         this.cRoot.§_-WL§.height = param2;
+         this.cRoot.§_-WL§.x = this.x;
+         this.cRoot.§_-WL§.y = this.y - 10 + this.yAdjust;
+         this.cRoot.§_-WL§.visible = true;
+      }
+      
+      public function removeRangeRallyPoint() : void
+      {
+         this.cRoot.§_-WL§.visible = false;
+      }
+      
+      public function removeRangeNew() : void
+      {
+         this.cRoot.towerRangeNew.visible = false;
+      }
+      
+      public function checkMenuRollOverAction(param1:String) : void
+      {
+         switch(param1)
+         {
+            case "archer":
+               this.showRangeNew(this.cRoot.gameSettings.archers.level1.range,this.cRoot.gameSettings.archers.level1.range * this.cRoot.gameSettings.rangeRatio);
+               break;
+            case "soldier":
+               this.§get const§(this.cRoot.gameSettings.§_-jG§.level1.rangeRally,this.cRoot.gameSettings.§_-jG§.level1.rangeRally * this.cRoot.gameSettings.rangeRatio);
+               break;
+            case "mage":
+               this.showRangeNew(this.cRoot.gameSettings.mages.level1.range,this.cRoot.gameSettings.mages.level1.range * this.cRoot.gameSettings.rangeRatio);
+               break;
+            case "engineer":
+               this.showRangeNew(this.cRoot.gameSettings.engineers.level1.range,this.cRoot.gameSettings.engineers.level1.range * this.cRoot.gameSettings.rangeRatio);
+         }
+      }
+      
+      protected function §set const if§(param1:int) : int
+      {
+         if(this.cRoot.game.gameUpgrades.§_-i7§ == true && (this.cRoot.§_-wi§ == 0 || this.cRoot.§_-wi§ >= 3))
+         {
+            return Math.ceil(param1 - param1 * 0.1);
+         }
+         return param1;
+      }
+      
+      protected function getCostEngineer(param1:int) : int
+      {
+         if(this.cRoot.game.gameUpgrades.engineersUpFieldLogistics == true && (this.cRoot.§_-wi§ == 0 || this.cRoot.§_-wi§ >= 3))
+         {
+            return Math.ceil(param1 - param1 * 0.1);
+         }
+         return param1;
+      }
+      
+      public function checkMenuRollOutAction(param1:String) : void
+      {
+         this.removeRangeNew();
+         this.removeRangeRallyPoint();
+      }
+      
+      public function §_-GM§() : Boolean
+      {
+         if(this.cRoot.quickMenu == null)
+         {
+            return false;
+         }
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function unSelect() : void
+      {
+         this.cRoot.towerRange.visible = false;
+         this.cRoot.towerRangeNew.visible = false;
+         this.cRoot.§_-WL§.visible = false;
+         this.§null const throw§();
+      }
+      
+      public function clickEvent(param1:MouseEvent) : void
+      {
+         this.cRoot.menu.§function const extends§();
+         if(!this.cRoot.enableElements)
+         {
+            return;
+         }
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         var _loc2_:String = Locale.getDefaultLang();
+         this.cRoot.quickMenu.load(this.x,this.y - 10 + this.yAdjust,this,false,0,true,new Array(new Array("archer","tw_archer",this.cRoot.gameSettings.archers.level1.cost,this.cRoot.§_-bY§(§_-Mm§.ARCHERS,1),false,0,0,1,"TooltipBasic",{
+            "title":Locale.loadStringEx("TOWER_ARCHERS_NAME",_loc2_),
+            "text":Locale.loadStringEx("TOWER_ARCHERS_DESCRIPTION",_loc2_),
+            "atts":[[Locale.loadStringEx("C_DAMAGE",_loc2_),this.cRoot.gameSettings.archers.level1.minDamage + "-" + this.cRoot.gameSettings.archers.level1.maxDamage,"white"],[Locale.loadStringEx("C_RELOAD",_loc2_),this.cRoot.gameSettings.getReloadString(this.cRoot.gameSettings.archers.level1.reload / this.cRoot.gameSettings.framesRate),"white"]]
+         }),new Array("soldier","tw_soldier",this.cRoot.gameSettings.§_-jG§.level1.cost,this.§set const const§(),0,0,0,2,"TooltipBasic",{
+            "title":Locale.loadStringEx("TOWER_BARRACKS_NAME",_loc2_),
+            "text":Locale.loadStringEx("TOWER_BARRACKS_DESCRIPTION",_loc2_),
+            "atts":[[Locale.loadStringEx("C_LIFE",_loc2_),this.cRoot.gameSettings.§_-jG§.level1.health,"white"],[Locale.loadStringEx("C_DAMAGE",_loc2_),this.cRoot.gameSettings.§_-jG§.level1.minDamage + "-" + this.cRoot.gameSettings.§_-jG§.level1.maxDamage,"white"],[Locale.loadStringEx("C_ARMOR",_loc2_),this.cRoot.gameSettings.getArmorString(this.cRoot.gameSettings.§_-jG§.level1.armor),"white"],[Locale.loadStringEx("C_RESPAWN",_loc2_),this.cRoot.gameSettings.§_-jG§.level1.respawn / this.cRoot.gameSettings.framesRate + Locale.loadStringEx("C_SEC",_loc2_),"white"]]
+         }),new Array("mage","tw_mage",this.§set const if§(this.cRoot.gameSettings.mages.level1.cost),this.cRoot.§_-bY§(§_-Mm§.MAGES,1),0,0,0,3,"TooltipBasic",{
+            "title":Locale.loadStringEx("TOWER_MAGES_NAME",_loc2_),
+            "text":Locale.loadStringEx("TOWER_MAGES_DESCRIPTION",_loc2_),
+            "atts":[[Locale.loadStringEx("C_DAMAGE",_loc2_),this.cRoot.gameSettings.mages.level1.minDamage + "-" + this.cRoot.gameSettings.mages.level1.maxDamage,"white"],[Locale.loadStringEx("C_RELOAD",_loc2_),this.cRoot.gameSettings.getReloadString(this.cRoot.gameSettings.mages.level1.reload / this.cRoot.gameSettings.framesRate),"white"]]
+         }),new Array("engineer","tw_engineer",this.getCostEngineer(this.cRoot.gameSettings.engineers.level1.cost),this.cRoot.§_-bY§(§_-Mm§.ENGINEERS,1),0,0,0,4,"TooltipBasic",{
+            "title":Locale.loadStringEx("TOWER_ENGINEERS_NAME",_loc2_),
+            "text":Locale.loadStringEx("TOWER_ENGINEERS_DESCRIPTION",_loc2_),
+            "atts":[[Locale.loadStringEx("C_DAMAGE",_loc2_),this.cRoot.gameSettings.engineers.level1.minDamage + "-" + this.cRoot.gameSettings.engineers.level1.maxDamage,"white"],[Locale.loadStringEx("C_RELOAD",_loc2_),this.cRoot.gameSettings.getReloadString(this.cRoot.gameSettings.engineers.level1.reload / this.cRoot.gameSettings.framesRate),"white"]]
+         }),new Array("qol_specials","tw_clean",0,false,0,0,0,7,"TooltipBasic",{
+            "title":"Special towers",
+            "text":"Open the sandbox special-tower page."
+         })));
+         this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+      }
+      
+      public function §set const const§() : Boolean
+      {
+         if(this.cRoot.§_-bY§(§_-Mm§.BARRACKS,1) || !this.canBuildBarracks)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function rollOverEvents(param1:MouseEvent) : void
+      {
+         if(!this.cRoot.enableElements)
+         {
+            return;
+         }
+         if(!this.§_-GM§())
+         {
+            this.cRoot.game.gameSounds.playGUIMouseOverCommon();
+            this.buttonMode = true;
+            this.mouseChildren = false;
+            this.useHandCursor = true;
+            this.§_-2h§();
+         }
+      }
+      
+      public function rollOutEvents(param1:MouseEvent) : void
+      {
+         if(!this.§_-GM§())
+         {
+            this.cRoot.game.gameSounds.stopSound("gui_mouse_over_tower_common");
+            this.useHandCursor = false;
+            this.§null const throw§();
+         }
+      }
+      
+      public function upgradeTower(param1:String) : void
+      {
+         if(param1 == "qol_specials")
+         {
+            this.cRoot.quickMenu.load(this.x,this.y - 10 + this.yAdjust,this,false,0,true,new Array(new Array("qol_dwarf","tw_archer",0,false,0,0,0,1,"TooltipBasic",{
+               "title":"Dwarf Riflemen",
+               "text":"Place the level-only Dwarf Riflemen tower."
+            }),new Array("qol_pirates","tw_soldier",0,false,0,0,0,2,"TooltipBasic",{
+               "title":"Pirate Barracks",
+               "text":"Place the level-only Pirate Barracks."
+            }),new Array("qol_back","tw_clean",0,false,0,0,0,7,"TooltipBasic",{
+               "title":"Back",
+               "text":"Close this page; tap the build spot again for normal towers."
+            })));
+            this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+            return;
+         }
+         if(param1 == "qol_dwarf")
+         {
+            this.cRoot.entities.addChild(new TowerDwarfRiflemen(this.x,this.y,this.§_-EV§));
+            this.destroyThis();
+            return;
+         }
+         if(param1 == "qol_pirates")
+         {
+            this.cRoot.entities.addChild(new TowerSoldierPirates(this.x,this.y,this.§_-EV§));
+            this.destroyThis();
+            return;
+         }
+         if(param1 == "qol_back")
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         var _loc2_:§_-5u§ = null;
+         §for for dynamic§.getInstance().playSound("tower_building",this.cRoot.game.gameSounds.§_-7D§,0,0);
+         var _loc3_:Boolean = false;
+         if(param1 == "mage")
+         {
+            _loc3_ = true;
+            _loc2_ = new TowerMage(this.x,this.y + this.yAdjust,this.§_-EV§,"",this.canBuildBarracks);
+         }
+         else if(param1 == "archer")
+         {
+            _loc2_ = new §_-v9§(this.x,this.y + this.yAdjust,this.§_-EV§,"",this.canBuildBarracks);
+         }
+         else if(param1 == "soldier")
+         {
+            _loc2_ = new §_-oH§(this.x,this.y + this.yAdjust,this.§_-EV§,"");
+         }
+         else if(param1 == "engineer")
+         {
+            _loc2_ = new TowerEngineer(this.x,this.y + this.yAdjust,this.§_-EV§,this.canBuildBarracks);
+         }
+         this.cRoot.entities.addChild(_loc2_);
+         this.cRoot.towers[_loc2_] = _loc2_;
+         if(_loc3_)
+         {
+            this.cRoot.evalBrilliance();
+         }
+         if(this.cRoot.data.levelIndex == 0 && Level1(this.cRoot).buildSign != null)
+         {
+            Level1(this.cRoot).buildSign.closeMe();
+         }
+         this.destroyThis();
+      }
+      
+      private function §_-2h§() : void
+      {
+         var _loc1_:Number = 16772164;
+         var _loc2_:Number = 0.9;
+         var _loc3_:Number = 4;
+         var _loc4_:Number = 4;
+         var _loc5_:Number = 8;
+         var _loc6_:Boolean = false;
+         var _loc7_:Boolean = false;
+         var _loc8_:Number = BitmapFilterQuality.HIGH;
+         var _loc9_:GlowFilter = new GlowFilter(_loc1_,_loc2_,_loc3_,_loc4_,_loc5_,_loc8_,_loc6_,_loc7_);
+         this.filters = new Array(_loc9_);
+      }
+      
+      private function §null const throw§() : void
+      {
+         var _loc1_:ColorMatrixFilter = new ColorMatrixFilter([1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0]);
+         this.filters = [_loc1_];
+      }
+      
+      public function destroyThis() : void
+      {
+         this.unSelect();
+         this.§_-EV§ = null;
+         this.rallyPoint = null;
+         this.§const final§ = null;
+         this.game = null;
+         this.removeEventListener(MouseEvent.ROLL_OVER,this.rollOverEvents);
+         this.removeEventListener(MouseEvent.ROLL_OUT,this.rollOutEvents);
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.init);
+         this.removeEventListener(MouseEvent.CLICK,this.clickEvent);
+         this.parent.removeChild(this);
+         this.cRoot.§_-Yx§();
+         this.cRoot = null;
+      }
+      
+      internal function frame1() : *
+      {
+         stop();
+      }
+      
+      internal function frame2() : *
+      {
+         stop();
+      }
+      
+      internal function frame3() : *
+      {
+         stop();
+      }
+   }
+}
+
