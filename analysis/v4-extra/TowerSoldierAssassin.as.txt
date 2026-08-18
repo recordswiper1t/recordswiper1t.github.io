@@ -1,0 +1,283 @@
+package
+{
+   import fl.lang.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   import flash.utils.Dictionary;
+   
+   [Embed(source="/_assets/assets.swf", symbol="symbol534")]
+   public class TowerSoldierAssassin extends §_-oH§
+   {
+      
+      private var §true const get§:int = 0;
+      
+      private var §static each§:int;
+      
+      private var §set const false§:int = 0;
+      
+      private var §const const var§:int;
+      
+      private var §do for false§:int = 0;
+      
+      private var §set do§:int;
+      
+      public var stealMoney:int;
+      
+      public function TowerSoldierAssassin(param1:int, param2:int, param3:Point, param4:Dictionary, param5:int)
+      {
+         addFrameScript(0,this.frame1,24,this.frame25);
+         super(param1,param2,param3);
+         this.§_-jG§ = param4;
+         this.§true super§ = "assassin";
+         this.§_-6f§ = param5;
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+      }
+      
+      override public function init(param1:Event) : void
+      {
+         var _loc2_:Soldier = null;
+         this.cRoot = Level(this.parent.parent);
+         this.cRoot.game.gameSounds.§_-uT§();
+         this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.cost;
+         this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.cost);
+         this.§each true§(L_ASSASSIN);
+         this.building = false;
+         this.§_-WU§.x = this.x;
+         this.§_-WU§.y = this.y;
+         this.cRoot.bullets.addChild(new §_-Sw§(new Point(this.x,this.y)));
+         for each(_loc2_ in this.§_-jG§)
+         {
+            _loc2_.updateTower(this);
+            if(!this.cRoot.entities.contains(_loc2_))
+            {
+               _loc2_.isRespawning = true;
+               _loc2_.doorQueed = false;
+               this.cRoot.entities.addChild(_loc2_);
+            }
+         }
+         this.§_-vx§(new §throw static§());
+         this.cRoot.game.§const for set§.buildTowerAssassin(this.cRoot);
+         this.cRoot.menu.§native package§(this);
+         this.unSelect();
+         this.addEventListener(MouseEvent.CLICK,clickEvent,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OVER,rollOverEvents,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,rollOutEvents,false,0,true);
+      }
+      
+      override public function getInfo() : Object
+      {
+         var _loc1_:Object = {};
+         _loc1_.tName = Locale.loadStringEx("TOWER_ASSASSIN_NAME",Locale.getDefaultLang());
+         _loc1_.tIconName = this.§true super§;
+         _loc1_.tSoldierName = "assassin";
+         _loc1_.tHealth = this.cRoot.gameSettings.§_-jG§.assassin.health;
+         _loc1_.tArmor = this.cRoot.gameSettings.§_-jG§.assassin.armor;
+         _loc1_.tDamageMin = this.cRoot.gameSettings.§_-jG§.assassin.minDamage;
+         _loc1_.tDamageMax = this.cRoot.gameSettings.§_-jG§.assassin.maxDamage;
+         _loc1_.tRespawn = this.cRoot.gameSettings.§_-jG§.assassin.respawn;
+         return _loc1_;
+      }
+      
+      override public function pause() : void
+      {
+         if(this.building)
+         {
+            return;
+         }
+         this.§_-bR§().stop();
+      }
+      
+      override public function unPause() : void
+      {
+         if(this.building)
+         {
+            return;
+         }
+         if(MovieClip(this.§_-bR§()).currentFrameLabel != "idle" && MovieClip(this.§_-bR§()).currentFrameLabel != "door_closed")
+         {
+            this.§_-bR§().play();
+         }
+      }
+      
+      public function getTooltipParams(param1:String) : Object
+      {
+         var _loc2_:String = Locale.getDefaultLang();
+         switch(param1)
+         {
+            case "special_sneak":
+               return {
+                  "title":Locale.loadStringEx("TOWER_ASSASSINS_SNEAK_NAME_" + this.§with const var§(this.§true const get§,this.§static each§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_ASSASSINS_SNEAK_DESCRIPTION_" + this.§with const var§(this.§true const get§,this.§static each§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_ASSASSINS_SNEAK_NOTE",_loc2_)
+               };
+            case "special_peak":
+               return {
+                  "title":Locale.loadStringEx("TOWER_ASSASSINS_PICK_NAME_" + this.§with const var§(this.§set const false§,this.§const const var§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_ASSASSINS_PICK_DESCRIPTION_" + this.§with const var§(this.§set const false§,this.§const const var§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_ASSASSINS_PICK_NOTE",_loc2_)
+               };
+            case "special_counter":
+               return {
+                  "title":Locale.loadStringEx("TOWER_ASSASSINS_COUNTER_NAME_" + this.§with const var§(this.§do for false§,this.§set do§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_ASSASSINS_COUNTER_DESCRIPTION_" + this.§with const var§(this.§do for false§,this.§set do§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_ASSASSINS_COUNTER_NOTE",_loc2_)
+               };
+            case "rally_point":
+               return {
+                  "title":Locale.loadStringEx("TOWER_BARRACKS_RALLY_POINT",_loc2_),
+                  "text":Locale.loadStringEx("TOWER_BARRACKS_RALLY_POINT_DESCRIPTION",_loc2_)
+               };
+            default:
+               return null;
+         }
+      }
+      
+      override public function §_-qL§() : void
+      {
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         var _loc1_:String = Locale.getDefaultLang();
+         MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10,this,true,180,false,new Array(new Array("special_sneak","sp_sneak",this.cRoot.gameSettings.§_-jG§.assassin.sneakCost,false,this.§true const get§,this.§static each§,this.cRoot.gameSettings.§_-jG§.assassin.sneakCostLevel,10,"TooltipBasic",this.getTooltipParams("special_sneak")),new Array("special_peak","sp_pickpocket",this.cRoot.gameSettings.§_-jG§.assassin.peakCost,false,this.§set const false§,this.§const const var§,this.cRoot.gameSettings.§_-jG§.assassin.peakCostLevel,11,"TooltipBasic",this.getTooltipParams("special_peak")),new Array("special_counter","sp_counter",this.cRoot.gameSettings.§_-jG§.assassin.counterCost,false,this.§do for false§,this.§set do§,this.cRoot.gameSettings.§_-jG§.assassin.counterCostLevel,7,"TooltipBasic",this.getTooltipParams("special_counter")),new Array("rally","tw_rally",0,false,0,0,0,9,"TooltipBasic",this.getTooltipParams("rally_point"))));
+         this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+      }
+      
+      override public function upgradeTower(param1:String) : void
+      {
+         switch(param1)
+         {
+            case "sell":
+               this.cRoot.updateCash(this.getSellValue());
+               this.§_-Zj§();
+               this.cRoot.entities.addChild(new TowerHolder(this.x,this.y,this.§_-EV§));
+               this.cRoot.entities.addChild(new §_-6G§(new Point(this.x,this.y),this.getSellValue()));
+               this.cRoot.§get import§();
+               this.destroyThis(true);
+               break;
+            case "special_sneak":
+               this.cRoot.game.gameSounds.§package for use§();
+               this.upgradeSneak();
+               break;
+            case "special_peak":
+               this.cRoot.game.gameSounds.§_-kB§();
+               this.upgradePeak();
+               break;
+            case "special_counter":
+               this.cRoot.game.gameSounds.§_-Ba§();
+               this.upgradeCounter();
+               this.cRoot.menu.§native package§(this);
+               break;
+            case "rally":
+               this.cRoot.bullets.addChild(new §set try§(this.cRoot,this));
+               this.cRoot.§false const with§();
+               this.§get const§(this.cRoot.gameSettings.§_-jG§.assassin.rangeRally,this.cRoot.gameSettings.§_-jG§.assassin.rangeRally * this.cRoot.gameSettings.rangeRatio);
+         }
+      }
+      
+      override public function §in throw§() : void
+      {
+         this.cRoot.game.gameSounds.§_-Ut§();
+      }
+      
+      override public function §_-bR§() : MovieClip
+      {
+         return MovieClip(this);
+      }
+      
+      override public function openDoor() : void
+      {
+         if(this.§with for if§ == DOOR_CLOSED)
+         {
+            this.§with for if§ = DOOR_OPENING;
+            this.gotoAndPlay("open_door");
+            this.doorTimeCounter = 0;
+         }
+      }
+      
+      private function upgradeSneak() : void
+      {
+         var _loc1_:SoldierAssassin = null;
+         ++this.§true const get§;
+         if(this.§true const get§ == 1)
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.sneakCost;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.sneakCost);
+         }
+         else
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.sneakCostLevel;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.sneakCostLevel);
+         }
+         for each(_loc1_ in this.§_-jG§)
+         {
+            _loc1_.upgradeSneakAttack(this.§true const get§);
+         }
+      }
+      
+      private function upgradePeak() : void
+      {
+         var _loc1_:SoldierAssassin = null;
+         ++this.§set const false§;
+         if(this.§set const false§ == 1)
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.peakCost;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.peakCost);
+         }
+         else
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.peakCostLevel;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.peakCostLevel);
+         }
+         for each(_loc1_ in this.§_-jG§)
+         {
+            _loc1_.upgradePeak(this.§set const false§);
+         }
+      }
+      
+      private function upgradeCounter() : void
+      {
+         var _loc1_:SoldierAssassin = null;
+         ++this.§do for false§;
+         if(this.§do for false§ == 1)
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.counterCost;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.counterCost);
+         }
+         else
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-jG§.assassin.counterCostLevel;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-jG§.assassin.counterCostLevel);
+         }
+         for each(_loc1_ in this.§_-jG§)
+         {
+            _loc1_.upgradeCounterAttack(this.§do for false§);
+         }
+      }
+      
+      public function §each true§(param1:int) : void
+      {
+         this.level = param1;
+         this.§_-iB§ = 3;
+         this.§static each§ = this.cRoot.gameSettings.§_-jG§.assassin.sneakLevels;
+         this.§const const var§ = this.cRoot.gameSettings.§_-jG§.assassin.peakLevels;
+         this.§set do§ = this.cRoot.gameSettings.§_-jG§.assassin.counterLevels;
+      }
+      
+      internal function frame1() : *
+      {
+         stop();
+      }
+      
+      internal function frame25() : *
+      {
+         stop();
+      }
+   }
+}
+

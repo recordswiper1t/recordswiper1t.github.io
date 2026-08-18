@@ -1,0 +1,359 @@
+package
+{
+   import fl.lang.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   
+   public class TowerDwarfRiflemen extends §_-v9§
+   {
+      
+      private var §default const continue§:int = 0;
+      
+      private var §function const while§:int;
+      
+      private var §_-QL§:int = 0;
+      
+      private var §_-1b§:int;
+      
+      private var §_-LQ§:Boolean;
+      
+      private var §include for super§:Point;
+      
+      private var barrelReloadTime:int;
+      
+      private var §_-LX§:int;
+      
+      private var §_-c2§:int;
+      
+      private var §_-9H§:int;
+      
+      private var barrelRangeWidth:int;
+      
+      private var §_-F§:int;
+      
+      public function TowerDwarfRiflemen(param1:int, param2:int, param3:Point, param4:String = "")
+      {
+         super(param1,param2,param3,param4);
+         this.§true super§ = "dwarf_riffle";
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+      }
+      
+      override public function init(param1:Event) : void
+      {
+         this.cRoot = Level(this.parent.parent);
+         this.§each true§(L_SPECIAL);
+         this.idleTime = 90;
+         this.idleTimeCounter = 0;
+         this.§null import§ = 24;
+         this.chargeTimePreShoot = 7;
+         this.addEventListener(MouseEvent.CLICK,clickEvent,false,0,true);
+         this.building = false;
+         this.upgradeTower("");
+         this.§_-Va§ = new Point(this.x + 10,this.y - 47);
+         this.§_-Yc§ = new Point(this.x - 10,this.y - 47);
+         this.§const const true§ = 46;
+         this.§_-18§ = 65;
+         this.§_-3g§(new GTowerDwarfRiflemen());
+         this.§_-c2§ = 33;
+         this.§_-9H§ = 0;
+         this.§_-vx§(new §_-uU§());
+         this.cRoot.towers[this] = this;
+         this.addEventListener(MouseEvent.ROLL_OVER,rollOverEvents,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,rollOutEvents,false,0,true);
+      }
+      
+      override public function pause() : void
+      {
+         this.§_-bR§().shooterRight.stop();
+         this.§_-bR§().shooterLeft.stop();
+         this.§native finally§();
+      }
+      
+      override public function unPause() : void
+      {
+         if(this.arrowCount % 2)
+         {
+            this.§_-V§(MovieClip(this.§_-bR§().shooterRight));
+         }
+         else
+         {
+            this.§_-V§(MovieClip(this.§_-bR§().shooterLeft));
+         }
+         this.§catch include§();
+      }
+      
+      private function §_-V§(param1:MovieClip) : void
+      {
+         switch(param1.currentFrameLabel)
+         {
+            case "idleUp":
+            case "idleDown":
+            case "barrelUpEnd":
+            case "barrelDownEnd":
+               break;
+            case "shootDownEnd":
+               param1.gotoAndStop("idleDown");
+               break;
+            case "shootUpEnd":
+               param1.gotoAndStop("idleUp");
+               break;
+            default:
+               param1.play();
+         }
+      }
+      
+      override public function getInfo() : Object
+      {
+         var _loc1_:Object = {};
+         _loc1_.tName = Locale.loadStringEx("SPECIAL_DWARF_BASTION_NAME",Locale.getDefaultLang());
+         _loc1_.tIconName = this.§true super§;
+         _loc1_.tRangeHeight = this.§null for set§;
+         _loc1_.tRangeWidth = this.§dynamic const§;
+         _loc1_.tReload = this.reloadTime + this.§null import§;
+         this.§_-3A§(_loc1_);
+         return _loc1_;
+      }
+      
+      override public function §_-Gr§(param1:MovieClip) : MovieClip
+      {
+         if(this.arrowCount % 2 == 0)
+         {
+            param1.x = this.§_-Yc§.x;
+            param1.y = this.§_-Yc§.y;
+         }
+         else
+         {
+            param1.x = this.§_-Va§.x;
+            param1.y = this.§_-Va§.y;
+         }
+         return param1;
+      }
+      
+      override public function §if for dynamic§() : void
+      {
+      }
+      
+      override public function §_-IW§(param1:Boolean = false, param2:int = 0) : MovieClip
+      {
+         var _loc3_:Point = null;
+         if(this.target == null || !this.target.isActive)
+         {
+            if(!this.§switch override§(this.cRoot.gameSettings.enemyMaxLevel))
+            {
+               _loc3_ = new Point(this.arrowDestiny.x,this.arrowDestiny.y);
+            }
+         }
+         return new BulletDwarfRiflemen(this.target,_loc3_,this.§_-QL§);
+      }
+      
+      public function getTooltipParams(param1:String) : Object
+      {
+         var _loc2_:String = Locale.getDefaultLang();
+         switch(param1)
+         {
+            case "special_barrel":
+               return {
+                  "title":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_NAME",_loc2_),
+                  "text":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_DESCRIPTION_" + this.§with const var§(this.§default const continue§,this.§function const while§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_NOTE",_loc2_)
+               };
+            case "special_damage":
+               return {
+                  "title":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_NAME",_loc2_),
+                  "text":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_DESCRIPTION_" + this.§with const var§(this.§_-QL§,this.§_-1b§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_NOTE",_loc2_)
+               };
+            default:
+               return null;
+         }
+      }
+      
+      override public function §_-qL§() : void
+      {
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         var _loc1_:String = Locale.getDefaultLang();
+         MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10,this,false,180,false,new Array(new Array("special_barrel","sp_dwarf_barrel",this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCost,false,this.§default const continue§,this.§function const while§,this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCostLevel,1,"TooltipBasic",this.getTooltipParams("special_barrel")),new Array("special_damage","sp_dwarf_bullets",this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCost,false,this.§_-QL§,this.§_-1b§,this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCostLevel,2,"TooltipBasic",this.getTooltipParams("special_damage"))));
+         this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+         this.showRange(this.§dynamic const§,this.§null for set§);
+      }
+      
+      override public function upgradeTower(param1:String) : void
+      {
+         switch(param1)
+         {
+            case "special_barrel":
+               this.upgradeBarrel();
+               this.cRoot.game.gameSounds.§_-Dg§();
+               break;
+            case "special_damage":
+               this.upgradeDamage();
+               this.cRoot.menu.§_-dG§(this);
+               this.cRoot.game.gameSounds.§true const import§();
+         }
+      }
+      
+      protected function upgradeBarrel() : void
+      {
+         ++this.§default const continue§;
+         if(this.§default const continue§ == 1)
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCost;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCost);
+         }
+         else
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCostLevel;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCostLevel);
+         }
+         this.barrelRangeWidth = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelRange[this.§default const continue§ - 1];
+         this.§_-F§ = this.barrelRangeWidth * this.cRoot.gameSettings.rangeRatio;
+         this.barrelReloadTime = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelReloadTime;
+      }
+      
+      protected function upgradeDamage() : void
+      {
+         ++this.§_-QL§;
+         if(this.§_-QL§ == 1)
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCost;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCost);
+         }
+         else
+         {
+            this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCostLevel;
+            this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCostLevel);
+         }
+      }
+      
+      override public function §_-xK§() : Boolean
+      {
+         if(this.§_-sN§())
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      override public function §_-K3§() : void
+      {
+         if(this.§default const continue§ != 0)
+         {
+            ++this.§_-LX§;
+         }
+      }
+      
+      protected function §_-sN§() : Boolean
+      {
+         var _loc1_:MovieClip = null;
+         if(this.§default const continue§ == 0)
+         {
+            return false;
+         }
+         if(!this.§_-LQ§)
+         {
+            if(this.§_-LX§ < this.barrelReloadTime)
+            {
+               return false;
+            }
+            if(!this.§else const continue§(this.cRoot.gameSettings.enemyMaxLevel,false,true))
+            {
+               return false;
+            }
+            if(this.arrowCount % 2)
+            {
+               _loc1_ = this.§_-bR§().shooterRight;
+               this.positionCurrentShoot = this.§_-Va§;
+            }
+            else
+            {
+               _loc1_ = this.§_-bR§().shooterLeft;
+               this.positionCurrentShoot = this.§_-Yc§;
+            }
+            if(this.§_-sD§.y >= this.y)
+            {
+               _loc1_.gotoAndPlay("barrelDown");
+            }
+            else
+            {
+               _loc1_.gotoAndPlay("barrelUp");
+            }
+            if(this.§_-sD§.x >= this.x)
+            {
+               _loc1_.scaleX = 1;
+            }
+            else
+            {
+               _loc1_.scaleX = -1;
+            }
+            this.§_-LX§ = 0;
+            this.§_-9H§ = 0;
+            this.§_-LQ§ = true;
+            return true;
+         }
+         if(this.§_-9H§ < this.§_-c2§)
+         {
+            ++this.§_-9H§;
+            if(this.§_-9H§ == 23)
+            {
+               this.cRoot.bullets.addChild(new §_-Ee§(this.§default const continue§,this.positionCurrentShoot,this.§_-sD§,0,0));
+            }
+            return true;
+         }
+         this.§_-LQ§ = false;
+         this.§_-LX§ = 0;
+         this.§_-9H§ = 0;
+         return false;
+      }
+      
+      public function §else const continue§(param1:int, param2:Boolean = true, param3:Boolean = true) : Boolean
+      {
+         var _loc5_:Enemy = null;
+         var _loc4_:Enemy = null;
+         this.target = null;
+         this.§_-sD§ = null;
+         for each(_loc5_ in this.cRoot.enemies)
+         {
+            if(_loc5_.isActive && _loc5_.§dynamic const for§ && (param3 || !_loc5_.isBoss) && _loc5_.level <= param1 && (param2 || !_loc5_.isFlying) && this.onRange(_loc5_))
+            {
+               if(_loc4_ == null || this.§_-Km§(_loc4_,_loc5_))
+               {
+                  _loc4_ = _loc5_;
+               }
+            }
+         }
+         if(_loc4_ != null)
+         {
+            this.target = _loc4_;
+            this.§_-sD§ = new Point(this.target.§with const static§[this.target.§package for var§ + this.target.getNodesSpeed()].x,this.target.§with const static§[this.target.§package for var§ + this.target.getNodesSpeed()].y);
+            this.§_-sD§ = new Point(this.target.x,this.target.y);
+            return true;
+         }
+         return false;
+      }
+      
+      override public function §each true§(param1:int) : void
+      {
+         this.level = param1;
+         this.reloadTime = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.reload - this.§null import§;
+         this.§null for set§ = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.range * this.cRoot.gameSettings.rangeRatio;
+         this.§dynamic const§ = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.range;
+         this.§continue for§ = "";
+         this.§function const while§ = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelLevels;
+         this.§_-1b§ = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageLevels;
+      }
+      
+      private function §_-3A§(param1:Object) : void
+      {
+         param1.tDamageMin = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.minDamage + this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageIncrement * this.§_-QL§;
+         param1.tDamageMax = this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.maxDamage + this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageIncrement * this.§_-QL§;
+      }
+   }
+}
+

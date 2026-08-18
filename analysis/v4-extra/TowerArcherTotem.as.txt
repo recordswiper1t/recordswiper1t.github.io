@@ -1,0 +1,334 @@
+package
+{
+   import fl.lang.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   
+   public class TowerArcherTotem extends §_-v9§
+   {
+      
+      private var §function true§:int;
+      
+      private var §function const if§:Point;
+      
+      private var §in static§:int = 0;
+      
+      private var §_-mG§:int;
+      
+      private var §_-Ig§:int;
+      
+      private var §_-JS§:int;
+      
+      private var §case const super§:Point;
+      
+      private var §_-5A§:int = 0;
+      
+      private var §_-wG§:int;
+      
+      private var §_-dh§:int;
+      
+      public function TowerArcherTotem(param1:int, param2:int, param3:Point, param4:int, param5:Boolean = true)
+      {
+         super(param1,param2,param3,"",param5);
+         this.§true super§ = "totem";
+         this.§_-6f§ = param4;
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+      }
+      
+      override public function init(param1:Event) : void
+      {
+         this.cRoot = Level(this.parent.parent);
+         this.cRoot.game.gameSounds.§_-pX§();
+         this.§_-6f§ += this.cRoot.gameSettings.archers.totem.cost;
+         this.cRoot.updateCash(-this.cRoot.gameSettings.archers.totem.cost);
+         this.§each true§(L_TOTEM);
+         this.building = false;
+         this.idleTime = 90;
+         this.idleTimeCounter = 0;
+         this.§_-3g§(new §in const default§());
+         this.cRoot.bullets.addChild(new §_-Sw§(new Point(this.x,this.y)));
+         this.§_-vx§(new §throw static§());
+         this.§_-Va§ = new Point(this.x + 5,this.y - 53);
+         this.§_-Yc§ = new Point(this.x - 9,this.y - 53);
+         this.cRoot.menu.§_-dG§(this);
+         this.cRoot.game.§const for set§.§continue const do§(this.cRoot);
+         this.unSelect();
+         this.§const const true§ = 46;
+         this.§_-18§ = 60;
+         this.addEventListener(MouseEvent.CLICK,clickEvent,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OVER,rollOverEvents,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,rollOutEvents,false,0,true);
+      }
+      
+      override public function §native finally§() : void
+      {
+         this.§_-bR§().eyesUp.stop();
+         this.§_-bR§().eyesDown.stop();
+         this.§_-bR§().fireLeft.stop();
+         this.§_-bR§().fireRight.stop();
+      }
+      
+      override public function §catch include§() : void
+      {
+         if(this.§_-bR§().eyesUp.currentFrameLabel != "idle" && this.§_-bR§().eyesUp.currentFrameLabel != "onEnd")
+         {
+            this.§_-bR§().eyesUp.play();
+         }
+         if(this.§_-bR§().eyesDown.currentFrameLabel != "idle" && this.§_-bR§().eyesDown.currentFrameLabel != "onEnd")
+         {
+            this.§_-bR§().eyesUp.play();
+         }
+         this.§_-bR§().fireLeft.play();
+         this.§_-bR§().fireRight.play();
+      }
+      
+      override public function §if for dynamic§() : void
+      {
+         var _loc1_:MovieClip = null;
+         if(this.cRoot.game.gameUpgrades.§extends const import§(GameUpgrades.FRONTIERS_TWIN_SHOOT,this.cRoot.§_-wi§) && Math.random() <= 0.1)
+         {
+            _loc1_ = this.§_-IW§(false,this.getRandom(15,23));
+            _loc1_ = this.§_-Gr§(_loc1_);
+            this.cRoot.bullets.addChild(_loc1_);
+            _loc1_ = null;
+         }
+      }
+      
+      override public function §_-IW§(param1:Boolean = false, param2:int = 0) : MovieClip
+      {
+         var _loc6_:int = 0;
+         var _loc3_:Point = null;
+         var _loc4_:Boolean = false;
+         var _loc5_:int = 0;
+         if(this.target == null || !this.target.isActive)
+         {
+            if(!this.§switch override§(this.cRoot.gameSettings.enemyMaxLevel))
+            {
+               _loc3_ = new Point(this.arrowDestiny.x,this.arrowDestiny.y);
+            }
+         }
+         if(this.cRoot.game.gameUpgrades.archersUpPrecision && (this.cRoot.§_-wi§ == 0 || this.cRoot.§_-wi§ == 5))
+         {
+            if(Math.random() <= 0.1)
+            {
+               _loc4_ = true;
+            }
+         }
+         if(this.cRoot.game.gameUpgrades.archersUpPiercing && (this.cRoot.§_-wi§ == 0 || this.cRoot.§_-wi§ >= 3))
+         {
+            _loc5_ = 10;
+         }
+         return new §_-R3§(1,this.target,_loc3_,null,param2,_loc4_,_loc5_,this.§true const static§);
+      }
+      
+      override public function §_-K3§() : void
+      {
+         if(this.§in static§ != 0)
+         {
+            ++this.§_-Ig§;
+            if(this.§_-Ig§ >= this.§_-mG§)
+            {
+               if(this.§set true§(this.cRoot.gameSettings.enemyMaxLevel))
+               {
+                  this.§_-bR§().eyesUp.gotoAndPlay("on");
+                  this.cRoot.entities.addChild(new §_-L8§(this.§function const if§,this.§in static§,this.cRoot));
+                  this.§_-Ig§ = 0;
+               }
+            }
+         }
+         if(this.§_-5A§ != 0)
+         {
+            ++this.§_-dh§;
+            if(this.§_-dh§ >= this.§_-wG§)
+            {
+               if(this.§switch const static§(this.cRoot.gameSettings.enemyMaxLevel))
+               {
+                  this.§_-bR§().eyesDown.gotoAndPlay("on");
+                  this.cRoot.entities.addChild(new §switch const override§(this.§case const super§,this.§_-5A§,this.cRoot));
+                  this.§_-dh§ = 0;
+               }
+            }
+         }
+      }
+      
+      override public function getInfo() : Object
+      {
+         var _loc1_:Object = {};
+         _loc1_.tName = Locale.loadStringEx("TOWER_TOTEM_NAME",Locale.getDefaultLang());
+         _loc1_.tIconName = this.§true super§;
+         _loc1_.tRangeHeight = this.§null for set§;
+         _loc1_.tRangeWidth = this.§dynamic const§;
+         _loc1_.tReload = this.reloadTime + this.§null import§;
+         _loc1_.tDamageMin = this.cRoot.gameSettings.archers.totem.minDamage + this.cRoot.gameSettings.archers.totem.minDamage * this.§true const static§ / 100;
+         _loc1_.tDamageMax = this.cRoot.gameSettings.archers.totem.maxDamage + this.cRoot.gameSettings.archers.totem.maxDamage * this.§true const static§ / 100;
+         return _loc1_;
+      }
+      
+      public function getTooltipParams(param1:String) : Object
+      {
+         var _loc2_:String = Locale.getDefaultLang();
+         switch(param1)
+         {
+            case "special_weakness":
+               return {
+                  "title":Locale.loadStringEx("TOWER_TOTEM_WEAKNESS_NAME_" + this.§with const var§(this.§in static§,this.§function true§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_TOTEM_WEAKNESS_DESCRIPTION_" + this.§with const var§(this.§in static§,this.§function true§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_TOTEM_WEAKNESS_NOTE",_loc2_)
+               };
+            case "special_silence":
+               return {
+                  "title":Locale.loadStringEx("TOWER_TOTEM_SPIRITS_NAME_" + this.§with const var§(this.§_-5A§,this.§_-JS§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_TOTEM_SPIRITS_DESCRIPTION_" + this.§with const var§(this.§_-5A§,this.§_-JS§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_TOTEM_SPIRITS_NOTE",_loc2_)
+               };
+            default:
+               return null;
+         }
+      }
+      
+      override public function §_-qL§() : void
+      {
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10,this,true,180,false,new Array(new Array("special_weakness","sp_weakness",this.cRoot.gameSettings.archers.totem.weaknessCost,false,this.§in static§,this.§function true§,this.cRoot.gameSettings.archers.totem.weaknessCostLevel,1,"TooltipBasic",this.getTooltipParams("special_weakness")),new Array("special_silence","sp_silence",this.cRoot.gameSettings.archers.totem.silenceCost,false,this.§_-5A§,this.§_-JS§,this.cRoot.gameSettings.archers.totem.silenceCostLevel,2,"TooltipBasic",this.getTooltipParams("special_silence"))));
+         this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+         this.showRange(this.§dynamic const§,this.§null for set§);
+      }
+      
+      override public function upgradeTower(param1:String) : void
+      {
+         switch(param1)
+         {
+            case "sell":
+               this.cRoot.updateCash(this.getSellValue());
+               this.§_-Zj§();
+               this.cRoot.entities.addChild(new TowerHolder(this.x,this.y,this.§_-EV§,this.canBuildBarracks));
+               this.cRoot.entities.addChild(new §_-6G§(new Point(this.x,this.y),this.getSellValue()));
+               this.cRoot.§get import§();
+               this.destroyThis();
+               break;
+            case "special_weakness":
+               this.cRoot.game.gameSounds.§null const implements§();
+               ++this.§in static§;
+               if(this.§in static§ == 1)
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.archers.totem.weaknessCost;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.archers.totem.weaknessCost);
+                  this.§_-bR§().eyesUp.gotoAndPlay("on");
+               }
+               else
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.archers.totem.weaknessCostLevel;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.archers.totem.weaknessCostLevel);
+               }
+               break;
+            case "special_silence":
+               this.cRoot.game.gameSounds.§dynamic for§();
+               ++this.§_-5A§;
+               if(this.§_-5A§ == 1)
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.archers.totem.silenceCost;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.archers.totem.silenceCost);
+                  this.§_-bR§().eyesDown.gotoAndPlay("on");
+               }
+               else
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.archers.totem.silenceCostLevel;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.archers.totem.silenceCostLevel);
+               }
+         }
+      }
+      
+      override public function §each true§(param1:int) : void
+      {
+         this.level = param1;
+         this.reloadTime = this.cRoot.gameSettings.archers.totem.reload - this.§null import§;
+         this.§null for set§ = this.cRoot.gameSettings.archers.totem.range * this.cRoot.gameSettings.rangeRatio;
+         this.§dynamic const§ = this.cRoot.gameSettings.archers.totem.range;
+         this.§function true§ = this.cRoot.gameSettings.archers.totem.weaknessLevels;
+         this.§_-mG§ = this.cRoot.gameSettings.archers.totem.weaknessCoolDown;
+         this.§_-JS§ = this.cRoot.gameSettings.archers.totem.silenceLevels;
+         this.§_-wG§ = this.cRoot.gameSettings.archers.totem.silenceCoolDown;
+      }
+      
+      private function §set true§(param1:int) : Boolean
+      {
+         var _loc3_:Enemy = null;
+         var _loc4_:int = 0;
+         var _loc2_:Enemy = null;
+         this.§function const if§ = null;
+         for each(_loc3_ in this.cRoot.enemies)
+         {
+            if(_loc3_.isActive && !_loc3_.§import for dynamic§ && _loc3_.§dynamic const for§ && !_loc3_.isBoss && _loc3_.level <= param1 && this.onRange(_loc3_))
+            {
+               if(_loc2_ == null || this.§_-Km§(_loc2_,_loc3_))
+               {
+                  _loc2_ = _loc3_;
+               }
+            }
+         }
+         if(_loc2_ != null)
+         {
+            _loc4_ = _loc2_.§package for var§ + this.getRandom(-7,7);
+            if(this.cRoot.§_-ly§(_loc2_.§false include§,_loc4_,0))
+            {
+               _loc4_ = _loc2_.§package for var§;
+            }
+            this.§function const if§ = this.cRoot.§_-V8§[_loc2_.§false include§][0][_loc4_];
+            return true;
+         }
+         return false;
+      }
+      
+      private function §switch const static§(param1:int) : Boolean
+      {
+         var _loc3_:Enemy = null;
+         var _loc4_:int = 0;
+         var _loc2_:Enemy = null;
+         this.§case const super§ = null;
+         for each(_loc3_ in this.cRoot.enemies)
+         {
+            if(_loc3_.isActive && !_loc3_.§import for dynamic§ && _loc3_.§dynamic const for§ && _loc3_.§dynamic const for§ && !_loc3_.isBoss && _loc3_.level <= param1 && this.onRange(_loc3_))
+            {
+               if(_loc2_ == null || this.§_-Km§(_loc2_,_loc3_))
+               {
+                  _loc2_ = _loc3_;
+               }
+            }
+         }
+         if(_loc2_ != null)
+         {
+            _loc4_ = _loc2_.§package for var§ + this.getRandom(-7,7);
+            if(this.cRoot.§_-ly§(_loc2_.§false include§,_loc4_,0))
+            {
+               _loc4_ = _loc2_.§package for var§;
+            }
+            this.§case const super§ = this.cRoot.§_-V8§[_loc2_.§false include§][0][_loc4_];
+            return true;
+         }
+         return false;
+      }
+      
+      override public function destroyThis() : void
+      {
+         this.§implements const if§ = true;
+         this.unSelect();
+         this.§throw with§();
+         this.target = null;
+         this.removeEventListener(MouseEvent.ROLL_OVER,rollOverEvents);
+         this.removeEventListener(MouseEvent.ROLL_OUT,rollOutEvents);
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.init);
+         this.removeEventListener(MouseEvent.CLICK,clickEvent);
+         this.cRoot.entities.removeChild(this);
+         this.§get with§();
+         this.cRoot.§return function§(this);
+      }
+   }
+}
+

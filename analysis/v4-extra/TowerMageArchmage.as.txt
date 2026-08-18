@@ -1,0 +1,452 @@
+package
+{
+   import fl.lang.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   
+   public class TowerMageArchmage extends TowerMage
+   {
+      
+      private var boltDestination:Point;
+      
+      private var §class throw§:Boolean;
+      
+      private var idleBolts:Array;
+      
+      private var idleCurrentShoots:int;
+      
+      private var idlePositionOne:Point;
+      
+      private var idlePositionTwo:Point;
+      
+      private var idlePositionThree:Point;
+      
+      private var §_-vh§:Boolean;
+      
+      private var §_-jx§:int;
+      
+      private var §for else§:int;
+      
+      private var §final for false§:int;
+      
+      private var twisterReloadTime:int;
+      
+      private var §in for false§:int;
+      
+      private var §_-y7§:int;
+      
+      private var §_-fO§:Point;
+      
+      private var §_-8n§:int;
+      
+      private var §continue const while§:int;
+      
+      private var explosionChance:int;
+      
+      private var §native const return§:int;
+      
+      private var §package const throw§:int;
+      
+      public function TowerMageArchmage(param1:int, param2:int, param3:Point, param4:int, param5:Boolean = true)
+      {
+         super(param1,param2,param3,"",param5);
+         this.§true super§ = "archmage";
+         this.§_-6f§ = param4;
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+      }
+      
+      override public function init(param1:Event) : void
+      {
+         this.cRoot = Level(this.parent.parent);
+         this.cRoot.game.gameSounds.§with package§();
+         this.building = false;
+         this.§_-6f§ += this.getCost(this.cRoot.gameSettings.mages.archmage.cost);
+         this.cRoot.updateCash(-this.getCost(this.cRoot.gameSettings.mages.archmage.cost));
+         this.§_-FT§ = false;
+         this.§null import§ = 29;
+         this.chargeTimePreShoot = 11;
+         this.§_-o9§ = 0;
+         this.idleTime = 90;
+         this.idleTimeCounter = 0;
+         this.§each true§(L_ARCANE);
+         this.§_-3g§(new §_-Ww§());
+         this.cRoot.bullets.addChild(new §_-Sw§(new Point(this.x,this.y)));
+         this.§_-vx§(new §throw static§());
+         this.§_-Va§ = new Point(this.x + 10,this.y - 54);
+         this.§_-Yc§ = new Point(this.x - 6,this.y - 54);
+         this.idleCurrentShoots = 0;
+         this.idlePositionOne = new Point(this.x + 2,this.y - 62);
+         this.idlePositionTwo = new Point(this.x - 17,this.y - 45);
+         this.idlePositionThree = new Point(this.x + 19,this.y - 45);
+         this.§_-jx§ = 29;
+         this.idleBolts = [];
+         this.cRoot.game.§const for set§.§null const static§(this.cRoot);
+         this.cRoot.menu.§_-dG§(this);
+         this.unSelect();
+         this.§const const true§ = 84;
+         this.§_-18§ = 62;
+         this.addEventListener(MouseEvent.CLICK,clickEvent,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OVER,rollOverEvents,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,rollOutEvents,false,0,true);
+      }
+      
+      override public function getInfo() : Object
+      {
+         var _loc1_:Object = {};
+         _loc1_.tName = Locale.loadStringEx("TOWER_ARCHMAGE_NAME",Locale.getDefaultLang());
+         _loc1_.tIconName = this.§true super§;
+         _loc1_.tRangeHeight = this.§null for set§;
+         _loc1_.tRangeWidth = this.§dynamic const§;
+         _loc1_.tReload = this.reloadTime + this.§null import§;
+         _loc1_.tDamageMin = this.cRoot.gameSettings.mages.archmage.minDamage + this.cRoot.gameSettings.mages.archmage.minDamage * this.§true const static§ / 100;
+         _loc1_.tDamageMax = this.cRoot.gameSettings.mages.archmage.maxDamage + this.cRoot.gameSettings.mages.archmage.maxDamage * this.§true const static§ / 100;
+         _loc1_.tAttackDamage = 2;
+         return _loc1_;
+      }
+      
+      override public function shoot() : void
+      {
+         var _loc4_:int = 0;
+         var _loc5_:Point = null;
+         if(this.§class throw§)
+         {
+            if(this.target == null || !this.target.isActive)
+            {
+               if(this.boltDestination != null)
+               {
+                  _loc5_ = new Point(this.boltDestination.x,this.boltDestination.y);
+               }
+               if(!this.§switch override§(this.cRoot.gameSettings.enemyMaxLevel))
+               {
+                  this.boltDestination = new Point(_loc5_.x,_loc5_.y);
+               }
+               else if(this.target == null)
+               {
+                  this.boltDestination = new Point(_loc5_.x,_loc5_.y);
+               }
+            }
+            _loc4_ = 0;
+            while(_loc4_ < this.idleBolts.length)
+            {
+               §break const if§(this.idleBolts[_loc4_]).gotoTarget(this.target,this.boltDestination);
+               --this.idleCurrentShoots;
+               _loc4_++;
+            }
+            this.idleBolts = [];
+            return;
+         }
+         var _loc1_:Point = null;
+         if(this.target == null)
+         {
+            this.cRoot.game.gameSounds.§_-GA§();
+            switch(this.idleCurrentShoots)
+            {
+               case 0:
+                  _loc1_ = this.idlePositionOne;
+                  break;
+               case 1:
+                  _loc1_ = this.idlePositionTwo;
+                  break;
+               case 2:
+                  _loc1_ = this.idlePositionThree;
+            }
+            ++this.idleCurrentShoots;
+         }
+         var _loc2_:Boolean = false;
+         if(this.§native const return§ != 0 && Math.random() * 100 < this.explosionChance)
+         {
+            _loc2_ = true;
+         }
+         var _loc3_:§break const if§ = new §break const if§(this.positionCurrentShoot,this.target,this.boltDestination,_loc1_,this,this.§native const return§,this.§true const static§,_loc2_);
+         if(this.target == null)
+         {
+            this.idleBolts.push(_loc3_);
+            _loc3_.orderAdjustY = 50;
+            this.cRoot.entities.addChild(_loc3_);
+         }
+         else
+         {
+            this.cRoot.bullets.addChild(_loc3_);
+         }
+         ++this.§for implements§;
+      }
+      
+      override public function chargeShoot() : *
+      {
+         if(this.target == null)
+         {
+            if(this.§_-bR§().mage.currentFrameLabel == "idleDown")
+            {
+               this.positionCurrentShoot = this.§_-Yc§;
+               this.§_-bR§().mage.gotoAndPlay("shoot_down");
+            }
+            else
+            {
+               this.positionCurrentShoot = this.§_-Va§;
+               this.§_-bR§().mage.gotoAndPlay("shoot_up");
+            }
+            this.§class throw§ = false;
+         }
+         else
+         {
+            if(this.target.y >= this.y - 35)
+            {
+               this.positionCurrentShoot = this.§_-Yc§;
+               this.§_-bR§().mage.gotoAndPlay("shoot_down");
+            }
+            else
+            {
+               this.positionCurrentShoot = this.§_-Va§;
+               this.§_-bR§().mage.gotoAndPlay("shoot_up");
+            }
+            if(this.idleCurrentShoots > 0)
+            {
+               this.§class throw§ = true;
+            }
+            else
+            {
+               this.§class throw§ = false;
+            }
+         }
+         this.§_-FT§ = true;
+         this.§_-jm§ = false;
+         this.idleTimeCounter = 0;
+      }
+      
+      override public function §_-K3§() : void
+      {
+         if(this.§final for false§ != 0)
+         {
+            ++this.§in for false§;
+         }
+      }
+      
+      public function getTooltipParams(param1:String) : Object
+      {
+         var _loc2_:String = Locale.getDefaultLang();
+         switch(param1)
+         {
+            case "special_explosion":
+               return {
+                  "title":Locale.loadStringEx("TOWER_ARCHMAGE_CRITICAL_NAME_" + this.§with const var§(this.§native const return§,this.§package const throw§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_ARCHMAGE_CRITICAL_DESCRIPTION_" + this.§with const var§(this.§native const return§,this.§package const throw§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_ARCHMAGE_CRITICAL_NOTE",_loc2_)
+               };
+            case "special_twister":
+               return {
+                  "title":Locale.loadStringEx("TOWER_ARCHMAGE_TWISTER_NAME_" + this.§with const var§(this.§final for false§,this.§_-y7§),_loc2_),
+                  "text":Locale.loadStringEx("TOWER_ARCHMAGE_TWISTER_DESCRIPTION_" + this.§with const var§(this.§final for false§,this.§_-y7§),_loc2_),
+                  "atts":[],
+                  "notes":Locale.loadStringEx("TOWER_ARCHMAGE_TWISTER_NOTE",_loc2_)
+               };
+            default:
+               return null;
+         }
+      }
+      
+      override public function §_-xK§() : Boolean
+      {
+         if(this.§final for false§ != 0 && Boolean(this.§_-qC§()))
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      override public function §_-qL§() : void
+      {
+         if(this.cRoot.quickMenu.cTower == this)
+         {
+            this.cRoot.§_-JI§();
+            return;
+         }
+         MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10,this,true,180,false,new Array(new Array("special_explosion","sp_explosion",this.cRoot.gameSettings.mages.archmage.explosionCost,false,this.§native const return§,this.§package const throw§,this.cRoot.gameSettings.mages.archmage.explosionCostLevel,2,"TooltipBasic",this.getTooltipParams("special_explosion")),new Array("special_twister","sp_twister",this.cRoot.gameSettings.mages.archmage.twisterCost,false,this.§final for false§,this.§_-y7§,this.cRoot.gameSettings.mages.archmage.twisterCostLevel,1,"TooltipBasic",this.getTooltipParams("special_twister"))));
+         this.cRoot.quickMenu.show(this.cRoot.§else const native§);
+         this.showRange(this.§dynamic const§,this.§null for set§);
+      }
+      
+      override public function upgradeTower(param1:String) : void
+      {
+         switch(param1)
+         {
+            case "sell":
+               this.cRoot.updateCash(this.getSellValue());
+               this.§_-Zj§();
+               this.cRoot.entities.addChild(new TowerHolder(this.x,this.y,this.§_-EV§,this.canBuildBarracks));
+               this.cRoot.entities.addChild(new §_-6G§(new Point(this.x,this.y),this.getSellValue()));
+               this.cRoot.§get import§();
+               this.destroyThis();
+               break;
+            case "special_explosion":
+               this.cRoot.game.gameSounds.§_-V5§();
+               ++this.§native const return§;
+               if(this.§native const return§ == 1)
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.mages.archmage.explosionCost;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.mages.archmage.explosionCost);
+               }
+               else
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.mages.archmage.explosionCostLevel;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.mages.archmage.explosionCostLevel);
+               }
+               break;
+            case "special_twister":
+               this.cRoot.game.gameSounds.§with const override§();
+               ++this.§final for false§;
+               if(this.§final for false§ == 1)
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.mages.archmage.twisterCost;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.mages.archmage.twisterCost);
+               }
+               else
+               {
+                  this.§_-6f§ += this.cRoot.gameSettings.mages.archmage.twisterCostLevel;
+                  this.cRoot.updateCash(-this.cRoot.gameSettings.mages.archmage.twisterCostLevel);
+               }
+         }
+      }
+      
+      override public function §switch override§(param1:int, param2:Boolean = true, param3:Boolean = true) : Boolean
+      {
+         var _loc5_:Enemy = null;
+         var _loc4_:Enemy = null;
+         this.target = null;
+         for each(_loc5_ in this.cRoot.enemies)
+         {
+            if(_loc5_.isActive && _loc5_.§dynamic const for§ && (param3 || !_loc5_.isBoss) && _loc5_.level <= param1 && (param2 || !_loc5_.isFlying) && this.onRange(_loc5_))
+            {
+               if(_loc4_ == null || this.§_-Km§(_loc4_,_loc5_))
+               {
+                  _loc4_ = _loc5_;
+               }
+            }
+         }
+         if(_loc4_ != null)
+         {
+            this.target = _loc4_;
+            this.boltDestination = new Point(this.target.x + this.target.xAdjust,this.target.y + this.target.yAdjust);
+            return true;
+         }
+         this.boltDestination = null;
+         if(this.idleCurrentShoots < 3)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function removeIdleShoot() : void
+      {
+         --this.idleCurrentShoots;
+      }
+      
+      private function §_-qC§() : Boolean
+      {
+         if(this.§_-vh§)
+         {
+            if(this.§for else§ < this.§_-jx§)
+            {
+               if(this.§for else§ == 17)
+               {
+                  this.cRoot.entities.addChild(new Twister(this.§_-fO§,this.§final for false§,this.§_-8n§,this.§continue const while§,this.cRoot));
+               }
+               ++this.§for else§;
+               return true;
+            }
+            this.§_-GT§ = 0;
+            this.§for else§ = 0;
+            this.§in for false§ = 0;
+            this.§_-vh§ = false;
+            return false;
+         }
+         if(this.§in for false§ < this.twisterReloadTime)
+         {
+            ++this.§in for false§;
+            return false;
+         }
+         if(this.§while if§(this.cRoot.gameSettings.enemyMaxLevel,true,false))
+         {
+            this.§_-vh§ = true;
+            if(this.target.y >= this.y - 35)
+            {
+               this.§_-bR§().mage.gotoAndPlay("twister_down");
+            }
+            else
+            {
+               this.§_-bR§().mage.gotoAndPlay("twister_up");
+            }
+            return true;
+         }
+         return false;
+      }
+      
+      public function §while if§(param1:int, param2:Boolean = true, param3:Boolean = true) : Boolean
+      {
+         var _loc5_:Enemy = null;
+         var _loc4_:Enemy = null;
+         this.target = null;
+         for each(_loc5_ in this.cRoot.enemies)
+         {
+            if(_loc5_.isActive && _loc5_.§dynamic const for§ && !_loc5_.§import for dynamic§ && (param3 || !_loc5_.isBoss) && _loc5_.§_-o§ && _loc5_.level <= param1 && (param2 || !_loc5_.isFlying) && this.onRange(_loc5_))
+            {
+               if(_loc4_ == null || this.§_-Km§(_loc4_,_loc5_))
+               {
+                  _loc4_ = _loc5_;
+               }
+            }
+         }
+         if(_loc4_ != null)
+         {
+            this.target = _loc4_;
+            this.§_-fO§ = new Point(this.target.§with const static§[this.target.§package for var§ + this.target.getNodesSpeed()].x,this.target.§with const static§[this.target.§package for var§ + this.target.getNodesSpeed()].y);
+            this.§_-8n§ = this.target.§false include§;
+            this.§continue const while§ = this.target.§package for var§ + this.target.getNodesSpeed();
+            return true;
+         }
+         return false;
+      }
+      
+      override public function §each true§(param1:int) : void
+      {
+         this.level = param1;
+         this.reloadTime = this.cRoot.gameSettings.mages.archmage.reload - this.§null import§;
+         this.§null for set§ = this.cRoot.gameSettings.mages.archmage.range * this.cRoot.gameSettings.rangeRatio;
+         this.§dynamic const§ = this.cRoot.gameSettings.mages.archmage.range;
+         this.§package const throw§ = this.cRoot.gameSettings.mages.archmage.explosionLevels;
+         this.explosionChance = this.cRoot.gameSettings.mages.archmage.explosionChance;
+         this.§_-y7§ = this.cRoot.gameSettings.mages.archmage.twisterLevels;
+         this.twisterReloadTime = this.cRoot.gameSettings.mages.archmage.twisterReloadTime;
+      }
+      
+      protected function §_-AE§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.idleBolts.length)
+         {
+            §break const if§(this.idleBolts[_loc1_]).hitIdle();
+            _loc1_++;
+         }
+         this.idleBolts = [];
+      }
+      
+      override public function destroyThis() : void
+      {
+         this.§implements const if§ = true;
+         this.unSelect();
+         this.§_-AE§();
+         this.§throw with§();
+         this.target = null;
+         this.removeEventListener(MouseEvent.ROLL_OVER,rollOverEvents);
+         this.removeEventListener(MouseEvent.ROLL_OUT,rollOutEvents);
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.init);
+         this.removeEventListener(MouseEvent.CLICK,clickEvent);
+         this.cRoot.entities.removeChild(this);
+         this.§get with§();
+         this.cRoot.§return function§(this);
+      }
+   }
+}
+
