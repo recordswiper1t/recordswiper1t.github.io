@@ -1,0 +1,71 @@
+name: PR Analyze Frontiers v3
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.head_ref == 'agent/v3-mobile-tools'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export current v2 ActionScript and build targeted grep report
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v3scripts
+          mkdir -p /tmp/v3scripts analysis
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 -export script /tmp/v3scripts assets/kingdom-rush-frontiers-qol-v2.swf > /tmp/v3-export.log 2>&1 || true
+          test -d /tmp/v3scripts/scripts
+          {
+            echo '=== Frontiers v3 targeted source grep ==='
+            echo
+            for pattern in \
+              'onPause|pause\(|unPause|resume|restart|quit|settings|sound|music' \
+              'TowerHolder|quickMenu|TowerDwarfRiflemen|TowerSoldierPirates|Tower[A-Za-z]+' \
+              'selectedHero|heroPortrait|skillPoints|hero[A-Z]|SoldierHero' \
+              'Wave\(|sendWave|nextWave|indexWaves|maxWaves|activeWaves|intervalWave' \
+              'Enemy[A-Za-z]+|getDefinitionByName\("Enemy|new Enemy' \
+              'cash|addCash|coins|gold' \
+              'MouseEvent|TouchEvent|Multitouch|stageX|stageY'; do
+              echo "===== PATTERN: $pattern ====="
+              grep -R -n -E -C 3 "$pattern" /tmp/v3scripts/scripts 2>/dev/null | head -n 6000 || true
+              echo
+            done
+          } > analysis/v3-grep.txt
+          wc -c analysis/v3-grep.txt
+
+      - name: Commit analysis report to PR branch
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/v3-grep.txt
+          git commit -m 'Add Frontiers v3 source grep [skip ci]' || exit 0
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
