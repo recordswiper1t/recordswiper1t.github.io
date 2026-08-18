@@ -32,7 +32,7 @@ jobs:
           mkdir -p /tmp/ffdec
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
 
-      - name: Export V4 scripts and extract targets
+      - name: Export V4 scripts and extract final targets
         shell: bash
         run: |
           set -euo pipefail
@@ -41,42 +41,38 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 \
             -export script /tmp/krf-v4 assets/kingdom-rush-frontiers-v4.swf >/tmp/export.log 2>&1 || true
           test "$(find /tmp/krf-v4 -type f | wc -l)" -gt 1000
-          report=analysis/v4-patch-targets.txt
+          report=analysis/v4-final-targets.txt
           : > "$report"
           {
-            echo '=== UNIQUE ENEMIES ACTUALLY USED BY WAVE DATA ==='
-            grep -RhoE 'new [^\(]+\("Enemy[A-Za-z0-9_]+' /tmp/krf-v4/scripts/Level*.as 2>/dev/null \
-              | sed -E 's/.*\("//' | sort -u
+            echo '=== LEVEL NORMAL WAVE CORE ==='
+            sed -n '1840,1950p' /tmp/krf-v4/scripts/Level.as | nl -ba -v1840
             echo
-            echo '=== INDEX/ACTIVE WAVE LOGIC IN LEVEL CLASSES ==='
-            grep -nHE 'indexWaves|activeWaves|intervalWaveCounter|updateWaves|spawnBoss|sendWave|nextWave|Boss' /tmp/krf-v4/scripts/Level*.as 2>/dev/null \
-              | sed 's#^/tmp/krf-v4/##' | cut -c1-600
+            echo '=== LEVEL MANUAL SEND CORE ==='
+            sed -n '2235,2270p' /tmp/krf-v4/scripts/Level.as | nl -ba -v2235
             echo
-            echo '=== FILES WITH spawnBoss AND FULL CONTEXT ==='
+            echo '=== LEVEL6 BOSS CORE ==='
+            sed -n '175,225p' /tmp/krf-v4/scripts/Level6.as | nl -ba -v175
+            echo
+            echo '=== LEVEL11 BOSS CORE ==='
+            sed -n '215,275p' /tmp/krf-v4/scripts/Level11.as | nl -ba -v215
+            echo
+            echo '=== LEVEL15 BOSS CORE ==='
+            sed -n '275,335p' /tmp/krf-v4/scripts/Level15.as | nl -ba -v275
+            echo
+            echo '=== SPECIAL TOWER CLASSES ==='
           } >> "$report"
-          for f in /tmp/krf-v4/scripts/Level*.as; do
-            if grep -q 'spawnBoss' "$f"; then
-              echo >> "$report"
-              echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
-              nl -ba "$f" >> "$report"
-            fi
-          done
-          {
-            echo
-            echo '=== TOWER SUBCLASSES / CONSTRUCTORS / IDENTIFIERS ==='
-          } >> "$report"
-          for f in /tmp/krf-v4/scripts/*.as; do
+          grep -l 'SPECIAL_' /tmp/krf-v4/scripts/*.as 2>/dev/null | while IFS= read -r f; do
             if grep -qE 'extends .*_-5u|extends Tower' "$f"; then
               echo >> "$report"
               echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
-              grep -nE 'class |function [A-Za-z_§]|function Â§|tName|pName|SPECIAL_|TOWER_' "$f" | sed -n '1,90p' >> "$report" || true
+              grep -nE 'public class|public function|SPECIAL_|pName|tName|getInfo' "$f" | sed -n '1,120p' >> "$report" || true
             fi
           done
           {
             echo
-            echo '=== TOWER HOLDER FULL SOURCE ==='
+            echo '=== V4 TOWERHOLDER SPECIAL BLOCK ==='
+            sed -n '220,390p' /tmp/krf-v4/scripts/TowerHolder.as | nl -ba -v220
           } >> "$report"
-          nl -ba /tmp/krf-v4/scripts/TowerHolder.as >> "$report"
           wc -l "$report"
 
       - name: Commit target report
@@ -85,7 +81,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add analysis/v4-patch-targets.txt
-          git commit -m 'Extract V4 patch targets [skip ci]' || exit 0
+          git add analysis/v4-final-targets.txt
+          git commit -m 'Extract final V4 patch targets [skip ci]' || exit 0
           git pull --rebase origin agent/iphone-performance-selector-completeness
           git push origin HEAD:agent/iphone-performance-selector-completeness
