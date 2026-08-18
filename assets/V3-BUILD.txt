@@ -1,0 +1,7 @@
+Kingdom Rush Frontiers — V3 Mobile + Sandbox
+Includes QoL v2 and Unlock-All v1.
+Moves speed controls into the in-level pause tools and adds +100 cash.
+Adds configurable 0-7 heroes and exact remaining hero skill currency.
+Gives exactly the remaining stars required for the 65-star upgrade tree.
+Adds custom enemy-round tools, send-all-waves, and a special-tower build page.
+Built and re-export verified with FFDec 26.2.1.

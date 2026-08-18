@@ -1,0 +1,2 @@
+bcc30c72d14b3b12225f669bce0cb1a3e12fbb00ba84b0d44903b795e0c0a698  assets/kingdom-rush-frontiers-qol-v2.swf
+0ac03b3832bbc79bdeadb5fe980b63aad3d5690dd114e294180c720ec55909c2  assets/kingdom-rush-frontiers-v3.swf
