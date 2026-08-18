@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#10120f">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Kingdom Rush Frontiers — V4 Sandbox + Stability</title>
+<title>Kingdom Rush Frontiers — V5 Fast + Mod Lab</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,8 +37,8 @@ p{color:#cfd6c8;line-height:1.46;margin:9px 0}
 #playerShell{display:none;position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #player{position:absolute;inset:0;width:100%;height:100%;display:grid;place-items:center;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 ruffle-player{display:block;width:100%!important;height:100%!important;touch-action:none!important;overscroll-behavior:none!important;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
-#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:48px;height:48px;min-height:48px;padding:0;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:rgba(20,20,20,.78);color:#fff;font-size:25px;backdrop-filter:blur(10px);touch-action:manipulation}
-#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 54px);right:max(8px,env(safe-area-inset-right));display:none;gap:9px;width:min(285px,calc(100vw - 16px));max-height:calc(100dvh - 80px);overflow:auto;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:rgba(15,15,15,.95);backdrop-filter:blur(12px)}
+#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:48px;height:48px;min-height:48px;padding:0;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:#151515;color:#fff;font-size:25px;touch-action:manipulation;contain:layout paint style}
+#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 54px);right:max(8px,env(safe-area-inset-right));display:none;gap:9px;width:min(285px,calc(100vw - 16px));max-height:calc(100dvh - 80px);overflow:auto;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:#0f0f0f;contain:layout paint style}
 #panel.open{display:grid}
 #panel button,#panel .button{min-height:44px;padding:10px 11px;font-size:14px}
 #notice{position:fixed;z-index:90;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;width:min(92vw,560px);padding:12px 14px;border-radius:12px;background:rgba(20,20,20,.96);border:1px solid rgba(255,255,255,.18);font-size:14px;line-height:1.35;text-align:center}
@@ -54,11 +54,12 @@ ruffle-player{display:block;width:100%!important;height:100%!important;touch-act
 <body>
 <main id="setup"><div class="wrap">
 <section class="card">
-<span class="pill">V4 • Sandbox + stability • Unlock-All included</span>
+<span class="pill">V5 Fast • iPhone performance + sandbox fixes</span>
 <h1>Kingdom Rush Frontiers</h1>
-<p><strong>V4</strong> is the recommended build. It keeps the V3 sandbox tools, starts heroes/stars maxed with a persistent reset-to-custom mode, adds per-hero level toggles, expands the special-tower catalog, improves swarm performance, and tightens touch handling.</p>
+<p><strong>V5 Fast</strong> is the recommended iPhone path. It loads the new V5 SWF directly with lower iOS render quality, stronger swarm cosmetic throttling, a complete wave-backed enemy selector, Pirate Camp, and Send All boss triggers. The stored-build buttons below remain available for older versions.</p>
 <div class="actions">
-<button id="installV4Btn" class="primary">Install V4 Sandbox + Stability</button>
+<a class="button primary" href="/mod/fast.html">Play V5 Fast — recommended on iPhone</a>
+<button id="installV4Btn" class="secondary">Install V4 Sandbox + Stability</button>
 <button id="installV3Btn" class="secondary">Install V3 Mobile + Sandbox</button>
 <button id="resumeBtn" hidden>Play stored build</button>
 <button id="installV2Btn" class="secondary">Install QoL v2</button>
@@ -72,23 +73,24 @@ ruffle-player{display:block;width:100%!important;height:100%!important;touch-act
 <div id="hash" class="hash"></div>
 </section>
 <section class="card">
-<h2>V4 changes</h2>
+<h2>V5 changes</h2>
 <ul class="changes">
-<li><strong>Heroes:</strong> the pause tools have individual ON/OFF toggles for all <strong>9 hero implementations present in this Flash build</strong>: Alric, Mirage, Captain Blackthorne, Cronan, Sha'tra, Grawl, Nivus, Dierdre and Ashbite. All 9 start ON in a level; toggle any hero off or back on for that level.</li>
+<li><strong>Heroes:</strong> the selector exposes all <strong>9 hero implementations actually present in this SWF</strong>: Alric, Mirage, Captain Blackthorne, Cronan, Sha'tra, Grawl, Nivus, Dierdre and Ashbite. The later bonus heroes Rurin, Black Corsair and Lucrezia do not have classes/assets in this source binary, so V5 does not add crash-prone fake buttons for them.</li>
 <li><strong>Maxed by default:</strong> new and existing saves default to all 65 star upgrades spent/maxed and every hero at level 10 with all hero skills maxed. Press <strong>RESET FOR CUSTOM</strong> to clear upgrade/skill spending while keeping the full 65-star pool and level-10 heroes; custom mode persists so your manual choices are not overwritten. Use <strong>MAX ALL</strong> to return to the default maxed mode.</li>
 <li><strong>Gold:</strong> the old +100 button is now a numeric field. Enter 0, 50, 9000 or another non-negative amount and press <strong>ADD</strong>.</li>
-<li><strong>Waves:</strong> the next-wave flag appears immediately after the previous wave is sent, so you can chain manual early waves. <strong>Send all waves</strong> remains available, but releases waves across frames instead of activating every remaining wave in one frame.</li>
-<li><strong>Special towers:</strong> the catalog has <strong>9 buildable choices</strong>: Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200. The six advanced specializations use their native in-game costs.</li>
+<li><strong>Waves + bosses:</strong> <strong>Send all waves</strong> still releases waves across frames, now runs each level's normal wave hook, and triggers the native Efreeti, Gorilla and Umbra/final-boss entrance controllers when the last wave is queued.</li>
+<li><strong>Special buildings:</strong> the catalog now has <strong>10 buildable choices</strong>, adding the previously missing <strong>Pirate Camp</strong> to Dwarf Riflemen, Pirate Barracks, Dwarf Hall, Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200.</li>
 <li><strong>Tower placement:</strong> map-special towers use the corrected build-spot center instead of the old offset placement.</li>
-<li><strong>Touch + performance:</strong> pause buttons, radial items and all three map-special towers respond on press; the player is re-focused on pointer-down. High-entity play reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only when entity/bullet counts are high, while gameplay updates stay full-rate.</li>
+<li><strong>Enemy selector:</strong> V5 adds every enemy class used by normal wave data that V4 omitted, including Alien Breeder/Reaper, Bouncer, underwater cannibals, Desert Wolf Small, Munra and Wasp Queen. Boss/helper pieces with incompatible constructors stay out of the generic wave selector.</li>
+<li><strong>Touch + performance:</strong> iPhones default to low Flash quality, expensive CSS backdrop blur is removed, background execution is paused, and cosmetic/decal/background layers update less often as swarms become heavy or extreme. Entity and bullet gameplay updates remain full-rate.</li>
 <li><strong>Previous mods retained:</strong> unlock-all, fast boot, Heroic/Iron availability, custom enemy rounds and 1×/3× speed remain included.</li>
 </ul>
-<p class="muted">Verified V4 SHA-256: <code>9744706b367e5b2fb36947614cd92f4957a87db1832a10b058477cf313930bdb</code></p>
+<p class="muted">V5 is served directly by the Fast player; its verified SHA-256 is stored alongside the SWF in <code>assets/kingdom-rush-frontiers-v5.sha256</code>.</p>
 </section>
 <section class="card">
-<h2>Using V4</h2>
-<p>Inside a level, open the game's pause/settings screen to see the V4 controls. Hero selection and enemy-round tools are separate pages. On an empty build spot, use <strong>More…</strong> to reach the three special-tower pages.</p>
-<p class="good"><strong>Your campaign save and stored SWF remain separate.</strong> Switching among V4, V3, v2, v1 and clean builds uses the same Ruffle site storage.</p>
+<h2>Using V5</h2>
+<p>For iPhone, use <strong>Play V5 Fast</strong>. Inside a level, open the game's pause/settings screen for hero and enemy-round tools. On an empty build spot, use <strong>More…</strong> to reach the special-building pages.</p>
+<p class="good"><strong>Your campaign save and game build remain separate.</strong> V5 Fast uses the same Ruffle site storage as the older Mod Lab builds.</p>
 <p class="warn">Use <strong>⋯ → Saves / backup</strong> occasionally. Clearing Safari website data can remove local progress.</p>
 </section>
 </div></main>
@@ -100,7 +102,8 @@ ruffle-player{display:block;width:100%!important;height:100%!important;touch-act
 <button id="savesBtn">Saves / backup</button>
 <button id="fullBtn" class="secondary">Full screen</button>
 <button id="reloadBtn" class="secondary">Reload stored build</button>
-<button id="v4Btn" class="primary">Install V4 Sandbox + Stability</button>
+<a class="button primary" href="/mod/fast.html">Play V5 Fast</a>
+<button id="v4Btn" class="secondary">Install V4 Sandbox + Stability</button>
 <button id="v3Btn" class="secondary">Install V3 Mobile + Sandbox</button>
 <button id="v2Btn" class="secondary">Install QoL v2</button>
 <button id="v1Btn" class="secondary">Install Unlock-All v1</button>
@@ -133,6 +136,7 @@ const installV4Btn=document.getElementById('installV4Btn'),installV3Btn=document
 const panel=document.getElementById('panel'),notice=document.getElementById('notice'),loading=document.getElementById('loading'),loadingText=document.getElementById('loadingText');
 let player=null,lastRecord=null,toastTimer=null;
 const TOUCH_DEVICE=('ontouchstart' in window)||(navigator.maxTouchPoints||0)>0||(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches);
+const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&(navigator.maxTouchPoints||0)>1);
 function toast(m,ms=4500){clearTimeout(toastTimer);notice.textContent=m;notice.classList.add('show');toastTimer=setTimeout(()=>notice.classList.remove('show'),ms)}
 function showLoading(m){loadingText.textContent=m||'Loading…';loading.classList.add('show')}
 function hideLoading(){loading.classList.remove('show')}
@@ -144,7 +148,7 @@ function looksLikeSwf(buf){if(!buf||buf.byteLength<8)return false;const b=new Ui
 async function sha256(buf){if(!window.crypto||!window.crypto.subtle)return'unavailable';const d=await window.crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function persist(){try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(_){}}
 function makePlayer(){const r=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!r)throw new Error('Ruffle failed to load.');player=r.createPlayer();player.id='krf-mod-player';player.tabIndex=0;player.style.touchAction='none';player.style.webkitUserSelect='none';player.style.userSelect='none';playerHost.replaceChildren(player);return player}
-function opts(extra={}){return Object.assign({autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:TOUCH_DEVICE?'medium':'high',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,swfFileName:CANONICAL_SWF_NAME,base:location.origin+'/mod/'},extra)}
+function opts(extra={}){return Object.assign({autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:IOS_DEVICE?'low':TOUCH_DEVICE?'medium':'high',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,backgroundExecutionMode:'none',preloader:false,splashScreen:false,polyfills:false,swfFileName:CANONICAL_SWF_NAME,base:location.origin+'/mod/'},extra)}
 async function launchBuffer(buf){if(!looksLikeSwf(buf))throw new Error('Stored file is not a valid SWF.');showLoading('Starting Kingdom Rush Frontiers…');setup.style.display='none';playerShell.style.display='block';document.body.classList.add('playing');panel.classList.remove('open');await persist();try{const p=player||makePlayer();await p.ruffle().load(opts({data:buf}));try{p.focus()}catch(_){}}finally{hideLoading()}}
 async function launchStored(){const r=await readGame();if(!r||!r.blob)throw new Error('No stored build found.');lastRecord=r;await launchBuffer(await r.blob.arrayBuffer())}
 async function remoteAvailable(url){try{const r=await fetch(url,{method:'HEAD',cache:'no-store'});return r.ok}catch(_){return false}}
