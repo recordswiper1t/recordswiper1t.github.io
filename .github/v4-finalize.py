@@ -266,7 +266,10 @@ safe = r'''         if(param1.indexOf("qol_") == 0)
             return;
          }
 '''
-t = once(t, marker, safe + marker, 'safe special action')
+idx = t.rfind(marker)
+if idx < 0:
+    die('safe special action: upgradeTower call not found')
+t = t[:idx] + safe + t[idx:]
 save('§_-LZ§.as', t)
 
 # Touch reliability for the radial item and all true map-special towers.
