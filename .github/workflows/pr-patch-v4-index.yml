@@ -17,7 +17,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
       - name: Patch V4 installer
-        run: python3 tools/patch-v4-index.py
+        run: python3 tools/patch-v4-index-regex.py
       - name: Commit installer
         env:
           TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
