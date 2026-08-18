@@ -37,12 +37,13 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4extra assets/kingdom-rush-frontiers-v3.swf >/tmp/v4extra.log 2>&1 || true
           python3 - <<'PY'
           from pathlib import Path
-          import re, shutil
+          import shutil
           root=Path('/tmp/v4extra/scripts')
           names=[
             'TowerDwarfRiflemen.as','TowerSoldierPirates.as','TowerArcherCrossbow.as','TowerArcherTotem.as',
             'TowerSoldierAssassin.as','TowerSoldierTemplar.as','TowerMageArchmage.as','TowerMageNecromancer.as',
-            'TowerEngineerDwaarp.as','TowerEngineerMech.as','§_-2i§.as','§_-BQ§.as','§true break§.as'
+            'TowerEngineerDwaarp.as','TowerEngineerMech.as','§_-Zs§.as','§_-jq§.as','§_-mj§.as',
+            '§_-2i§.as','§_-BQ§.as','§true break§.as'
           ]
           found={}
           for p in root.rglob('*.as'):
@@ -57,7 +58,7 @@ jobs:
               t=(root/found[n]).read_text(encoding='utf-8')
               cls=n[:-3]
               for i,line in enumerate(t.splitlines(),1):
-                if ('function '+cls+'(' in line or 'cost' in line.lower() or 'upgradeTower' in line or 'loadData(' in line) and len(line)<420:
+                if ('function '+cls+'(' in line or 'SPECIAL_' in line or 'cost' in line.lower() or 'upgradeTower' in line or 'loadData(' in line) and len(line)<420:
                   lines.append(f'  {i:05d}: {line.strip()}')
           Path('analysis/v4-extra-summary.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
           PY
@@ -68,6 +69,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add analysis/v4-extra analysis/v4-extra-summary.txt
-          git commit -m 'Add exact V4 tower and progression targets [skip ci]' || exit 0
+          git commit -m 'Expand exact V4 special tower targets [skip ci]' || exit 0
           git pull --rebase origin agent/v4-frontiers-fixes
           git push origin HEAD:agent/v4-frontiers-fixes
