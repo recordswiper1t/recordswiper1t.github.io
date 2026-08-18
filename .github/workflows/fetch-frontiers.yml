@@ -1,4 +1,4 @@
-name: Fetch Frontiers SWF
+name: Mirror Frontiers SWF to Pages
 
 on:
   workflow_dispatch:
@@ -7,36 +7,41 @@ on:
       - '.github/workflows/fetch-frontiers.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  fetch:
+  mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Download exact Internet Archive SWF
+      - name: Check out site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download and verify exact Internet Archive SWF
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p assets
           url='https://archive.org/download/kingdom-rush-frontie-15717/kingdom-rush-frontie-15717.swf'
-          curl -fL --retry 5 --retry-delay 2 --connect-timeout 20 "$url" -o kingdom-rush-frontie-15717.swf
-          test -s kingdom-rush-frontie-15717.swf
-          size=$(stat -c '%s' kingdom-rush-frontie-15717.swf)
-          sig=$(head -c 3 kingdom-rush-frontie-15717.swf)
+          curl -fL --retry 5 --retry-delay 2 --connect-timeout 20 "$url" -o assets/kingdom-rush-frontie-15717.swf
+          test -s assets/kingdom-rush-frontie-15717.swf
+          size=$(stat -c '%s' assets/kingdom-rush-frontie-15717.swf)
+          sig=$(head -c 3 assets/kingdom-rush-frontie-15717.swf)
           case "$sig" in FWS|CWS|ZWS) ;; *) echo "Unexpected SWF signature: $sig" >&2; exit 1;; esac
-          sha256sum kingdom-rush-frontie-15717.swf | tee SHA256SUMS.txt
-          sha1sum kingdom-rush-frontie-15717.swf | tee SHA1SUMS.txt
-          md5sum kingdom-rush-frontie-15717.swf | tee MD5SUMS.txt
-          printf 'size=%s\nsignature=%s\nsource=%s\n' "$size" "$sig" "$url" | tee BUILD.txt
+          sha256sum assets/kingdom-rush-frontie-15717.swf | tee assets/SHA256SUMS.txt
+          printf 'size=%s\nsignature=%s\nsource=%s\n' "$size" "$sig" "$url" | tee assets/BUILD.txt
 
-      - name: Upload SWF artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kingdom-rush-frontie-15717-archive-org
-          path: |
-            kingdom-rush-frontie-15717.swf
-            SHA256SUMS.txt
-            SHA1SUMS.txt
-            MD5SUMS.txt
-            BUILD.txt
-          if-no-files-found: error
-          compression-level: 0
+      - name: Publish verified SWF to this Pages repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontie-15717.swf assets/SHA256SUMS.txt assets/BUILD.txt
+          if git diff --cached --quiet; then
+            echo 'Verified SWF already matches the published copy.'
+            exit 0
+          fi
+          git commit -m 'Mirror verified Frontiers SWF from Internet Archive'
+          git push
