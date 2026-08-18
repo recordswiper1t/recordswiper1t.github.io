@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: agent/iphone-performance-selector-completeness
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -87,4 +87,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add analysis/v4-patch-targets.txt
           git commit -m 'Extract V4 patch targets [skip ci]' || exit 0
+          git pull --rebase origin agent/iphone-performance-selector-completeness
           git push origin HEAD:agent/iphone-performance-selector-completeness
