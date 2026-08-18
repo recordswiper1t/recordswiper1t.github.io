@@ -41,10 +41,22 @@ jobs:
           p=Path('tools/build-v3.py')
           s=p.read_text()
           s=s.replace('Open the sandbox special-tower page."}))\'','Open the sandbox special-tower page."})\'')
-          s=s.replace('Close this page; tap the build spot again for normal towers.\\"}))));','Close this page; tap the build spot again for normal towers.\\"})));')
           p.write_text(s)
           PY
           python3 tools/build-v3.py patch /tmp/v3scripts/scripts /tmp/import
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/import/scripts/TowerHolder.as')
+          s=p.read_text(encoding='utf-8')
+          a=s.find('if(param1 == "qol_specials")')
+          b=s.find('if(param1 == "qol_dwarf")',a)
+          if a < 0 or b < 0:
+              raise SystemExit('generated special tower block not found')
+          block=s[a:b]
+          block=block.replace('))));', ')));')
+          s=s[:a]+block+s[b:]
+          p.write_text(s,encoding='utf-8',newline='')
+          PY
 
       - name: Rebuild v3 SWF
         run: |
