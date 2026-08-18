@@ -1,0 +1,115 @@
+name: Build Frontiers V5
+
+on:
+  push:
+    branches:
+      - agent/iphone-performance-selector-completeness
+    paths:
+      - 'tools/build-v5.py'
+      - '.github/workflows/build-v5.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out work branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/iphone-performance-selector-completeness
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export and patch V4 scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v5
+          mkdir -p /tmp/krf-v5
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v5 assets/kingdom-rush-frontiers-v4.swf \
+            > /tmp/v5-export.log 2>&1 || true
+          count=$(find /tmp/krf-v5/scripts -type f | wc -l | tr -d ' ')
+          echo "Exported scripts: $count"
+          test "$count" -gt 1200
+          python3 tools/build-v5.py /tmp/krf-v5/scripts
+
+      - name: Import patched scripts into V5 SWF
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/kingdom-rush-frontiers-v5.swf
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort -timeout 180 \
+            -importScript assets/kingdom-rush-frontiers-v4.swf /tmp/kingdom-rush-frontiers-v5.swf /tmp/krf-v5/scripts \
+            > /tmp/v5-import.log 2>&1
+          test -s /tmp/kingdom-rush-frontiers-v5.swf
+          size=$(stat -c '%s' /tmp/kingdom-rush-frontiers-v5.swf)
+          echo "V5 size: $size bytes"
+          test "$size" -gt 50000000
+
+      - name: Re-export and verify V5 markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v5-verify
+          mkdir -p /tmp/krf-v5-verify
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v5-verify /tmp/kingdom-rush-frontiers-v5.swf \
+            > /tmp/v5-verify.log 2>&1 || true
+          level=/tmp/krf-v5-verify/scripts/Level.as
+          holder=/tmp/krf-v5-verify/scripts/TowerHolder.as
+          test -f "$level"
+          test -f "$holder"
+          grep -q 'EnemyAlienBreeder' "$level"
+          grep -q 'EnemyWaspQueen' "$level"
+          grep -q 'qolForceBossIfNeeded' "$level"
+          grep -q 'numChildren > 180' "$level"
+          grep -q 'qol_piratecamp' "$holder"
+          grep -q 'qolForceBossFromSendAll' /tmp/krf-v5-verify/scripts/Level6.as
+          grep -q 'qolForceBossFromSendAll' /tmp/krf-v5-verify/scripts/Level11.as
+          grep -q 'qolForceBossFromSendAll' /tmp/krf-v5-verify/scripts/Level15.as
+          echo 'V5 re-export verification passed.'
+
+      - name: Publish V5 asset to work branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.swf
+          sha256sum assets/kingdom-rush-frontiers-v5.swf | awk '{print $1}' > assets/kingdom-rush-frontiers-v5.sha256
+          cat assets/kingdom-rush-frontiers-v5.sha256
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.sha256
+          git commit -m 'Build Frontiers V5 performance and sandbox fixes [skip ci]'
+          git pull --rebase origin agent/iphone-performance-selector-completeness
+          git push origin HEAD:agent/iphone-performance-selector-completeness
+
+      - name: Show FFDec logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          echo '--- export log tail ---'
+          tail -n 100 /tmp/v5-export.log 2>/dev/null || true
+          echo '--- import log tail ---'
+          tail -n 160 /tmp/v5-import.log 2>/dev/null || true
+          echo '--- verify log tail ---'
+          tail -n 100 /tmp/v5-verify.log 2>/dev/null || true
