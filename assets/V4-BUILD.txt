@@ -1,0 +1,13 @@
+Kingdom Rush Frontiers — V4 Sandbox + Stability (final)
+Based on the verified V3/V4 SWF chain and re-export verified with FFDec 26.2.1.
+
+- All 9 heroes start enabled in levels and can be toggled individually.
+- New/legacy saves default to all 65 tower-upgrade stars spent/maxed and all heroes level 10 with every hero skill maxed.
+- RESET FOR CUSTOM clears tower/hero skill spending while retaining the full 65-star pool and level-10 heroes. Custom mode persists, so later manual choices are not overwritten.
+- Gold uses a numeric text field and Add button.
+- Next-wave flags appear immediately; Send All Waves is paced across frames.
+- Special catalog includes Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow, Totem, Archmage, Necromancer, DWAARP and Battle-Mecha direct builds with displayed costs.
+- Special placements use the corrected build-spot center.
+- Pause controls, radial items and all three map-special towers react on mouse-down for more reliable touch input.
+- Heavy-enemy performance reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only under high entity/bullet counts; gameplay updates stay full-rate.
+- V3 unlock-all, speed, custom enemy round and mobile changes remain included.
