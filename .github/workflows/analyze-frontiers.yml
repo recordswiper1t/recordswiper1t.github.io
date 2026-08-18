@@ -1,0 +1,101 @@
+name: Analyze Frontiers Tower Scripts
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/analyze-frontiers.yml'
+      - 'assets/kingdom-rush-frontie-15717.swf'
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export ActionScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-scripts
+          mkdir -p /tmp/krf-scripts
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-scripts assets/kingdom-rush-frontie-15717.swf \
+            > /tmp/ffdec-export.log 2>&1 || true
+          count=$(find /tmp/krf-scripts -type f | wc -l | tr -d ' ')
+          echo "Exported files: $count"
+          test "$count" -gt 0
+
+      - name: Build compact tower index
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p analysis
+          report='analysis/tower-index.txt'
+          : > "$report"
+          {
+            echo 'Kingdom Rush Frontiers tower-script index'
+            echo 'Source: assets/kingdom-rush-frontie-15717.swf'
+            echo "Generated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo '=== likely tower-related source files ==='
+          } >> "$report"
+
+          pattern='tower|archer|barrack|mage|artillery|crossbow|templar|assassin|necromancer|dwaarp|mecha|tesla|archmage|axe.?throw|totem|falconer'
+          grep -RilE "$pattern" /tmp/krf-scripts 2>/dev/null \
+            | sed 's#^/tmp/krf-scripts/##' \
+            | sort -u \
+            | head -n 500 >> "$report" || true
+
+          {
+            echo
+            echo '=== matching declarations/stat lines (trimmed) ==='
+          } >> "$report"
+          grep -RniE 'class .*Tower|tower|archer|barrack|mage|artillery|crossbow|templar|assassin|necromancer|dwaarp|mecha|tesla|archmage|axe.?throw|totem|falconer|damage|minDamage|maxDamage|range|reload|cooldown|fireRate|attackRate|price|cost' /tmp/krf-scripts 2>/dev/null \
+            | sed 's#^/tmp/krf-scripts/##' \
+            | cut -c1-260 \
+            | head -n 6000 >> "$report" || true
+
+          {
+            echo
+            echo '=== FFDec export tail ==='
+            tail -n 80 /tmp/ffdec-export.log || true
+          } >> "$report"
+
+          wc -l "$report"
+
+      - name: Commit analysis index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/tower-index.txt
+          if git diff --cached --quiet; then
+            echo 'Tower index unchanged.'
+            exit 0
+          fi
+          git commit -m 'Index Frontiers tower scripts'
+          git push
