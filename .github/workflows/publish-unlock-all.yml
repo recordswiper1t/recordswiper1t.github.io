@@ -1,278 +1,103 @@
-name: Build and publish Frontiers unlock-all
+name: Finalize V4 repository cleanup
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/publish-unlock-all.yml'
   pull_request:
     branches:
       - main
-    types: [opened, synchronize, reopened]
+    types: [reopened]
     paths:
       - '.github/workflows/publish-unlock-all.yml'
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    if: github.head_ref != 'agent/v4-frontiers-fixes'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out target branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Download FFDec 26.2.1
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
-          mkdir -p /tmp/ffdec
-          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          test -f /tmp/ffdec/ffdec.jar
-
-      - name: Export ActionScript
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf /tmp/krf-scripts /tmp/import /tmp/verify /tmp/out
-          mkdir -p /tmp/krf-scripts /tmp/import/scripts /tmp/out
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
-            -onerror ignore -timeout 60 -exportFileTimeout 120 \
-            -export script /tmp/krf-scripts assets/kingdom-rush-frontie-15717.swf \
-            > /tmp/export.log 2>&1 || true
-          test -f '/tmp/krf-scripts/scripts/Level.as'
-          test -f '/tmp/krf-scripts/scripts/§if const function§.as'
-
-      - name: Patch tower and hero gates
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          def replace_function(text, signature, body):
-              start = text.find(signature)
-              if start < 0:
-                  raise SystemExit(f'function signature not found: {signature}')
-              brace = text.find('{', start)
-              if brace < 0:
-                  raise SystemExit('opening brace not found')
-              depth = 0
-              end = None
-              for i in range(brace, len(text)):
-                  c = text[i]
-                  if c == '{':
-                      depth += 1
-                  elif c == '}':
-                      depth -= 1
-                      if depth == 0:
-                          end = i + 1
-                          break
-              if end is None:
-                  raise SystemExit('closing brace not found')
-              indent = '      '
-              replacement = signature + '\r\n' + indent + '{\r\n' + indent + '   ' + body + '\r\n' + indent + '}'
-              return text[:start] + replacement + text[end:]
-
-          level = Path('/tmp/krf-scripts/scripts/Level.as')
-          text = level.read_text(encoding='utf-8', errors='strict')
-          text = replace_function(text, 'public function §_-bY§(param1:*, param2:*) : Boolean', 'return false;')
-          level.write_text(text, encoding='utf-8', newline='')
-
-          heroes = Path('/tmp/krf-scripts/scripts/§if const function§.as')
-          text = heroes.read_text(encoding='utf-8', errors='strict')
-          text = text.replace('public static const UNLOCK_STAGE_MIRAGE:Number = 3;', 'public static const UNLOCK_STAGE_MIRAGE:Number = -999;')
-          text = text.replace('public static const UNLOCK_STAGE_CRONAN:Number = 6;', 'public static const UNLOCK_STAGE_CRONAN:Number = -999;')
-          text = replace_function(text, 'public function checkPremiumContent(param1:String) : Boolean', 'return false;')
-          heroes.write_text(text, encoding='utf-8', newline='')
-
-          Path('/tmp/import/scripts/Level.as').write_bytes(level.read_bytes())
-          Path('/tmp/import/scripts/§if const function§.as').write_bytes(heroes.read_bytes())
-          assets = Path('/tmp/krf-scripts/_assets')
-          if assets.exists():
-              import shutil
-              shutil.copytree(assets, Path('/tmp/import/_assets'), dirs_exist_ok=True)
-          PY
-
-      - name: Import patched scripts
-        shell: bash
-        run: |
-          set -o pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
-            -onerror abort \
-            -importScript assets/kingdom-rush-frontie-15717.swf /tmp/out/kingdom-rush-frontiers-unlock-all.swf /tmp/import \
-            > /tmp/import.log 2>&1
-          test -s /tmp/out/kingdom-rush-frontiers-unlock-all.swf
-          head -c 3 /tmp/out/kingdom-rush-frontiers-unlock-all.swf | grep -Eq 'FWS|CWS|ZWS'
-
-      - name: Verify patched output
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/verify
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
-            -onerror ignore -timeout 60 -selectclass 'Level,§if const function§' \
-            -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-unlock-all.swf \
-            > /tmp/verify.log 2>&1 || true
-          grep -F 'return false;' '/tmp/verify/scripts/Level.as'
-          grep -F 'UNLOCK_STAGE_MIRAGE:Number = -999' '/tmp/verify/scripts/§if const function§.as'
-          grep -F 'UNLOCK_STAGE_CRONAN:Number = -999' '/tmp/verify/scripts/§if const function§.as'
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('/tmp/verify/scripts/§if const function§.as').read_text(errors='replace')
-          sig = 'public function checkPremiumContent(param1:String) : Boolean'
-          i = p.find(sig)
-          assert i >= 0
-          assert 'return false;' in p[i:i+350]
-          PY
-
-      - name: Publish verified mod
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp /tmp/out/kingdom-rush-frontiers-unlock-all.swf assets/kingdom-rush-frontiers-unlock-all.swf
-          {
-            echo 'Kingdom Rush Frontiers — Unlock All'
-            echo 'All tower upgrade gates disabled.'
-            echo 'Mirage/Cronan stage gates disabled.'
-            echo 'Premium hero purchase gate disabled.'
-            echo 'Built and re-export verified with FFDec 26.2.1.'
-          } > assets/UNLOCK-ALL-BUILD.txt
-          sha256sum assets/kingdom-rush-frontie-15717.swf assets/kingdom-rush-frontiers-unlock-all.swf > assets/UNLOCK-ALL-SHA256SUMS.txt
-
-      - name: Commit verified mod
-        shell: bash
-        env:
-          TARGET_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/kingdom-rush-frontiers-unlock-all.swf assets/UNLOCK-ALL-BUILD.txt assets/UNLOCK-ALL-SHA256SUMS.txt
-          if git diff --cached --quiet; then
-            echo 'Verified mod already matches repository.'
-          else
-            git commit -m 'Add verified unlock-all Frontiers build [skip ci]'
-            git push origin HEAD:"${TARGET_BRANCH}"
-          fi
-
-  finalize-v4:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/v4-frontiers-fixes'
+  cleanup-v4:
+    if: github.head_ref == 'agent/v4-frontiers-fixes'
     runs-on: ubuntu-latest
     steps:
       - name: Check out V4 branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Download FFDec 26.2.1
+      - name: Update installer copy and integrity hash
         shell: bash
         run: |
           set -euo pipefail
-          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
-          mkdir -p /tmp/ffdec
-          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          test -f /tmp/ffdec/ffdec.jar
+          python3 - <<'PY'
+          from pathlib import Path
 
-      - name: Export verified V4 and apply final patch
+          p = Path('mod/index.html')
+          text = p.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one match, found {count}')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '<p><strong>V4</strong> is the recommended build. It keeps the V3 sandbox tools, adds per-hero selection and max/reset trees, expands special towers, improves wave dispatch stability, and tightens touch handling.</p>',
+              '<p><strong>V4</strong> is the recommended build. It keeps the V3 sandbox tools, starts heroes/stars maxed with a persistent reset-to-custom mode, adds per-hero level toggles, expands the special-tower catalog, improves swarm performance, and tightens touch handling.</p>',
+              'V4 intro',
+          )
+          replace_once(
+              '<li><strong>Heroes:</strong> the pause tools now have individual ON/OFF toggles for all <strong>9 hero implementations present in this Flash build</strong>: Alric, Mirage, Captain Blackthorne, Cronan, Sha\'tra, Grawl, Nivus, Dierdre and Ashbite.</li>',
+              '<li><strong>Heroes:</strong> the pause tools have individual ON/OFF toggles for all <strong>9 hero implementations present in this Flash build</strong>: Alric, Mirage, Captain Blackthorne, Cronan, Sha\'tra, Grawl, Nivus, Dierdre and Ashbite. All 9 start ON in a level; toggle any hero off or back on for that level.</li>',
+              'hero copy',
+          )
+          replace_once(
+              '<li><strong>Maxed by default:</strong> a session starts with all six star-upgrade trees and every hero skill tree maxed. Use <strong>Trees: MAXED (reset)</strong> to reset everything and receive the exact spendable stars/hero points again; press it again to max them.</li>',
+              '<li><strong>Maxed by default:</strong> new and existing saves default to all 65 star upgrades spent/maxed and every hero at level 10 with all hero skills maxed. Press <strong>RESET FOR CUSTOM</strong> to clear upgrade/skill spending while keeping the full 65-star pool and level-10 heroes; custom mode persists so your manual choices are not overwritten. Use <strong>MAX ALL</strong> to return to the default maxed mode.</li>',
+              'max/reset copy',
+          )
+          replace_once(
+              '<li><strong>Special towers:</strong> the radial page expands from 2 to <strong>8 buildable choices</strong>: Dwarf Riflemen, Pirate Barracks, Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200. Dwarf/Pirate placements now have explicit costs; the six advanced towers use their built-in game costs.</li>',
+              '<li><strong>Special towers:</strong> the catalog has <strong>9 buildable choices</strong>: Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200. The six advanced specializations use their native in-game costs.</li>',
+              'tower catalog copy',
+          )
+          replace_once(
+              '<li><strong>Tower placement:</strong> special towers now use the same +36px holder adjustment as normal towers, fixing the half-tile-high placement.</li>',
+              '<li><strong>Tower placement:</strong> map-special towers use the corrected build-spot center instead of the old offset placement.</li>',
+              'tower placement copy',
+          )
+          replace_once(
+              '<li><strong>Touch + performance:</strong> V4 pause buttons respond on press, the player is re-focused on pointer-down, touch devices use medium render quality, and a leaked TowerHolder mouse listener is cleaned up correctly.</li>',
+              '<li><strong>Touch + performance:</strong> pause buttons, radial items and all three map-special towers respond on press; the player is re-focused on pointer-down. High-entity play reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only when entity/bullet counts are high, while gameplay updates stay full-rate.</li>',
+              'touch/performance copy',
+          )
+          replace_once(
+              "On an empty build spot, use <strong>More…</strong> to reach the two special-tower pages.",
+              "On an empty build spot, use <strong>More…</strong> to reach the three special-tower pages.",
+              'special pages copy',
+          )
+
+          old_hash = 'd603b4d554347e0c55964061607d6524dc7d7eae53d44966347006be0487c0f1'
+          new_hash = '9744706b367e5b2fb36947614cd92f4957a87db1832a10b058477cf313930bdb'
+          hash_count = text.count(old_hash)
+          if hash_count != 2:
+              raise SystemExit(f'V4 hash: expected two old hashes, found {hash_count}')
+          text = text.replace(old_hash, new_hash)
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Remove temporary V4 build files and restore normal workflow
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/v4src /tmp/v4import /tmp/v4out /tmp/v4verify
-          mkdir -p /tmp/v4src /tmp/v4import/scripts /tmp/v4out
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4src assets/kingdom-rush-frontiers-v4.swf >/tmp/v4-export.log 2>&1 || true
-          test -f '/tmp/v4src/scripts/Level.as'
-          python3 .github/v4-finalize.py /tmp/v4src/scripts /tmp/v4import
+          git rm -f --ignore-unmatch .github/v4-finalize.py .github/workflows/v4-finalize-ready.yml assets/V4-FINALIZE-FAIL.txt
+          git checkout origin/main -- .github/workflows/publish-unlock-all.yml
 
-      - name: Rebuild V4
+      - name: Commit clean final V4 PR
         shell: bash
         run: |
           set -euo pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v4.swf /tmp/v4out/kingdom-rush-frontiers-v4.swf /tmp/v4import >/tmp/v4-import.log 2>&1
-          test -s /tmp/v4out/kingdom-rush-frontiers-v4.swf
-          head -c 3 /tmp/v4out/kingdom-rush-frontiers-v4.swf | grep -Eq 'FWS|CWS|ZWS'
-
-      - name: Re-export and verify final V4
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/v4verify
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -selectclass 'Level,§_-2i§,§_-BQ§,TowerHolder,§_-LZ§,§true break§,TowerDwarfRiflemen,TowerSoldierPirates,§_-Zs§' -export script /tmp/v4verify /tmp/v4out/kingdom-rush-frontiers-v4.swf >/tmp/v4-verify.log 2>&1 || true
-          grep -F 'Level.qolHeroEnabled[heroName] = true' /tmp/v4verify/scripts/Level.as
-          grep -F 'RESET FOR CUSTOM' /tmp/v4verify/scripts/Level.as
-          grep -F 'qolUpdateContainer' /tmp/v4verify/scripts/Level.as
-          grep -F 'var heavy:Boolean' /tmp/v4verify/scripts/Level.as
-          grep -F 'h.level = 10' '/tmp/v4verify/scripts/§_-2i§.as'
-          grep -F 'qolProgressMode' '/tmp/v4verify/scripts/§_-BQ§.as'
-          grep -F 'Dwarf Hall — 225' /tmp/v4verify/scripts/TowerHolder.as
-          grep -F 'qol_specials3' '/tmp/v4verify/scripts/§_-LZ§.as'
-          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' '/tmp/v4verify/scripts/§true break§.as'
-          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' /tmp/v4verify/scripts/TowerDwarfRiflemen.as
-          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' /tmp/v4verify/scripts/TowerSoldierPirates.as
-          grep -F 'MouseEvent.MOUSE_DOWN,this.clickEvent' '/tmp/v4verify/scripts/§_-Zs§.as'
-
-      - name: Publish final V4
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp /tmp/v4out/kingdom-rush-frontiers-v4.swf assets/kingdom-rush-frontiers-v4.swf
-          cat > assets/V4-BUILD.txt <<'EOF'
-          Kingdom Rush Frontiers — V4 Sandbox + Stability (final)
-          Based on the verified V3/V4 SWF chain and re-export verified with FFDec 26.2.1.
-
-          - All 9 heroes start enabled in levels and can be toggled individually.
-          - New/legacy saves default to all 65 tower-upgrade stars spent/maxed and all heroes level 10 with every hero skill maxed.
-          - RESET FOR CUSTOM clears tower/hero skill spending while retaining the full 65-star pool and level-10 heroes. Custom mode persists, so later manual choices are not overwritten.
-          - Gold uses a numeric text field and Add button.
-          - Next-wave flags appear immediately; Send All Waves is paced across frames.
-          - Special catalog includes Dwarf Bastion (250), Pirate Barracks (180), Dwarf Hall (225), Crossbow, Totem, Archmage, Necromancer, DWAARP and Battle-Mecha direct builds with displayed costs.
-          - Special placements use the corrected build-spot center.
-          - Pause controls, radial items and all three map-special towers react on mouse-down for more reliable touch input.
-          - Heavy-enemy performance reuses child snapshots instead of allocating per-tick Dictionaries and throttles cosmetic layers only under high entity/bullet counts; gameplay updates stay full-rate.
-          - V3 unlock-all, speed, custom enemy round and mobile changes remain included.
-          EOF
-          sha256sum assets/kingdom-rush-frontiers-v3.swf assets/kingdom-rush-frontiers-v4.swf > assets/V4-SHA256SUMS.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/kingdom-rush-frontiers-v4.swf assets/V4-BUILD.txt assets/V4-SHA256SUMS.txt
-          git commit -m 'Finalize Frontiers V4 max-reset, touch and performance [skip ci]'
+          git add mod/index.html .github/workflows/publish-unlock-all.yml
+          git commit -m 'Finalize V4 installer and clean build scaffolding [skip ci]'
           git pull --rebase origin agent/v4-frontiers-fixes
           git push origin HEAD:agent/v4-frontiers-fixes
-
-      - name: Record V4 failure details
-        if: failure()
-        shell: bash
-        run: |
-          set +e
-          {
-            echo 'V4 finalization failed.'
-            echo '--- export tail ---'; tail -100 /tmp/v4-export.log 2>/dev/null
-            echo '--- import tail ---'; tail -100 /tmp/v4-import.log 2>/dev/null
-            echo '--- verify tail ---'; tail -100 /tmp/v4-verify.log 2>/dev/null
-          } > assets/V4-FINALIZE-FAIL.txt
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/V4-FINALIZE-FAIL.txt
-          git commit -m 'Record V4 finalization failure [skip ci]' || true
-          git pull --rebase origin agent/v4-frontiers-fixes || true
-          git push origin HEAD:agent/v4-frontiers-fixes || true
