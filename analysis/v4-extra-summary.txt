@@ -1,6 +1,13 @@
 TowerDwarfRiflemen.as	TowerDwarfRiflemen.as
   00035: public function TowerDwarfRiflemen(param1:int, param2:int, param3:Point, param4:String = "")
   00052: this.upgradeTower("");
+  00109: _loc1_.tName = Locale.loadStringEx("SPECIAL_DWARF_BASTION_NAME",Locale.getDefaultLang());
+  00157: "title":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_NAME",_loc2_),
+  00158: "text":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_DESCRIPTION_" + this.§with const var§(this.§default const continue§,this.§function const while§),_loc2_),
+  00160: "notes":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_1_NOTE",_loc2_)
+  00164: "title":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_NAME",_loc2_),
+  00165: "text":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_DESCRIPTION_" + this.§with const var§(this.§_-QL§,this.§_-1b§),_loc2_),
+  00167: "notes":Locale.loadStringEx("SPECIAL_DWARF_TOWER1_UPGRADE_2_NOTE",_loc2_)
   00187: override public function upgradeTower(param1:String) : void
   00207: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCost;
   00208: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.barrelCost);
@@ -12,6 +19,12 @@ TowerDwarfRiflemen.as	TowerDwarfRiflemen.as
   00231: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfRiflemen.damageCostLevel);
 TowerSoldierPirates.as	TowerSoldierPirates.as
   00016: public function TowerSoldierPirates(param1:int, param2:int, param3:Point)
+  00055: _loc1_.pName = Locale.loadStringEx("SPECIAL_PIRATE_NAME",Locale.getDefaultLang());
+  00056: _loc1_.pDescription = Locale.loadStringEx("SPECIAL_PIRATE_DESCRIPTION",Locale.getDefaultLang());
+  00067: "title":Locale.loadStringEx("SPECIAL_PIRATE_CAP_NAME",_loc2_),
+  00068: "text":Locale.loadStringEx("SPECIAL_PIRATE_CAP_DESCRIPTION",_loc2_)
+  00072: "title":Locale.loadStringEx("SPECIAL_PIRATE_FLAMER_NAME",_loc2_),
+  00073: "text":Locale.loadStringEx("SPECIAL_PIRATE_FLAMER_DESCRIPTION",_loc2_)
   00097: override public function upgradeTower(param1:String) : void
   00102: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.pirateCap.cost;
   00103: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.pirateCap.cost);
@@ -129,6 +142,45 @@ TowerEngineerMech.as	TowerEngineerMech.as
   00340: this.cRoot.updateCash(-this.getPowerCost(this.cRoot.gameSettings.engineers.mech.oilCost));
   00344: this.§_-6f§ += this.getPowerCost(this.cRoot.gameSettings.engineers.mech.oilCostLevel);
   00345: this.cRoot.updateCash(-this.getPowerCost(this.cRoot.gameSettings.engineers.mech.oilCostLevel));
+§_-Zs§.as	§_-Zs§.as
+  00026: public function §_-Zs§(param1:int, param2:int, param3:Point)
+  00058: _loc1_.tName = Locale.loadStringEx("SPECIAL_DWARF_HALL_NAME",Locale.getDefaultLang());
+  00076: "title":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_1_NAME_" + this.§with const var§(this.§_-v5§,this.§return const function§),_loc2_),
+  00077: "text":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_1_DESCRIPTION_" + this.§with const var§(this.§_-v5§,this.§return const function§),_loc2_),
+  00079: "notes":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_1_NOTE",_loc2_)
+  00083: "title":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_2_NAME_" + this.§with const var§(this.§implements implements§,this.§_-Uw§),_loc2_),
+  00084: "text":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_2_DESCRIPTION_" + this.§with const var§(this.§implements implements§,this.§_-Uw§),_loc2_),
+  00086: "notes":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_2_NOTE",_loc2_)
+  00090: "title":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_3_NAME_" + this.§with const var§(this.§_-K8§,this.§get for if§),_loc2_),
+  00091: "text":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_3_DESCRIPTION_" + this.§with const var§(this.§_-K8§,this.§get for if§),_loc2_),
+  00093: "notes":Locale.loadStringEx("SPECIAL_DWARF_BARRACKS_UPGRADE_3_NOTE",_loc2_)
+  00117: override public function upgradeTower(param1:String) : void
+  00148: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.hammerCost;
+  00149: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.hammerCost);
+  00153: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.hammerCostLevel;
+  00154: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.hammerCostLevel);
+  00168: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.armorCost;
+  00169: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.armorCost);
+  00173: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.armorCostLevel;
+  00174: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.armorCostLevel);
+  00188: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.beerCost;
+  00189: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.beerCost);
+  00193: this.§_-6f§ += this.cRoot.gameSettings.§_-wX§.dwarfHall.beerCostLevel;
+  00194: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.dwarfHall.beerCostLevel);
+§_-jq§.as	§_-jq§.as
+  00014: public function §_-jq§(param1:int, param2:int, param3:Point)
+  00044: "title":Locale.loadStringEx("SPECIAL_REPAIR_HOLDER_UNDERGROUND_NAME",_loc2_),
+  00045: "text":Locale.loadStringEx("SPECIAL_REPAIR_HOLDER_UNDERGROUND_DESCRIPTION",_loc2_)
+  00074: MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10 + this.yAdjust,this,false,180,true,new Array(new Array("repair_holder","tw_clean",this.cRoot.gameSettings.§_-wX§.towerHolderLocked.repairCostUnderground,false,0,0,0,7,"TooltipBasic",this.getTooltipParams("special_repair_holder"))));
+  00078: override public function upgradeTower(param1:String) : void
+  00087: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.towerHolderLocked.repairCostUnderground);
+§_-mj§.as	§_-mj§.as
+  00014: public function §_-mj§(param1:int, param2:int, param3:Point)
+  00044: "title":Locale.loadStringEx("SPECIAL_REPAIR_HOLDER_JUNGLE_NAME",_loc2_),
+  00045: "text":Locale.loadStringEx("SPECIAL_REPAIR_HOLDER_JUNGLE_DESCRIPTION",_loc2_)
+  00074: MovieClip(this.cRoot).quickMenu.load(this.x,this.y - 10 + this.yAdjust,this,false,180,true,new Array(new Array("repair_holder","tw_clean",this.cRoot.gameSettings.§_-wX§.towerHolderLocked.repairCost,false,0,0,0,7,"TooltipBasic",this.getTooltipParams("special_repair_holder"))));
+  00078: override public function upgradeTower(param1:String) : void
+  00087: this.cRoot.updateCash(-this.cRoot.gameSettings.§_-wX§.towerHolderLocked.repairCost);
 §_-2i§.as	§_-2i§.as
   00034: public function §_-2i§(param1:§_-BQ§)
   00051: _loc2_.cost = [1,2,3,0];
