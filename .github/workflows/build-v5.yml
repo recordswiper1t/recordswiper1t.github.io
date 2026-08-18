@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - agent/iphone-performance-selector-completeness
-    paths:
-      - 'tools/build-v5.py'
-      - '.github/workflows/build-v5.yml'
 
 permissions:
   contents: write
@@ -89,16 +86,22 @@ jobs:
           grep -q 'qolForceBossFromSendAll' /tmp/krf-v5-verify/scripts/Level15.as
           echo 'V5 re-export verification passed.'
 
-      - name: Publish V5 asset to work branch
+      - name: Prepare V5 asset and optimized player pages
         shell: bash
         run: |
           set -euo pipefail
           cp /tmp/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.swf
           sha256sum assets/kingdom-rush-frontiers-v5.swf | awk '{print $1}' > assets/kingdom-rush-frontiers-v5.sha256
-          cat assets/kingdom-rush-frontiers-v5.sha256
+          python3 tools/update-v5-site.py
+          echo "V5 SHA-256: $(cat assets/kingdom-rush-frontiers-v5.sha256)"
+
+      - name: Publish verified V5 to work branch
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.sha256
+          git add assets/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.sha256 index.html mod/index.html mod/fast.html
           git commit -m 'Build Frontiers V5 performance and sandbox fixes [skip ci]'
           git pull --rebase origin agent/iphone-performance-selector-completeness
           git push origin HEAD:agent/iphone-performance-selector-completeness
