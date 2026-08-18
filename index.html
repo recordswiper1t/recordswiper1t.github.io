@@ -2,87 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="refresh" content="0;url=/play-v4.html?build=628ec4f2">
 <title>Kingdom Rush Frontiers</title>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#player,#archive{position:fixed;inset:0;width:100%;height:100%;background:#000}#archive{display:none}#archive iframe{width:100%;height:100%;border:0}ruffle-player{display:block;width:100%!important;height:100%!important}.loading{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#000}.loading.hide{display:none}.loadingBox{text-align:center;padding:24px;max-width:360px}.spinner{width:42px;height:42px;margin:0 auto 14px;border:4px solid #333;border-top-color:#d7a94d;border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}#loadingText{font-weight:700}.sub{margin-top:8px;color:#aaa;font-size:13px;line-height:1.35}#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:42px;height:42px;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:rgba(20,20,20,.72);color:#fff;font-size:23px;backdrop-filter:blur(10px)}#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 48px);right:max(8px,env(safe-area-inset-right));display:none;gap:8px;width:195px;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(15,15,15,.92);backdrop-filter:blur(12px)}#panel.open{display:grid}button{appearance:none;border:0;border-radius:10px;padding:11px 12px;background:#d7a94d;color:#1e1608;font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button.secondary{background:#2e2e2e;color:#fff;border:1px solid #4b4b4b}#notice{position:fixed;z-index:90;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;max-width:min(92vw,520px);padding:12px 14px;border-radius:12px;background:rgba(20,20,20,.94);border:1px solid rgba(255,255,255,.18);font-size:14px;line-height:1.35;text-align:center}#notice.show{display:block}#fileInput{display:none}
-</style>
+<script>location.replace('/play-v4.html?build=628ec4f2');</script>
 </head>
-<body>
-<div id="player"></div>
-<div id="archive"><iframe id="archiveFrame" allow="fullscreen; autoplay" allowfullscreen title="Kingdom Rush Frontiers"></iframe></div>
-<div id="loading" class="loading"><div class="loadingBox"><div class="spinner"></div><div id="loadingText">Downloading Kingdom Rush Frontiers…</div><div class="sub">First launch downloads about 59 MB. Your progress is then stored by Ruffle in this site's browser storage.</div></div></div>
-<button id="menuToggle" aria-label="Open controls">⋯</button>
-<div id="panel">
-<button id="savesBtn">Saves / Mods</button>
-<button id="fullBtn" class="secondary">Full screen</button>
-<button id="reloadBtn" class="secondary">Reload game</button>
-<button id="archiveBtn" class="secondary">Archive fallback</button>
-<button id="localBtn" class="secondary">Use local SWF</button>
-</div>
-<input id="fileInput" type="file" accept=".swf,application/x-shockwave-flash">
-<div id="notice"></div>
-<script src="https://unpkg.com/@ruffle-rs/ruffle@0.4.1"></script>
-<script>
-(()=>{
-'use strict';
-const ITEM='15717-kingdom-rush-frontie';
-const FILE='15717__kingdom-rush-frontie.swf';
-const GAME_URL=`https://archive.org/cors/${ITEM}/${FILE}`;
-const GAME_BASE=`https://archive.org/cors/${ITEM}/`;
-const ARCHIVE_URL=`https://archive.org/embed/${ITEM}`;
-const playerHost=document.getElementById('player'),archive=document.getElementById('archive'),archiveFrame=document.getElementById('archiveFrame'),loading=document.getElementById('loading'),loadingText=document.getElementById('loadingText'),menuToggle=document.getElementById('menuToggle'),panel=document.getElementById('panel'),notice=document.getElementById('notice'),fileInput=document.getElementById('fileInput');
-let player=null,noticeTimer=null,cachedGame=null;
-function toast(msg,ms=4500){clearTimeout(noticeTimer);notice.textContent=msg;notice.classList.add('show');noticeTimer=setTimeout(()=>notice.classList.remove('show'),ms)}
-function hideLoading(){loading.classList.add('hide')}
-function showLoading(msg){loadingText.textContent=msg;loading.classList.remove('hide')}
-async function persistStorage(){try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(_){}}
-function validSwf(data){if(!data||data.byteLength<8)return false;const b=new Uint8Array(data,0,3);const s=String.fromCharCode(b[0],b[1],b[2]);return s==='FWS'||s==='CWS'||s==='ZWS'}
-function opts(extra={}){return Object.assign({autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:'high',allowScriptAccess:true,allowNetworking:'all',openUrlMode:'confirm',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false},extra)}
-function makePlayer(){const r=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!r)throw new Error('Ruffle did not load');player=r.createPlayer();player.id='krf';playerHost.replaceChildren(player);return player}
-async function fetchGame(){
- if(cachedGame)return cachedGame.slice(0);
- showLoading('Downloading Kingdom Rush Frontiers…');
- const res=await fetch(GAME_URL,{mode:'cors',cache:'force-cache',credentials:'omit'});
- if(!res.ok)throw new Error(`Archive download failed (${res.status})`);
- const data=await res.arrayBuffer();
- if(!validSwf(data))throw new Error('Archive returned something other than the SWF');
- cachedGame=data;
- return data.slice(0);
-}
-async function loadDirect(){
- archive.style.display='none';playerHost.style.display='block';archiveFrame.src='about:blank';
- await persistStorage();
- const data=await fetchGame();
- showLoading('Starting Kingdom Rush Frontiers…');
- if(!player)makePlayer();
- await player.ruffle().load(opts({data,swfFileName:'kingdom-rush-frontiers.swf',base:GAME_BASE}));
- hideLoading();
-}
-function loadArchive(reason){
- showLoading('Opening fallback player…');playerHost.style.display='none';archive.style.display='block';archiveFrame.onload=()=>hideLoading();archiveFrame.src=ARCHIVE_URL;
- if(reason)toast(reason);
-}
-async function loadLocal(file){
- showLoading('Opening local game…');archive.style.display='none';playerHost.style.display='block';archiveFrame.src='about:blank';await persistStorage();
- const data=await file.arrayBuffer();if(!validSwf(data))throw new Error('Not a valid SWF');if(!player)makePlayer();await player.ruffle().load(opts({data,swfFileName:'kingdom-rush-frontiers.swf',base:GAME_BASE}));hideLoading();
-}
-function openRuffleMenu(){
- if(!player){toast('Fallback mode is open. Press and hold inside the game to open Ruffle’s menu.');return}
- try{const r=player.getBoundingClientRect();player.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+80,clientY:r.top+80,button:2,buttons:2,view:window}));toast('Choose Save Manager. If the menu did not appear, press and hold inside the game.');}catch(_){toast('Press and hold inside the game, then choose Save Manager.');}
-}
-menuToggle.onclick=()=>panel.classList.toggle('open');
-document.getElementById('savesBtn').onclick=()=>{panel.classList.remove('open');openRuffleMenu()};
-document.getElementById('fullBtn').onclick=()=>{panel.classList.remove('open');try{if(player&&player.ruffle().fullscreenEnabled)player.ruffle().requestFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(_){}};
-document.getElementById('reloadBtn').onclick=()=>{panel.classList.remove('open');if(archive.style.display==='block'){archiveFrame.src=ARCHIVE_URL}else{loadDirect().catch(e=>loadArchive('Direct launch failed: '+e.message))}};
-document.getElementById('archiveBtn').onclick=()=>{panel.classList.remove('open');loadArchive()};
-document.getElementById('localBtn').onclick=()=>{panel.classList.remove('open');fileInput.click()};
-fileInput.onchange=()=>{const f=fileInput.files&&fileInput.files[0];fileInput.value='';if(f)loadLocal(f).catch(e=>{hideLoading();toast(e.message||String(e))})};
-window.addEventListener('load',()=>loadDirect().catch(e=>{console.error(e);loadArchive('Direct save-enabled mode was blocked; fallback opened.')}));
-})();
-</script>
+<body style="margin:0;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif">
+<a href="/play-v4.html?build=628ec4f2" style="color:#fff">Open Kingdom Rush Frontiers</a>
 </body>
 </html>
