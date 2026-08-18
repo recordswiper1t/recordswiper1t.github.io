@@ -1,0 +1,7 @@
+Kingdom Rush Frontiers — QoL v2
+Includes Unlock-All v1.
+Adds persistent 1x/3x gameplay speed toggle (default 1x).
+Skips the branded intro sequence and opens directly to save selection.
+Heroic and Iron unlock as soon as their campaign level is enabled.
+Upgrade-star balance is forced to 999999 whenever a save is loaded.
+Built and re-export verified with FFDec 26.2.1.
