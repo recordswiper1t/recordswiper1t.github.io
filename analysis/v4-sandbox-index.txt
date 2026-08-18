@@ -1,6 +1,6 @@
 Kingdom Rush Frontiers V4 sandbox-script index
 Source: assets/kingdom-rush-frontiers-v4.swf
-Generated: 2026-08-18T17:08:50Z
+Generated: 2026-08-18T17:13:33Z
 
 === hero/enemy/tower implementations ===
 scripts/Enemy.as
@@ -8064,83 +8064,83 @@ scripts/§_-59§.as:110:         this.parent.removeChild(this);
    436	
 
 === export log tail ===
-Exported script 1226/1302 §implements const§, 00:00.039
-Exported script 1225/1302 §_-vr§, 00:00.051
-Exported script 1228/1302 §_-r3§, 00:00.042
-Exported script 1229/1302 §null const super§, 00:00.047
-Exported script 1227/1302 §include switch§, 00:00.061
-Exported script 1230/1302 ironhide.utils.tooltip.§continue for while§, 00:00.044
-Exported script 1232/1302 §_-9b§, 00:00.086
-Exported script 1231/1302 §else for false§, 00:00.090
-Exported script 1233/1302 Bleeding, 00:00.078
-Exported script 1234/1302 BleedingGreen, 00:00.042
-Exported script 1235/1302 BleedingViolet, 00:00.051
-Exported script 1236/1302 §default const in§, 00:00.074
-Exported script 1238/1302 §_-SV§, 00:00.050
-Exported script 1237/1302 §throw const include§, 00:00.071
-Exported script 1239/1302 §_-r9§, 00:00.042
-Exported script 1241/1302 BombCommon, 00:00.053
-Exported script 1240/1302 BombBlack, 00:00.064
+Exported script 1225/1302 §_-vr§, 00:00.047
+Exported script 1224/1302 §_-It§, 00:00.052
+Exported script 1228/1302 §_-r3§, 00:00.048
+Exported script 1227/1302 §include switch§, 00:00.050
+Exported script 1229/1302 §null const super§, 00:00.058
+Exported script 1230/1302 ironhide.utils.tooltip.§continue for while§, 00:00.045
+Exported script 1231/1302 §else for false§, 00:00.055
+Exported script 1232/1302 §_-9b§, 00:00.057
+Exported script 1233/1302 Bleeding, 00:00.048
+Exported script 1234/1302 BleedingGreen, 00:00.047
+Exported script 1235/1302 BleedingViolet, 00:00.044
+Exported script 1236/1302 §default const in§, 00:00.050
+Exported script 1237/1302 §throw const include§, 00:00.046
+Exported script 1238/1302 §_-SV§, 00:00.048
+Exported script 1239/1302 §_-r9§, 00:00.066
+Exported script 1240/1302 BombBlack, 00:00.067
+Exported script 1241/1302 BombCommon, 00:00.073
 Exported script 1242/1302 BombDynamite, 00:00.057
-Exported script 1243/1302 §finally const native§, 00:00.057
-Exported script 1244/1302 DebuffSoldierPoison, 00:00.066
-Exported script 1245/1302 §package for false§, 00:00.055
+Exported script 1243/1302 §finally const native§, 00:00.051
+Exported script 1244/1302 DebuffSoldierPoison, 00:00.055
+Exported script 1246/1302 §_-6q§, 00:00.042
+Exported script 1245/1302 §package for false§, 00:00.048
+Exported script 1247/1302 SavantPortal, 00:00.053
 Exported script 1248/1302 NotificationPowerFireball, 00:00.048
-Exported script 1247/1302 SavantPortal, 00:00.073
-Exported script 1246/1302 §_-6q§, 00:00.087
-Exported script 1249/1302 NotificationPowerReinforcement, 00:00.051
-Exported script 1251/1302 NotificationTipArmorMagic, 00:00.048
-Exported script 1250/1302 NotificationTipArmor, 00:00.085
-Exported script 1252/1302 NotificationTipChallenges, 00:00.053
-Exported script 1253/1302 NotificationTipHero, 00:00.055
-Exported script 1255/1302 NotificationTipStrategySoldier, 00:00.044
-Exported script 1256/1302 NotificationTowerArcherTotem, 00:00.060
-Exported script 1254/1302 NotificationTipRallyPoint, 00:00.085
-Exported script 1257/1302 NotificationTowerEngineerDwaarp, 00:00.062
-Exported script 1258/1302 NotificationTowerEngineerMech, 00:00.064
-Exported script 1259/1302 NotificationTowerLevel2, 00:00.088
-Exported script 1260/1302 NotificationTowerLevel3, 00:00.061
-Exported script 1261/1302 NotificationTowerMageArchmage, 00:00.047
-Exported script 1263/1302 NotificationTowerSoldierAssassin, 00:00.063
-Exported script 1262/1302 NotificationTowerMageNecromancer, 00:00.089
-Exported script 1264/1302 NotificationTowerSoldierTemplar, 00:00.084
-Exported script 1265/1302 §override const continue§, 00:00.075
-Exported script 1267/1302 §_-uh§, 00:00.058
-Exported script 1266/1302 §_-ir§, 00:00.071
-Exported script 1268/1302 §finally const in§, 00:00.059
-Exported script 1269/1302 EnemyBouncer, 00:00.064
-Exported script 1270/1302 EnemyCanibal, 00:00.128
-Exported script 1271/1302 EnemyCanibalHunter, 00:00.100
-Exported script 1272/1302 EnemyCanibalHunterUnderwater, 00:00.095
-Exported script 1273/1302 EnemyCanibalNecromancer, 00:00.080
-Exported script 1274/1302 EnemyCanibalShamanMagic, 00:00.105
-Exported script 1275/1302 EnemyCanibalShamanShield, 00:00.101
-Exported script 1276/1302 EnemyCanibalUnderwater, 00:00.070
-Exported script 1278/1302 EnemyCanibalZombie, 00:00.076
-Exported script 1277/1302 EnemyCanibalWingRider, 00:00.103
-Exported script 1279/1302 EnemyDesertArcher, 00:00.098
-Exported script 1280/1302 EnemyDesertRaider, 00:00.061
-Exported script 1281/1302 EnemyDesertWolf, 00:00.092
-Exported script 1282/1302 EnemyDesertWolfSmall, 00:00.087
-Exported script 1283/1302 EnemyFallen, 00:00.117
-Exported script 1284/1302 EnemyGorilla, 00:00.101
-Exported script 1285/1302 EnemyImmortal, 00:00.076
-Exported script 1286/1302 EnemyJungleSpiderBig, 00:00.122
-Exported script 1287/1302 EnemyJungleSpiderSmall, 00:00.118
-Exported script 1288/1302 EnemyMunra, 00:00.142
-Exported script 1289/1302 EnemySaurianBlazefang, 00:00.103
-Exported script 1291/1302 EnemySaurianBrute, 00:00.084
-Exported script 1290/1302 EnemySaurianBroodguard, 00:00.112
+Exported script 1249/1302 NotificationPowerReinforcement, 00:00.054
+Exported script 1250/1302 NotificationTipArmor, 00:00.049
+Exported script 1251/1302 NotificationTipArmorMagic, 00:00.043
+Exported script 1252/1302 NotificationTipChallenges, 00:00.054
+Exported script 1253/1302 NotificationTipHero, 00:00.045
+Exported script 1254/1302 NotificationTipRallyPoint, 00:00.053
+Exported script 1255/1302 NotificationTipStrategySoldier, 00:00.047
+Exported script 1256/1302 NotificationTowerArcherTotem, 00:00.045
+Exported script 1257/1302 NotificationTowerEngineerDwaarp, 00:00.046
+Exported script 1258/1302 NotificationTowerEngineerMech, 00:00.052
+Exported script 1259/1302 NotificationTowerLevel2, 00:00.049
+Exported script 1260/1302 NotificationTowerLevel3, 00:00.055
+Exported script 1261/1302 NotificationTowerMageArchmage, 00:00.048
+Exported script 1262/1302 NotificationTowerMageNecromancer, 00:00.046
+Exported script 1263/1302 NotificationTowerSoldierAssassin, 00:00.047
+Exported script 1264/1302 NotificationTowerSoldierTemplar, 00:00.047
+Exported script 1265/1302 §override const continue§, 00:00.047
+Exported script 1266/1302 §_-ir§, 00:00.045
+Exported script 1267/1302 §_-uh§, 00:00.062
+Exported script 1268/1302 §finally const in§, 00:00.067
+Exported script 1269/1302 EnemyBouncer, 00:00.088
+Exported script 1270/1302 EnemyCanibal, 00:00.086
+Exported script 1271/1302 EnemyCanibalHunter, 00:00.099
+Exported script 1272/1302 EnemyCanibalHunterUnderwater, 00:00.091
+Exported script 1274/1302 EnemyCanibalShamanMagic, 00:00.093
+Exported script 1273/1302 EnemyCanibalNecromancer, 00:00.123
+Exported script 1275/1302 EnemyCanibalShamanShield, 00:00.089
+Exported script 1276/1302 EnemyCanibalUnderwater, 00:00.099
+Exported script 1278/1302 EnemyCanibalZombie, 00:00.104
+Exported script 1277/1302 EnemyCanibalWingRider, 00:00.137
+Exported script 1279/1302 EnemyDesertArcher, 00:00.097
+Exported script 1281/1302 EnemyDesertWolf, 00:00.060
+Exported script 1280/1302 EnemyDesertRaider, 00:00.093
+Exported script 1282/1302 EnemyDesertWolfSmall, 00:00.092
+Exported script 1283/1302 EnemyFallen, 00:00.095
+Exported script 1284/1302 EnemyGorilla, 00:00.092
+Exported script 1285/1302 EnemyImmortal, 00:00.077
+Exported script 1286/1302 EnemyJungleSpiderBig, 00:00.091
+Exported script 1287/1302 EnemyJungleSpiderSmall, 00:00.146
+Exported script 1288/1302 EnemyMunra, 00:00.129
+Exported script 1289/1302 EnemySaurianBlazefang, 00:00.134
+Exported script 1290/1302 EnemySaurianBroodguard, 00:00.096
+Exported script 1291/1302 EnemySaurianBrute, 00:00.094
 Exported script 1292/1302 EnemySaurianDarter, 00:00.086
-Exported script 1294/1302 EnemySaurianNightscale, 00:00.070
-Exported script 1293/1302 EnemySaurianMyrmidon, 00:00.083
+Exported script 1293/1302 EnemySaurianMyrmidon, 00:00.099
+Exported script 1294/1302 EnemySaurianNightscale, 00:00.092
 Exported script 1295/1302 EnemySaurianQuetzal, 00:00.079
-Exported script 1296/1302 EnemySaurianRazorwing, 00:00.065
-Exported script 1297/1302 EnemySaurianSavant, 00:00.081
-Exported script 1298/1302 EnemySavageBird, 00:00.065
-Exported script 1299/1302 EnemyScorpion, 00:00.071
-Exported script 1300/1302 EnemyTremor, 00:00.075
-Exported script 1301/1302 EnemyWasp, 00:00.078
-Exported script 1302/1302 EnemyWaspQueen, 00:00.084
-Export finished. Total export time: 00:45.973
+Exported script 1296/1302 EnemySaurianRazorwing, 00:00.106
+Exported script 1297/1302 EnemySaurianSavant, 00:00.103
+Exported script 1298/1302 EnemySavageBird, 00:00.100
+Exported script 1300/1302 EnemyTremor, 00:00.088
+Exported script 1301/1302 EnemyWasp, 00:00.090
+Exported script 1299/1302 EnemyScorpion, 00:00.121
+Exported script 1302/1302 EnemyWaspQueen, 00:00.049
+Export finished. Total export time: 00:45.255
 OK
