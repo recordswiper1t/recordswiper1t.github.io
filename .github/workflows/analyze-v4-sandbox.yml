@@ -1,22 +1,21 @@
 name: Analyze Frontiers V4 Sandbox
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/analyze-v4-sandbox.yml'
-      - 'assets/kingdom-rush-frontiers-v4.swf'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   analyze:
+    if: github.head_ref == 'agent/iphone-performance-selector-completeness'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out branch
+      - name: Check out PR branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Set up Java
@@ -60,36 +59,25 @@ jobs:
             echo 'Source: assets/kingdom-rush-frontiers-v4.swf'
             echo "Generated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             echo
-            echo '=== files containing V4 UI/control strings ==='
-          } >> "$report"
-
-          grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|CUSTOM|HERO|Hero|ENEMY|Enemy|SPECIAL|Special|speed|Speed|wave|Wave' /tmp/krf-v4 2>/dev/null \
-            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 500 >> "$report" || true
-
-          {
-            echo
             echo '=== hero/enemy/tower implementations ==='
           } >> "$report"
           find /tmp/krf-v4 -type f \( -iname '*Hero*.as' -o -iname 'Enemy*.as' -o -iname 'Tower*.as' -o -iname '*Boss*.as' -o -iname '*Special*.as' \) \
-            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 1200 >> "$report" || true
-
+            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 1600 >> "$report" || true
           {
             echo
             echo '=== V4 control-related source lines ==='
           } >> "$report"
-          grep -RniE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|custom enemy|enemy round|hero|special tower|special_|wave|boss|quickMenu|addChild|removeChild|mouseDown|MOUSE_DOWN|CLICK' /tmp/krf-v4/scripts 2>/dev/null \
-            | sed 's#^/tmp/krf-v4/##' | cut -c1-380 | head -n 12000 >> "$report" || true
-
+          grep -RniE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|custom enemy|enemy round|hero|special tower|special_|wave|boss|quickMenu|qol_|addChild|removeChild|MOUSE_DOWN|CLICK' /tmp/krf-v4/scripts 2>/dev/null \
+            | sed 's#^/tmp/krf-v4/##' | cut -c1-420 | head -n 14000 >> "$report" || true
           {
             echo
-            echo '=== likely modified files with context ==='
+            echo '=== likely modified files with full context ==='
           } >> "$report"
-          for f in $(grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL' /tmp/krf-v4/scripts 2>/dev/null | head -n 30); do
+          while IFS= read -r f; do
             echo >> "$report"
             echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
-            nl -ba "$f" | head -n 1200 >> "$report"
-          done
-
+            nl -ba "$f" | head -n 1800 >> "$report"
+          done < <(grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|qol_specials|qol_enemy|qol_hero' /tmp/krf-v4/scripts 2>/dev/null | head -n 40)
           {
             echo
             echo '=== export log tail ==='
@@ -97,16 +85,15 @@ jobs:
           } >> "$report"
           wc -l "$report"
 
-      - name: Commit V4 analysis index
+      - name: Commit V4 analysis index to PR branch
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add analysis/v4-sandbox-index.txt
-          if git diff --cached --quiet; then
-            echo 'V4 sandbox index unchanged.'
-            exit 0
-          fi
-          git commit -m 'Index Frontiers V4 sandbox scripts'
-          git push
+          git commit -m 'Index Frontiers V4 sandbox scripts [skip ci]' || exit 0
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
