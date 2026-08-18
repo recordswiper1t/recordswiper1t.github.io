@@ -6,6 +6,12 @@ on:
       - main
     paths:
       - '.github/workflows/publish-unlock-all.yml'
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/publish-unlock-all.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,10 +21,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out target branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -147,6 +154,8 @@ jobs:
 
       - name: Commit verified mod
         shell: bash
+        env:
+          TARGET_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
@@ -156,5 +165,5 @@ jobs:
             echo 'Verified mod already matches repository.'
           else
             git commit -m 'Add verified unlock-all Frontiers build [skip ci]'
-            git push origin HEAD:main
+            git push origin HEAD:"${TARGET_BRANCH}"
           fi
