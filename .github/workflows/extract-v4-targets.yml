@@ -1,0 +1,90 @@
+name: Extract V4 Patch Targets
+
+on:
+  push:
+    branches:
+      - agent/iphone-performance-selector-completeness
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out work branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/iphone-performance-selector-completeness
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export V4 scripts and extract targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v4
+          mkdir -p /tmp/krf-v4 analysis
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v4 assets/kingdom-rush-frontiers-v4.swf >/tmp/export.log 2>&1 || true
+          test "$(find /tmp/krf-v4 -type f | wc -l)" -gt 1000
+          report=analysis/v4-patch-targets.txt
+          : > "$report"
+          {
+            echo '=== UNIQUE ENEMIES ACTUALLY USED BY WAVE DATA ==='
+            grep -RhoE 'new [^\(]+\("Enemy[A-Za-z0-9_]+' /tmp/krf-v4/scripts/Level*.as 2>/dev/null \
+              | sed -E 's/.*\("//' | sort -u
+            echo
+            echo '=== INDEX/ACTIVE WAVE LOGIC IN LEVEL CLASSES ==='
+            grep -nHE 'indexWaves|activeWaves|intervalWaveCounter|updateWaves|spawnBoss|sendWave|nextWave|Boss' /tmp/krf-v4/scripts/Level*.as 2>/dev/null \
+              | sed 's#^/tmp/krf-v4/##' | cut -c1-600
+            echo
+            echo '=== FILES WITH spawnBoss AND FULL CONTEXT ==='
+          } >> "$report"
+          for f in /tmp/krf-v4/scripts/Level*.as; do
+            if grep -q 'spawnBoss' "$f"; then
+              echo >> "$report"
+              echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
+              nl -ba "$f" >> "$report"
+            fi
+          done
+          {
+            echo
+            echo '=== TOWER SUBCLASSES / CONSTRUCTORS / IDENTIFIERS ==='
+          } >> "$report"
+          for f in /tmp/krf-v4/scripts/*.as; do
+            if grep -qE 'extends .*_-5u|extends Tower' "$f"; then
+              echo >> "$report"
+              echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
+              grep -nE 'class |function [A-Za-z_§]|function Â§|tName|pName|SPECIAL_|TOWER_' "$f" | sed -n '1,90p' >> "$report" || true
+            fi
+          done
+          {
+            echo
+            echo '=== TOWER HOLDER FULL SOURCE ==='
+          } >> "$report"
+          nl -ba /tmp/krf-v4/scripts/TowerHolder.as >> "$report"
+          wc -l "$report"
+
+      - name: Commit target report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/v4-patch-targets.txt
+          git commit -m 'Extract V4 patch targets [skip ci]' || exit 0
+          git push origin HEAD:agent/iphone-performance-selector-completeness
