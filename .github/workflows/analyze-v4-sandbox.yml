@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -62,13 +62,13 @@ jobs:
             echo '=== hero/enemy/tower implementations ==='
           } >> "$report"
           find /tmp/krf-v4 -type f \( -iname '*Hero*.as' -o -iname 'Enemy*.as' -o -iname 'Tower*.as' -o -iname '*Boss*.as' -o -iname '*Special*.as' \) \
-            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 1600 >> "$report" || true
+            | sed 's#^/tmp/krf-v4/##' | sort -u | sed -n '1,1600p' >> "$report"
           {
             echo
             echo '=== V4 control-related source lines ==='
           } >> "$report"
           grep -RniE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|custom enemy|enemy round|hero|special tower|special_|wave|boss|quickMenu|qol_|addChild|removeChild|MOUSE_DOWN|CLICK' /tmp/krf-v4/scripts 2>/dev/null \
-            | sed 's#^/tmp/krf-v4/##' | cut -c1-420 | head -n 14000 >> "$report" || true
+            | sed 's#^/tmp/krf-v4/##' | cut -c1-420 | sed -n '1,14000p' >> "$report" || true
           {
             echo
             echo '=== likely modified files with full context ==='
@@ -76,8 +76,8 @@ jobs:
           while IFS= read -r f; do
             echo >> "$report"
             echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
-            nl -ba "$f" | head -n 1800 >> "$report"
-          done < <(grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|qol_specials|qol_enemy|qol_hero' /tmp/krf-v4/scripts 2>/dev/null | head -n 40)
+            sed -n '1,1800p' "$f" | nl -ba >> "$report"
+          done < <(grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|qol_specials|qol_enemy|qol_hero' /tmp/krf-v4/scripts 2>/dev/null | sed -n '1,40p')
           {
             echo
             echo '=== export log tail ==='
