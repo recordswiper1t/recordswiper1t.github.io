@@ -1,0 +1,112 @@
+name: Analyze Frontiers V4 Sandbox
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/analyze-v4-sandbox.yml'
+      - 'assets/kingdom-rush-frontiers-v4.swf'
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export V4 ActionScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v4
+          mkdir -p /tmp/krf-v4
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v4 assets/kingdom-rush-frontiers-v4.swf \
+            > /tmp/v4-export.log 2>&1 || true
+          count=$(find /tmp/krf-v4 -type f | wc -l | tr -d ' ')
+          echo "Exported files: $count"
+          test "$count" -gt 0
+
+      - name: Build compact V4 sandbox index
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p analysis
+          report='analysis/v4-sandbox-index.txt'
+          : > "$report"
+          {
+            echo 'Kingdom Rush Frontiers V4 sandbox-script index'
+            echo 'Source: assets/kingdom-rush-frontiers-v4.swf'
+            echo "Generated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo '=== files containing V4 UI/control strings ==='
+          } >> "$report"
+
+          grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|CUSTOM|HERO|Hero|ENEMY|Enemy|SPECIAL|Special|speed|Speed|wave|Wave' /tmp/krf-v4 2>/dev/null \
+            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 500 >> "$report" || true
+
+          {
+            echo
+            echo '=== hero/enemy/tower implementations ==='
+          } >> "$report"
+          find /tmp/krf-v4 -type f \( -iname '*Hero*.as' -o -iname 'Enemy*.as' -o -iname 'Tower*.as' -o -iname '*Boss*.as' -o -iname '*Special*.as' \) \
+            | sed 's#^/tmp/krf-v4/##' | sort -u | head -n 1200 >> "$report" || true
+
+          {
+            echo
+            echo '=== V4 control-related source lines ==='
+          } >> "$report"
+          grep -RniE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL|custom enemy|enemy round|hero|special tower|special_|wave|boss|quickMenu|addChild|removeChild|mouseDown|MOUSE_DOWN|CLICK' /tmp/krf-v4/scripts 2>/dev/null \
+            | sed 's#^/tmp/krf-v4/##' | cut -c1-380 | head -n 12000 >> "$report" || true
+
+          {
+            echo
+            echo '=== likely modified files with context ==='
+          } >> "$report"
+          for f in $(grep -RilE 'SEND ALL|Send All|RESET FOR CUSTOM|MAX ALL' /tmp/krf-v4/scripts 2>/dev/null | head -n 30); do
+            echo >> "$report"
+            echo "----- ${f#/tmp/krf-v4/} -----" >> "$report"
+            nl -ba "$f" | head -n 1200 >> "$report"
+          done
+
+          {
+            echo
+            echo '=== export log tail ==='
+            tail -n 80 /tmp/v4-export.log || true
+          } >> "$report"
+          wc -l "$report"
+
+      - name: Commit V4 analysis index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/v4-sandbox-index.txt
+          if git diff --cached --quiet; then
+            echo 'V4 sandbox index unchanged.'
+            exit 0
+          fi
+          git commit -m 'Index Frontiers V4 sandbox scripts'
+          git push
