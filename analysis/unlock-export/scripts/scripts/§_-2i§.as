@@ -1,0 +1,999 @@
+package
+{
+   import flash.net.*;
+   
+   public class §_-2i§
+   {
+      
+      public var heroAlric:Object;
+      
+      public var heroMirage:Object;
+      
+      public var heroCronan:Object;
+      
+      public var heroCaptain:Object;
+      
+      public var heroNivus:Object;
+      
+      public var heroDierdre:Object;
+      
+      public var heroGrawl:Object;
+      
+      public var heroShatra:Object;
+      
+      public var heroAshbite:Object;
+      
+      public var selectedHero:Object;
+      
+      public var game:§_-BQ§;
+      
+      private var §_-xT§:§_-Mm§;
+      
+      public var master_xp:Array;
+      
+      public function §_-2i§(param1:§_-BQ§)
+      {
+         super();
+         this.game = param1;
+         this.§_-xT§ = new §_-Mm§(this.game);
+         this.heroAlric = new Object();
+         this.heroMirage = new Object();
+         this.heroCronan = new Object();
+         this.heroCaptain = new Object();
+         this.heroNivus = new Object();
+         this.heroDierdre = new Object();
+         this.heroGrawl = new Object();
+         this.heroShatra = new Object();
+         this.heroAshbite = new Object();
+         this.selectedHero = new Object();
+         this.master_xp = this.§_-xT§.heroes.heroesSavageMasterTable.common_tables.master_xp;
+         var _loc2_:* = new Object();
+         _loc2_.cost = [1,2,3,0];
+         _loc2_.level = 0;
+         _loc2_.description = ["Improve base attack damage by 2 points.","Improve base attack damage by an additional 4.","Improve base attack damage by an additional 6.","Improve base attack damage by an additional 6."];
+         _loc2_.name = ["Swordsmanship","Swordsmanship II","Swordsmanship III","Swordsmanship III"];
+         var _loc3_:* = new Object();
+         _loc3_.description = ["when Damaged, Alric returns 10% of that damage to his target.","when Damaged, Alric returns 30% of that damage to his target.","when Damaged, Alric returns 60% of that damage to his target.","when Damaged, Alric returns 60% of that damage to his target."];
+         _loc3_.cost = [1,2,3,0];
+         _loc3_.level = 0;
+         _loc3_.name = ["Spiked Armor","Spiked Armor II","Spiked Armor III","Spiked Armor III"];
+         var _loc4_:* = new Object();
+         _loc4_.description = ["Increase Alric\'s maximum life by 30.","Increase Alric\'s maximum life by an additional 60.","Increase Alric\'s maximum life by an additional 90.","Increase Alric\'s maximum life by an additional 90."];
+         _loc4_.cost = [1,2,3,0];
+         _loc4_.level = 0;
+         _loc4_.name = ["Toughness","Toughness II","Toughness III","Toughness III"];
+         var _loc5_:* = new Object();
+         _loc5_.description = ["Special maneuver that strikes an opponent 2 times in quick succession.","Special maneuver that strikes an opponent 4 times in quick succession.","Special maneuver that strikes an opponent 6 times in quick succession.","Special maneuver that strikes an opponent 6 times in quick succession."];
+         _loc5_.cost = [2,2,2,0];
+         _loc5_.level = 0;
+         _loc5_.name = ["Flurry","Flurry II","Flurry III","Flurry III"];
+         var _loc6_:* = new Object();
+         _loc6_.description = ["Summons a sand warrior with 60 life to block and damage enemies.","Summons two sand warriors with 100 life each.","Summons three sand warrior with 140 life each.","Summons three sand warriors with 140 life each."];
+         _loc6_.cost = [2,2,2,0];
+         _loc6_.level = 0;
+         _loc6_.name = ["Sand Warriors","Sand Warriors II","Sand Warriors III","Sand Warriors III"];
+         this.heroAlric.name = "alric";
+         this.heroAlric.heroClass = "Champion";
+         this.heroAlric.health = 245;
+         this.heroAlric.xp = 0;
+         this.heroAlric.armor = "Low";
+         this.heroAlric.speed = "Average";
+         this.heroAlric.level = 1;
+         this.heroAlric.type = "melee";
+         this.heroAlric.skillArray = [_loc2_,_loc3_,_loc4_,_loc5_,_loc6_];
+         this.heroAlric.skill1 = _loc2_;
+         this.heroAlric.skill2 = _loc3_;
+         this.heroAlric.skill3 = _loc4_;
+         this.heroAlric.skill4 = _loc5_;
+         this.heroAlric.skill5 = _loc6_;
+         this.heroAlric.skillPoints = this.§_-oq§(this.heroAlric);
+         this.heroAlric.damage = "6 - 10";
+         this.heroAlric.number = 0;
+         this.heroAlric.skillKey1 = "Swordsmanship";
+         this.heroAlric.skillKey2 = "Spiked Armor";
+         this.heroAlric.skillKey3 = "Toughness";
+         this.heroAlric.skillKey4 = "Flurry";
+         this.heroAlric.skillKey5 = "Sand Warriors";
+         var _loc7_:* = new Object();
+         _loc7_.description = ["Improves Mirage\'s attack range by 10%.","Improves Mirage\'s attack range by 20%.","Improves Mirage\'s attack range by 30%.","Improves Mirage\'s attack range by 30%."];
+         _loc7_.level = 0;
+         _loc7_.cost = [1,1,1,0];
+         _loc7_.name = ["Precision","Precision II","Precision III","Precision III"];
+         var _loc8_:* = new Object();
+         _loc8_.description = ["Gives mirage a 20% dodge chance and the ability to leave an illusion in her place.","Gives mirage a 40% dodge chance and the ability to leave an illusion in her place.","Gives mirage a 60% dodge chance and the ability to leave an illusion in her place.","Gives mirage a 60% dodge chance and the ability to leave an illusion in her place."];
+         _loc8_.level = 0;
+         _loc8_.cost = [2,2,2,0];
+         _loc8_.name = ["Shadow Dodge","Shadow Dodge II","Shadow Dodge III","Shadow Dodge III"];
+         var _loc9_:* = new Object();
+         _loc9_.description = ["Increases Mirage\'s movement speed by 20%.","Increases Mirage\'s movement speed by 40%.","Increases Mirage\'s movement speed by 60%.","Increases Mirage\'s movement speed by 60%."];
+         _loc9_.level = 0;
+         _loc9_.cost = [1,1,1,0];
+         _loc9_.name = ["Swiftness","Swiftness II","Swiftness III","Swiftness III"];
+         var _loc10_:* = new Object();
+         _loc10_.description = ["Sends forth 2 shadows to strike nearby enemies for 24 damage each.","Sends forth 3 shadows to strike nearby enemies for 32 damage each.","Sends forth 4 shadows to strike nearby enemies for 40 damage each.","Sends forth 4 shadows to strike nearby enemies for 40 damage each."];
+         _loc10_.level = 0;
+         _loc10_.cost = [2,2,2,0];
+         _loc10_.name = ["Shadow Dance","Shadow Dance II","Shadow Dance III","Shadow Dance III"];
+         var _loc11_:* = new Object();
+         _loc11_.description = ["Mirage backstabs her target for 90 damage, with a small instant kill chance.","Mirage backstabs her target for 180 damage, with a small instant kill chance.","Mirage backstabs her target for 270 damage, with a small instant kill chance.","Mirage backstabs her target for 270 damage, with a small instant kill chance."];
+         _loc11_.level = 0;
+         _loc11_.cost = [4,4,4,0];
+         _loc11_.name = ["Lethal Strike","Lethal Strike II","Lethal Strike III","Lethal Strike III"];
+         this.heroMirage.name = "mirage";
+         this.heroMirage.heroClass = "Assassin";
+         this.heroMirage.health = "180";
+         this.heroMirage.armor = "None";
+         this.heroMirage.damage = "6 - 9";
+         this.heroMirage.speed = "Fast";
+         this.heroMirage.level = 2;
+         this.heroMirage.xp = this.master_xp[this.heroMirage.level - 1];
+         this.heroMirage.type = "range";
+         this.heroMirage.skillArray = [_loc7_,_loc8_,_loc9_,_loc10_,_loc11_];
+         this.heroMirage.skill1 = _loc7_;
+         this.heroMirage.skill2 = _loc8_;
+         this.heroMirage.skill3 = _loc9_;
+         this.heroMirage.skill4 = _loc10_;
+         this.heroMirage.skill5 = _loc11_;
+         this.heroMirage.skillPoints = this.§_-oq§(this.heroMirage);
+         this.heroMirage.number = 1;
+         this.heroMirage.skillKey1 = "Precision";
+         this.heroMirage.skillKey2 = "Shadow Dodge";
+         this.heroMirage.skillKey3 = "Swiftness";
+         this.heroMirage.skillKey4 = "Shadow Dance";
+         this.heroMirage.skillKey5 = "Lethal Strike";
+         var _loc12_:* = new Object();
+         _loc12_.description = ["Summons a boar with 160 life to attack and block enemies in range.","Summons 2 boars with 160 life each to attack and block enemies in range.","Summons 2 boars with 240 life to attack and block enemies in range.","Summons 2 boars with 240 life to attack and block enemies in range."];
+         _loc12_.level = 0;
+         _loc12_.cost = [2,2,2,0];
+         _loc12_.name = ["Boarmaster","Boarmaster II","Boarmaster III","Boarmaster III"];
+         var _loc13_:* = new Object();
+         _loc13_.description = ["Summons a stampede that deals damage and has a 25% chance to stun enemies.","increase stampede herd size and stun chance to 30%.","increase stampede herd size and stun chance to 35%.","increase stampede herd size and stun chance to 35%."];
+         _loc13_.level = 0;
+         _loc13_.cost = [2,2,2,0];
+         _loc13_.name = ["Stampede","Stampede II","Stampede III","Stampede III"];
+         var _loc14_:* = new Object();
+         _loc14_.description = ["Trains a falcon companion to attack enemies in range for 3 to 9 damage.","Trains a falcon companion to attack enemies in range for 9 to 27 damage.","Trains a falcon companion to attack enemies in range for 18 to 54 damage.","Trains a falcon companion to attack enemies in range for 18 to 54 damage."];
+         _loc14_.level = 0;
+         _loc14_.cost = [1,2,3,0];
+         _loc14_.name = ["Falconer","Falconer II","Falconer III","Falconer III"];
+         var _loc15_:* = new Object();
+         _loc15_.description = ["Special attack that deals 14 damage and bleeds its target for an additional 12.","Special attack that deals 24 damage and bleeds its target for an additional 36.","Special attack that deals 36 damage and bleeds its target for an additional 72.","Special attack that deals 36 damage and bleeds its target for an additional 72."];
+         _loc15_.level = 0;
+         _loc15_.cost = [1,2,3,0];
+         _loc15_.name = ["Deep Lash","Deep Lash II","Deep Lash III","Deep Lash III"];
+         var _loc16_:* = new Object();
+         _loc16_.description = ["Grants Cronan instant regeneration of 3 life per second.","Grants Cronan instant regeneration of 6 life per second.","Grants Cronan instant regeneration of 9 life per second.","Grants Cronan instant regeneration of 9 life per second."];
+         _loc16_.level = 0;
+         _loc16_.cost = [2,2,2,0];
+         _loc16_.name = ["Regeneration","Regeneration II","Regeneration III","Regeneration III"];
+         this.heroCronan.name = "cronan";
+         this.heroCronan.heroClass = "Beastmaster";
+         this.heroCronan.health = "520";
+         this.heroCronan.armor = "None";
+         this.heroCronan.damage = "14 - 22";
+         this.heroCronan.speed = "Average";
+         this.heroCronan.level = 4;
+         this.heroCronan.xp = this.master_xp[this.heroCronan.level - 1];
+         this.heroCronan.type = "melee";
+         this.heroCronan.skillArray = [_loc12_,_loc13_,_loc14_,_loc15_,_loc16_];
+         this.heroCronan.skill1 = _loc12_;
+         this.heroCronan.skill2 = _loc13_;
+         this.heroCronan.skill3 = _loc14_;
+         this.heroCronan.skill4 = _loc15_;
+         this.heroCronan.skill5 = _loc16_;
+         this.heroCronan.skillPoints = this.§_-oq§(this.heroCronan);
+         this.heroCronan.number = 2;
+         this.heroCronan.skillKey1 = "Boarmaster";
+         this.heroCronan.skillKey2 = "Stampede";
+         this.heroCronan.skillKey3 = "Falconer";
+         this.heroCronan.skillKey4 = "Deep Lash";
+         this.heroCronan.skillKey5 = "Regeneration";
+         var _loc17_:* = new Object();
+         _loc17_.description = ["Improves attack damage by 3 points.","Improves attack damage by an additional 6 points.","Improves attack damage by an additional 9 points.","Improves attack damage by an additional 9 points."];
+         _loc17_.level = 0;
+         _loc17_.cost = [1,2,3,0];
+         _loc17_.name = ["Swordsmanship","Swordsmanship II","Swordsmanship III","Swordsmanship III"];
+         var _loc18_:* = new Object();
+         _loc18_.description = ["Enemies defeated close to blackthorne yield an additional 10% gold.","Enemies defeated close to blackthorne yield an additional 20% gold.","Enemies defeated close to blackthorne yield an additional 30% gold.","Enemies defeated close to blackthorne yield an additional 30% gold."];
+         _loc18_.level = 0;
+         _loc18_.cost = [2,2,2,0];
+         _loc18_.name = ["Looting","Looting II","Looting III","Looting III"];
+         var _loc19_:* = new Object();
+         _loc19_.description = ["increases Blackthorne\'s maximum life by 30.","increases Blackthorne\'s maximum life by an additional 60.","increases Blackthorne\'s maximum life by an additional 90.","increases Blackthorne\'s maximum life by an additional 90."];
+         _loc19_.level = 0;
+         _loc19_.cost = [1,1,1,0];
+         _loc19_.name = ["Toughness","Toughness II","Toughness III","Toughness III"];
+         var _loc20_:* = new Object();
+         _loc20_.description = ["Throws an explosive keg that deals 48 area damage.","Throws an explosive keg that deals 84 area damage.","Throws an explosive keg that deals 120 area damage.","Throws an explosive keg that deals 120 area damage."];
+         _loc20_.level = 0;
+         _loc20_.cost = [2,2,2,0];
+         _loc20_.name = ["Rum and Bang!","Rum and Bang! II","Rum and Bang! III","Rum and Bang! III"];
+         var _loc21_:* = new Object();
+         _loc21_.description = ["Summons the Kraken to trap up to 4 enemies while slowing all others by 25%.","Summons the Kraken to trap up to 5 enemies while slowing all others by 50%.","Summons the Kraken to trap up to 6 enemies while slowing all others by 75%.","Summons the Kraken to trap up to 6 enemies while slowing all others by 75%."];
+         _loc21_.level = 0;
+         _loc21_.cost = [3,3,3,0];
+         _loc21_.name = ["Release the Kraken","Release the Kraken II","Release the Kraken III","Release the Kraken III"];
+         this.heroCaptain.name = "captain";
+         this.heroCaptain.heroClass = "Corsair";
+         this.heroCaptain.health = "300";
+         this.heroCaptain.armor = "None";
+         this.heroCaptain.damage = "12 - 22";
+         this.heroCaptain.speed = "Slow";
+         this.heroCaptain.level = 4;
+         this.heroCaptain.xp = this.master_xp[this.heroCaptain.level - 1];
+         this.heroCaptain.type = "melee";
+         this.heroCaptain.skillArray = [_loc17_,_loc18_,_loc19_,_loc20_,_loc21_];
+         this.heroCaptain.skill1 = _loc17_;
+         this.heroCaptain.skill2 = _loc18_;
+         this.heroCaptain.skill3 = _loc19_;
+         this.heroCaptain.skill4 = _loc20_;
+         this.heroCaptain.skill5 = _loc21_;
+         this.heroCaptain.skillPoints = this.§_-oq§(this.heroCaptain);
+         this.heroCaptain.number = 3;
+         this.heroCaptain.skillKey1 = "Swordsmanship Pirate";
+         this.heroCaptain.skillKey2 = "Looting";
+         this.heroCaptain.skillKey3 = "Toughness Pirate";
+         this.heroCaptain.skillKey4 = "Rum and Bang!";
+         this.heroCaptain.skillKey5 = "Release the Kraken";
+         var _loc22_:* = new Object();
+         _loc22_.description = ["Casts 3 homing magic missiles that never miss and deal 12 damage each.","Casts 5 homing magic missiles that never miss and deal 18 damage each.","Casts 7 homing magic missiles that never miss and deal 24 damage each.","Casts 7 homing magic missiles that never miss and deal 24 damage each."];
+         _loc22_.level = 0;
+         _loc22_.cost = [1,2,3,0];
+         _loc22_.name = ["Magic Missile","Magic Missile II","Magic Missile III","Magic Missile III"];
+         var _loc23_:* = new Object();
+         _loc23_.description = ["Casts an overcharged ray that bounces off up to 2 targets.","Casts an overcharged ray that bounces off up to 3 targets.","Casts an overcharged ray that bounces off up to 4 targets.","Casts an overcharged ray that bounces off up to 4 targets."];
+         _loc23_.level = 0;
+         _loc23_.cost = [2,2,2,0];
+         _loc23_.name = ["Chain Spell","Chain Spell II","Chain Spell III","Chain Spell III"];
+         var _loc24_:* = new Object();
+         _loc24_.description = ["Desintegrate enemies in range with a combined life of 170 or less.","Desintegrate enemies in range with a combined life of 330 or less.","Desintegrate enemies in range with a combined life of 480 or less.","Desintegrate enemies in range with a combined life of 480 or less."];
+         _loc24_.level = 0;
+         _loc24_.cost = [3,3,3,0];
+         _loc24_.name = ["Desintegrate","Desintegrate II","Desintegrate III","Desintegrate III"];
+         var _loc25_:* = new Object();
+         _loc25_.description = ["Increases Nivus\' attack range by 10%.","Increases Nivus\' attack range by 20%.","Increases Nivus\' attack range by 30%.","Increases Nivus\' attack range by 30%."];
+         _loc25_.level = 0;
+         _loc25_.cost = [1,1,1,0];
+         _loc25_.name = ["Arcane Reach","Arcane Reach II","Arcane Reach III","Arcane Reach III"];
+         var _loc26_:* = new Object();
+         _loc26_.description = ["Increases Nivus\' base attack damage by 2 points.","Increases Nivus\' base attack damage by 4 points.","Increases Nivus\' base attack damage by 6 points.","Increases Nivus\' base attack damage by 6 points."];
+         _loc26_.level = 0;
+         _loc26_.cost = [1,2,3,0];
+         _loc26_.name = ["Arcane Focus","Arcane Focus II","Arcane Focus III","Arcane Focus III"];
+         this.heroNivus.name = "nivus";
+         this.heroNivus.heroClass = "Grand Wizard";
+         this.heroNivus.health = "160";
+         this.heroNivus.armor = "None";
+         this.heroNivus.damage = "12 - 41";
+         this.heroNivus.speed = "Slow";
+         this.heroNivus.level = 4;
+         this.heroNivus.xp = this.master_xp[this.heroNivus.level - 1];
+         this.heroNivus.type = "magic";
+         this.heroNivus.skillArray = [_loc22_,_loc23_,_loc24_,_loc25_,_loc26_];
+         this.heroNivus.skill1 = _loc22_;
+         this.heroNivus.skill2 = _loc23_;
+         this.heroNivus.skill3 = _loc24_;
+         this.heroNivus.skill4 = _loc25_;
+         this.heroNivus.skill5 = _loc26_;
+         this.heroNivus.skillPoints = this.§_-oq§(this.heroNivus);
+         this.heroNivus.number = 5;
+         this.heroNivus.skillKey1 = "Magic Missile";
+         this.heroNivus.skillKey2 = "Chain Spell";
+         this.heroNivus.skillKey3 = "Desintegrate";
+         this.heroNivus.skillKey4 = "Arcane Reach";
+         this.heroNivus.skillKey5 = "Arcane Focus";
+         var _loc27_:* = new Object();
+         _loc27_.description = ["Throws a huge boulder that deals 20 to 40 area damage.","Throws a huge boulder that deals 40 to 60 area damage.","Throws a huge boulder that deals 60 to 100 area damage.","Throws a huge boulder that deals 60 to 100 area damage."];
+         _loc27_.level = 0;
+         _loc27_.cost = [2,2,2,0];
+         _loc27_.name = ["Boulder Throw","Boulder Throw II","Boulder Throw III","Boulder Throw III"];
+         var _loc28_:* = new Object();
+         _loc28_.description = ["Smashes the ground 4 times, Damaging, slowing and stunning nearby enemies.","Smashes the ground 6 times, Damaging, slowing and stunning nearby enemies.","Smashes the ground 8 times, Damaging, slowing and stunning nearby enemies.","Smashes the ground 8 times, Damaging, slowing and stunning nearby enemies."];
+         _loc28_.level = 0;
+         _loc28_.cost = [2,2,2,0];
+         _loc28_.name = ["Stomp","Stomp II","Stomp III","Stomp III"];
+         var _loc29_:* = new Object();
+         _loc29_.description = ["While holding ground, Grawl gradually gains bonus damage up to a maximum of 6.","While holding ground, Grawl gradually gains bonus damage up to a maximum of 12.","While holding ground, Grawl gradually gains bonus damage up to a maximum of 18.","While holding ground, Grawl gradually gains bonus damage up to a maximum of 18."];
+         _loc29_.level = 0;
+         _loc29_.cost = [1,1,1,0];
+         _loc29_.name = ["Bastion","Bastion II","Bastion III","Bastion III"];
+         var _loc30_:* = new Object();
+         _loc30_.description = ["Special attack that deals 60 damage, with a 10% slay chance if Grawl\'s life is triple its target\'s life.","Special attack that deals 120 damage, with a 20% slay chance if Grawl\'s life is triple its target\'s life.","Special attack that deals 180 damage, with a 30% slay chance if Grawl\'s life is triple its target\'s life","Special attack that deals 180 damage, with a 30% slay chance if Grawl\'s life is triple its target\'s life."];
+         _loc30_.level = 0;
+         _loc30_.cost = [3,3,3,0];
+         _loc30_.name = ["Shard Punch","Shard Punch II","Shard Punch III","Shard Punch III"];
+         var _loc31_:* = new Object();
+         _loc31_.description = ["Increases Grawl\'s maximum life by 50.","Increases Grawl\'s maximum life by an additional 100.","Increases Grawl\'s maximum life by an additional 150.","Increases Grawl\'s maximum life by an additional 150."];
+         _loc31_.level = 0;
+         _loc31_.cost = [1,2,3,0];
+         _loc31_.name = ["Hard Rock","Hard Rock II","Hard Rock III","Hard Rock III"];
+         this.heroGrawl.name = "grawl";
+         this.heroGrawl.heroClass = "Stone Giant";
+         this.heroGrawl.health = "450";
+         this.heroGrawl.armor = "Medium";
+         this.heroGrawl.damage = "17 - 25";
+         this.heroGrawl.speed = "Slow";
+         this.heroGrawl.level = 5;
+         this.heroGrawl.xp = this.master_xp[this.heroGrawl.level - 1];
+         this.heroGrawl.type = "melee";
+         this.heroGrawl.skillArray = [_loc27_,_loc28_,_loc29_,_loc30_,_loc31_];
+         this.heroGrawl.skill1 = _loc27_;
+         this.heroGrawl.skill2 = _loc28_;
+         this.heroGrawl.skill3 = _loc29_;
+         this.heroGrawl.skill4 = _loc30_;
+         this.heroGrawl.skill5 = _loc31_;
+         this.heroGrawl.skillPoints = this.§_-oq§(this.heroGrawl);
+         this.heroGrawl.number = 7;
+         this.heroGrawl.skillKey1 = "Boulder Throw";
+         this.heroGrawl.skillKey2 = "Stomp";
+         this.heroGrawl.skillKey3 = "Bastion";
+         this.heroGrawl.skillKey4 = "Shard Punch";
+         this.heroGrawl.skillKey5 = "Hard Rock";
+         var _loc32_:* = new Object();
+         _loc32_.description = ["Healing affects up to 2 allies, healing them for 20 life each, with 10% chance of reviving fallen ones.","Healing affects up to 3 allies, healing them for 40 life each, with 20% chance of reviving fallen ones.","Healing affects up to 4 allies, healing them for 60 life each, with 30% chance of reviving fallen ones.","Healing affects up to 4 allies, healing them for 60 life each, with 30% chance of reviving fallen ones."];
+         _loc32_.level = 0;
+         _loc32_.cost = [1,2,3,0];
+         _loc32_.name = ["Holy Light","Holy Light II","Holy Light III","Holy Light III"];
+         var _loc33_:* = new Object();
+         _loc33_.description = ["Consecrates a tower, granting it a bonus of 15% to damage for 4 seconds.","Consecrates a tower, granting it a bonus of 20% to damage for 8 seconds.","Consecrates a tower, granting it a bonus of 25% to damage for 12 seconds.","Consecrates a tower, granting it a bonus of 25% to damage for 12 seconds."];
+         _loc33_.level = 0;
+         _loc33_.cost = [2,2,3,0];
+         _loc33_.name = ["Consecrate","Consecrate II","Consecrate III","Consecrate III"];
+         var _loc34_:* = new Object();
+         _loc34_.description = ["Allows Dierdre to teleport while blessing nearby allies\' armor for 10 seconds.","Allows Dierdre to teleport while blessing nearby allies\' armor for 20 seconds.","Allows Dierdre to teleport while blessing nearby allies\' armor for 30 seconds.","Allows Dierdre to teleport while blessing nearby allies\' armor for 30 seconds."];
+         _loc34_.level = 0;
+         _loc34_.cost = [3,1,1,0];
+         _loc34_.name = ["Wings of Light","Wings of Light II","Wings of Light III","Wings of Light III"];
+         var _loc35_:* = new Object();
+         _loc35_.description = ["Grants Dierdre a heavenly armor to protect her from physical attacks.","Improves Dierdre’s armor rating to Medium.","Improves Dierdre’s armor rating to High.","Improves Dierdre’s armor rating to High."];
+         _loc35_.level = 0;
+         _loc35_.cost = [2,2,2,0];
+         _loc35_.name = ["Blessed Armor","Blessed Armor II","Blessed Armor III","Blessed Armor III"];
+         var _loc36_:* = new Object();
+         _loc36_.description = ["Increases Dierdre\'s maximum life by 30.","Increases Dierdre’s maximum life by an additional 60.","Increases Dierdre’s maximum life by an additional 90.","Increases Dierdre’s maximum life by an additional 90."];
+         _loc36_.level = 0;
+         _loc36_.cost = [1,2,3,0];
+         _loc36_.name = ["Divine Health","Divine Health II","Divine Health III","Divine Health III"];
+         this.heroDierdre.name = "dierdre";
+         this.heroDierdre.heroClass = "Priestess";
+         this.heroDierdre.health = "450";
+         this.heroDierdre.armor = "None";
+         this.heroDierdre.damage = "28-41";
+         this.heroDierdre.speed = "Average";
+         this.heroDierdre.level = 4;
+         this.heroDierdre.xp = this.master_xp[this.heroDierdre.level - 1];
+         this.heroDierdre.type = "magic";
+         this.heroDierdre.skillArray = [_loc32_,_loc33_,_loc34_,_loc35_,_loc36_];
+         this.heroDierdre.skill1 = _loc32_;
+         this.heroDierdre.skill2 = _loc33_;
+         this.heroDierdre.skill3 = _loc34_;
+         this.heroDierdre.skill4 = _loc35_;
+         this.heroDierdre.skill5 = _loc36_;
+         this.heroDierdre.skillPoints = this.§_-oq§(this.heroDierdre);
+         this.heroDierdre.number = 4;
+         this.heroDierdre.skillKey1 = "Holy Light";
+         this.heroDierdre.skillKey2 = "Consecrate";
+         this.heroDierdre.skillKey3 = "Wings of Light";
+         this.heroDierdre.skillKey4 = "Blessed Armor";
+         this.heroDierdre.skillKey5 = "Divine Health";
+         var _loc37_:* = new Object();
+         _loc37_.description = ["Throws a glaive that deals 22 damage and has a 30% chance to strike an additional target.","Throws a glaive that deals 30 damage and has a 40% chance to strike an additional target.","Throws a glaive that deals 35 damage and has a 50% chance to strike an additional target.","Throws a glaive that deals 35 damage and has a 50% chance to strike an additional target."];
+         _loc37_.level = 0;
+         _loc37_.cost = [2,2,2,0];
+         _loc37_.name = ["Energy Glaive","Energy Glaive II","Energy Glaive III","Energy Glaive III"];
+         var _loc38_:* = new Object();
+         _loc38_.description = ["Summons a drone that shoots overheated plasma dealing 80 damage over 1 second.","Summons a drone that shoots overheated plasma dealing 160 damage over 2 seconds.","Summons a drone that shoots overheated plasma dealing 240 damage over 3 seconds.","Summons a drone that shoots overheated plasma dealing 240 damage over 3 seconds."];
+         _loc38_.level = 0;
+         _loc38_.cost = [2,2,2,0];
+         _loc38_.name = ["Purification Protocol","Purification Protocol II","Purification Protocol III","Purification Protocol III"];
+         var _loc39_:* = new Object();
+         _loc39_.description = ["Calls its mothership to abduct one specimen with 250 life or less.","Calls its mothership to abduct up to two specimens totaling 600 life or less.","Calls its mothership to abduct a group of two or three specimens totaling 1000 life or any single one.","Calls its mothership to abduct a group of two or three specimens totaling 1000 life or any single one."];
+         _loc39_.level = 0;
+         _loc39_.cost = [3,4,4,0];
+         _loc39_.name = ["Abduction","Abduction II","Abductiont III","Abduction III"];
+         var _loc40_:* = new Object();
+         _loc40_.description = ["Increases Sha’tra\'s base attack damage by 5 and makes his attacks bypass armor.","Increases Sha’tra\'s base attack damage by another 5 points for a total of 10.","Increases Sha’tra\'s base attack damage by another 5 points for a total of 15.","Increases Sha’tra\'s base attack damage by another 5 points for a total of 15."];
+         _loc40_.level = 0;
+         _loc40_.cost = [2,1,1,0];
+         _loc40_.name = ["Vibroblades","Vibroblades II","Vibroblades III","Vibroblades III"];
+         var _loc41_:* = new Object();
+         _loc41_.description = ["Whenever Sha’tra reaches 0 life, he explodes dealing 100 area damage.","Whenever Sha’tra reaches 0 life, he explodes dealing 160 area damage.","Whenever Sha’tra reaches 0 life, he explodes dealing 220 area damage.","Whenever Sha’tra reaches 0 life, he explodes dealing 220 area damage."];
+         _loc41_.level = 0;
+         _loc41_.cost = [1,1,1,0];
+         _loc41_.name = ["Final Countdown","Final Countdown II","Final Countdown III","Final Countdown III"];
+         this.heroShatra.name = "shatra";
+         this.heroShatra.heroClass = "Skyhunter";
+         this.heroShatra.health = "450";
+         this.heroShatra.armor = "Low";
+         this.heroShatra.damage = "28-41";
+         this.heroShatra.speed = "Average";
+         this.heroShatra.level = 5;
+         this.heroShatra.xp = this.master_xp[this.heroShatra.level - 1];
+         this.heroShatra.type = "melee";
+         this.heroShatra.skillArray = [_loc37_,_loc38_,_loc39_,_loc40_,_loc41_];
+         this.heroShatra.skill1 = _loc37_;
+         this.heroShatra.skill2 = _loc38_;
+         this.heroShatra.skill3 = _loc39_;
+         this.heroShatra.skill4 = _loc40_;
+         this.heroShatra.skill5 = _loc41_;
+         this.heroShatra.skillPoints = this.§_-oq§(this.heroShatra);
+         this.heroShatra.number = 6;
+         this.heroShatra.skillKey1 = "Energy Glaive";
+         this.heroShatra.skillKey2 = "Purification Protocol";
+         this.heroShatra.skillKey3 = "Abduction";
+         this.heroShatra.skillKey4 = "Vibro Blades";
+         this.heroShatra.skillKey5 = "Final Countdown";
+         var _loc42_:* = new Object();
+         _loc42_.description = ["Spews forth a cone of searing flames dealing 28 area damage.","Spews forth a cone of searing flames dealing 42 area damage.","Spews forth a cone of searing flames dealing 56 area damage.","Spews forth a cone of searing flames dealing 56 area damage."];
+         _loc42_.level = 0;
+         _loc42_.cost = [2,2,2,0];
+         _loc42_.name = ["Blazing Breath","Blazing breath II","Blazing breath III","Blazing breath III"];
+         var _loc43_:* = new Object();
+         _loc43_.description = ["Dives and feasts upon an enemy dealing 80 damage, with a 20% chance of devouring it.","Dives and feasts upon an enemy dealing 140 damage, with a 30% chance of devouring it.","Dives and feasts upon an enemy dealing 200 damage, with a 40% chance of devouring it.","Dives and feasts upon an enemy dealing 200 damage, with a 40% chance of devouring it."];
+         _loc43_.level = 0;
+         _loc43_.cost = [3,2,2,0];
+         _loc43_.name = ["Feast","Feast II","Feast III","Feast III"];
+         var _loc44_:* = new Object();
+         _loc44_.description = ["Sends out a cloud of hot smoke that slows enemies by 30% for 3 seconds.","Sends out a cloud of hot smoke that slows enemies by 40% for 4 seconds.","Sends out a cloud of hot smoke that slows enemies by 50% for 5 seconds.","Sends out a cloud of hot smoke that slows enemies by 50% for 5 seconds."];
+         _loc44_.level = 0;
+         _loc44_.cost = [1,1,1,0];
+         _loc44_.name = ["Fiery Mist","Fiery Mist II","Fiery Mist III","Fiery Mist III"];
+         var _loc45_:* = new Object();
+         _loc45_.description = ["Scorches the ground, melting all enemies with 4 explosions of 30 damage each.","Scorches the ground, melting all enemies with 8 explosions of 30 damage each.","Scorches the ground, melting all enemies with 12 explosions of 30 damage each.","Scorches the ground, melting all enemies with 12 explosions of 30 damage each."];
+         _loc45_.level = 0;
+         _loc45_.cost = [3,3,3,0];
+         _loc45_.name = ["Wildfire Barrage","Wildfire Barrage II","Wildfire Barrage III","Wildfire Barrage III"];
+         var _loc46_:* = new Object();
+         _loc46_.description = ["Fire based attacks set enemies on fire, burning them for 6 damage over 3 seconds.","Fire based attacks set enemies on fire, burning them for 18 damage over 3 seconds.","Fire based attacks set enemies on fire, burning them for 30 damage over 3 seconds.","Fire based attacks set enemies on fire, burning them for 30 damage over 3 seconds."];
+         _loc46_.level = 0;
+         _loc46_.cost = [1,2,2,0];
+         _loc46_.name = ["Reign of Fire","Reign of Fire II","Reign of Fire III","Reign of Fire III"];
+         this.heroAshbite.name = "ashbite";
+         this.heroAshbite.heroClass = "Dragon";
+         this.heroAshbite.health = "450";
+         this.heroAshbite.armor = "None";
+         this.heroAshbite.damage = "28-41";
+         this.heroAshbite.speed = "Average";
+         this.heroAshbite.level = 6;
+         this.heroAshbite.xp = this.master_xp[this.heroAshbite.level - 1];
+         this.heroAshbite.type = "fire";
+         this.heroAshbite.skillArray = [_loc42_,_loc43_,_loc44_,_loc45_,_loc46_];
+         this.heroAshbite.skill1 = _loc42_;
+         this.heroAshbite.skill2 = _loc43_;
+         this.heroAshbite.skill3 = _loc44_;
+         this.heroAshbite.skill4 = _loc45_;
+         this.heroAshbite.skill5 = _loc46_;
+         this.heroAshbite.skillPoints = this.§_-oq§(this.heroAshbite);
+         this.heroAshbite.number = 8;
+         this.heroAshbite.skillKey1 = "Blazing Breath";
+         this.heroAshbite.skillKey2 = "Feast";
+         this.heroAshbite.skillKey3 = "Fiery Mist";
+         this.heroAshbite.skillKey4 = "Wildfire Barrage";
+         this.heroAshbite.skillKey5 = "Reign of Fire";
+         this.selectedHero = this.heroAlric;
+      }
+      
+      public function §case super§() : void
+      {
+         var §function for var§:SharedObject = null;
+         if(!this.game.§_-yX§)
+         {
+            try
+            {
+               §function for var§ = SharedObject.getLocal(this.game.§use const get§);
+               §function for var§.data.heroData.selectedHero = this.selectedHero.name;
+               §function for var§.data.heroData.heroAlric.level = this.heroAlric.level;
+               §function for var§.data.heroData.heroAlric.xp = this.heroAlric.xp;
+               §function for var§.data.heroData.heroAlric.skill1.level = this.heroAlric.skill1.level;
+               §function for var§.data.heroData.heroAlric.skill2.level = this.heroAlric.skill2.level;
+               §function for var§.data.heroData.heroAlric.skill3.level = this.heroAlric.skill3.level;
+               §function for var§.data.heroData.heroAlric.skill4.level = this.heroAlric.skill4.level;
+               §function for var§.data.heroData.heroAlric.skill5.level = this.heroAlric.skill5.level;
+               §function for var§.data.heroData.heroMirage.level = this.heroMirage.level;
+               §function for var§.data.heroData.heroMirage.xp = this.heroMirage.xp;
+               §function for var§.data.heroData.heroMirage.skill1.level = this.heroMirage.skill1.level;
+               §function for var§.data.heroData.heroMirage.skill2.level = this.heroMirage.skill2.level;
+               §function for var§.data.heroData.heroMirage.skill3.level = this.heroMirage.skill3.level;
+               §function for var§.data.heroData.heroMirage.skill4.level = this.heroMirage.skill4.level;
+               §function for var§.data.heroData.heroMirage.skill5.level = this.heroMirage.skill5.level;
+               §function for var§.data.heroData.heroCronan.level = this.heroCronan.level;
+               §function for var§.data.heroData.heroCronan.xp = this.heroCronan.xp;
+               §function for var§.data.heroData.heroCronan.skill1.level = this.heroCronan.skill1.level;
+               §function for var§.data.heroData.heroCronan.skill2.level = this.heroCronan.skill2.level;
+               §function for var§.data.heroData.heroCronan.skill3.level = this.heroCronan.skill3.level;
+               §function for var§.data.heroData.heroCronan.skill4.level = this.heroCronan.skill4.level;
+               §function for var§.data.heroData.heroCronan.skill5.level = this.heroCronan.skill5.level;
+               §function for var§.data.heroData.heroCaptain.level = this.heroCaptain.level;
+               §function for var§.data.heroData.heroCaptain.xp = this.heroCaptain.xp;
+               §function for var§.data.heroData.heroCaptain.skill1.level = this.heroCaptain.skill1.level;
+               §function for var§.data.heroData.heroCaptain.skill2.level = this.heroCaptain.skill2.level;
+               §function for var§.data.heroData.heroCaptain.skill3.level = this.heroCaptain.skill3.level;
+               §function for var§.data.heroData.heroCaptain.skill4.level = this.heroCaptain.skill4.level;
+               §function for var§.data.heroData.heroCaptain.skill5.level = this.heroCaptain.skill5.level;
+               §function for var§.data.heroData.heroNivus.level = this.heroNivus.level;
+               §function for var§.data.heroData.heroNivus.xp = this.heroNivus.xp;
+               §function for var§.data.heroData.heroNivus.skill1.level = this.heroNivus.skill1.level;
+               §function for var§.data.heroData.heroNivus.skill2.level = this.heroNivus.skill2.level;
+               §function for var§.data.heroData.heroNivus.skill3.level = this.heroNivus.skill3.level;
+               §function for var§.data.heroData.heroNivus.skill4.level = this.heroNivus.skill4.level;
+               §function for var§.data.heroData.heroNivus.skill5.level = this.heroNivus.skill5.level;
+               §function for var§.data.heroData.heroDierdre.level = this.heroDierdre.level;
+               §function for var§.data.heroData.heroDierdre.xp = this.heroDierdre.xp;
+               §function for var§.data.heroData.heroDierdre.skill1.level = this.heroDierdre.skill1.level;
+               §function for var§.data.heroData.heroDierdre.skill2.level = this.heroDierdre.skill2.level;
+               §function for var§.data.heroData.heroDierdre.skill3.level = this.heroDierdre.skill3.level;
+               §function for var§.data.heroData.heroDierdre.skill4.level = this.heroDierdre.skill4.level;
+               §function for var§.data.heroData.heroDierdre.skill5.level = this.heroDierdre.skill5.level;
+               §function for var§.data.heroData.heroGrawl.level = this.heroGrawl.level;
+               §function for var§.data.heroData.heroGrawl.xp = this.heroGrawl.xp;
+               §function for var§.data.heroData.heroGrawl.skill1.level = this.heroGrawl.skill1.level;
+               §function for var§.data.heroData.heroGrawl.skill2.level = this.heroGrawl.skill2.level;
+               §function for var§.data.heroData.heroGrawl.skill3.level = this.heroGrawl.skill3.level;
+               §function for var§.data.heroData.heroGrawl.skill4.level = this.heroGrawl.skill4.level;
+               §function for var§.data.heroData.heroGrawl.skill5.level = this.heroGrawl.skill5.level;
+               §function for var§.data.heroData.heroShatra.level = this.heroShatra.level;
+               §function for var§.data.heroData.heroShatra.xp = this.heroShatra.xp;
+               §function for var§.data.heroData.heroShatra.skill1.level = this.heroShatra.skill1.level;
+               §function for var§.data.heroData.heroShatra.skill2.level = this.heroShatra.skill2.level;
+               §function for var§.data.heroData.heroShatra.skill3.level = this.heroShatra.skill3.level;
+               §function for var§.data.heroData.heroShatra.skill4.level = this.heroShatra.skill4.level;
+               §function for var§.data.heroData.heroShatra.skill5.level = this.heroShatra.skill5.level;
+               §function for var§.data.heroData.heroAshbite.level = this.heroAshbite.level;
+               §function for var§.data.heroData.heroAshbite.xp = this.heroAshbite.xp;
+               §function for var§.data.heroData.heroAshbite.skill1.level = this.heroAshbite.skill1.level;
+               §function for var§.data.heroData.heroAshbite.skill2.level = this.heroAshbite.skill2.level;
+               §function for var§.data.heroData.heroAshbite.skill3.level = this.heroAshbite.skill3.level;
+               §function for var§.data.heroData.heroAshbite.skill4.level = this.heroAshbite.skill4.level;
+               §function for var§.data.heroData.heroAshbite.skill5.level = this.heroAshbite.skill5.level;
+               §function for var§.flush();
+               §function for var§.close();
+            }
+            catch(err:Error)
+            {
+               trace("error salvar " + err);
+            }
+         }
+      }
+      
+      public function loadData() : void
+      {
+         var my_so:SharedObject = null;
+         try
+         {
+            my_so = SharedObject.getLocal(this.game.§use const get§);
+            switch(my_so.data.heroData.selectedHero)
+            {
+               case "alric":
+                  this.selectedHero = this.heroAlric;
+                  break;
+               case "mirage":
+                  this.selectedHero = this.heroMirage;
+                  break;
+               case "cronan":
+                  this.selectedHero = this.heroCronan;
+                  break;
+               case "dierdre":
+                  this.selectedHero = this.heroDierdre;
+                  break;
+               case "captain":
+                  this.selectedHero = this.heroCaptain;
+                  break;
+               case "nivus":
+                  this.selectedHero = this.heroNivus;
+                  break;
+               case "grawl":
+                  this.selectedHero = this.heroGrawl;
+                  break;
+               case "shatra":
+                  this.selectedHero = this.heroShatra;
+                  break;
+               case "ashbite":
+                  this.selectedHero = this.heroAshbite;
+            }
+            this.heroAlric.level = my_so.data.heroData.heroAlric.level;
+            this.heroAlric.xp = my_so.data.heroData.heroAlric.xp;
+            this.heroAlric.skill1.level = my_so.data.heroData.heroAlric.skill1.level;
+            this.heroAlric.skill2.level = my_so.data.heroData.heroAlric.skill2.level;
+            this.heroAlric.skill3.level = my_so.data.heroData.heroAlric.skill3.level;
+            this.heroAlric.skill4.level = my_so.data.heroData.heroAlric.skill4.level;
+            this.heroAlric.skill5.level = my_so.data.heroData.heroAlric.skill5.level;
+            this.heroMirage.level = my_so.data.heroData.heroMirage.level;
+            this.heroMirage.xp = my_so.data.heroData.heroMirage.xp;
+            this.heroMirage.skill1.level = my_so.data.heroData.heroMirage.skill1.level;
+            this.heroMirage.skill2.level = my_so.data.heroData.heroMirage.skill2.level;
+            this.heroMirage.skill3.level = my_so.data.heroData.heroMirage.skill3.level;
+            this.heroMirage.skill4.level = my_so.data.heroData.heroMirage.skill4.level;
+            this.heroMirage.skill5.level = my_so.data.heroData.heroMirage.skill5.level;
+            this.heroCronan.level = my_so.data.heroData.heroCronan.level;
+            this.heroCronan.xp = my_so.data.heroData.heroCronan.xp;
+            this.heroCronan.skill1.level = my_so.data.heroData.heroCronan.skill1.level;
+            this.heroCronan.skill2.level = my_so.data.heroData.heroCronan.skill2.level;
+            this.heroCronan.skill3.level = my_so.data.heroData.heroCronan.skill3.level;
+            this.heroCronan.skill4.level = my_so.data.heroData.heroCronan.skill4.level;
+            this.heroCronan.skill5.level = my_so.data.heroData.heroCronan.skill5.level;
+            this.heroCaptain.level = my_so.data.heroData.heroCaptain.level;
+            this.heroCaptain.xp = my_so.data.heroData.heroCaptain.xp;
+            this.heroCaptain.skill1.level = my_so.data.heroData.heroCaptain.skill1.level;
+            this.heroCaptain.skill2.level = my_so.data.heroData.heroCaptain.skill2.level;
+            this.heroCaptain.skill3.level = my_so.data.heroData.heroCaptain.skill3.level;
+            this.heroCaptain.skill4.level = my_so.data.heroData.heroCaptain.skill4.level;
+            this.heroCaptain.skill5.level = my_so.data.heroData.heroCaptain.skill5.level;
+            this.heroNivus.level = my_so.data.heroData.heroNivus.level;
+            this.heroNivus.xp = my_so.data.heroData.heroNivus.xp;
+            this.heroNivus.skill1.level = my_so.data.heroData.heroNivus.skill1.level;
+            this.heroNivus.skill2.level = my_so.data.heroData.heroNivus.skill2.level;
+            this.heroNivus.skill3.level = my_so.data.heroData.heroNivus.skill3.level;
+            this.heroNivus.skill4.level = my_so.data.heroData.heroNivus.skill4.level;
+            this.heroNivus.skill5.level = my_so.data.heroData.heroNivus.skill5.level;
+            this.heroDierdre.level = my_so.data.heroData.heroDierdre.level;
+            this.heroDierdre.xp = my_so.data.heroData.heroDierdre.xp;
+            this.heroDierdre.skill1.level = my_so.data.heroData.heroDierdre.skill1.level;
+            this.heroDierdre.skill2.level = my_so.data.heroData.heroDierdre.skill2.level;
+            this.heroDierdre.skill3.level = my_so.data.heroData.heroDierdre.skill3.level;
+            this.heroDierdre.skill4.level = my_so.data.heroData.heroDierdre.skill4.level;
+            this.heroDierdre.skill5.level = my_so.data.heroData.heroDierdre.skill5.level;
+            this.heroGrawl.level = my_so.data.heroData.heroGrawl.level;
+            this.heroGrawl.xp = my_so.data.heroData.heroGrawl.xp;
+            this.heroGrawl.skill1.level = my_so.data.heroData.heroGrawl.skill1.level;
+            this.heroGrawl.skill2.level = my_so.data.heroData.heroGrawl.skill2.level;
+            this.heroGrawl.skill3.level = my_so.data.heroData.heroGrawl.skill3.level;
+            this.heroGrawl.skill4.level = my_so.data.heroData.heroGrawl.skill4.level;
+            this.heroGrawl.skill5.level = my_so.data.heroData.heroGrawl.skill5.level;
+            this.heroShatra.level = my_so.data.heroData.heroShatra.level;
+            this.heroShatra.xp = my_so.data.heroData.heroShatra.xp;
+            this.heroShatra.skill1.level = my_so.data.heroData.heroShatra.skill1.level;
+            this.heroShatra.skill2.level = my_so.data.heroData.heroShatra.skill2.level;
+            this.heroShatra.skill3.level = my_so.data.heroData.heroShatra.skill3.level;
+            this.heroShatra.skill4.level = my_so.data.heroData.heroShatra.skill4.level;
+            this.heroShatra.skill5.level = my_so.data.heroData.heroShatra.skill5.level;
+            this.heroAshbite.level = my_so.data.heroData.heroAshbite.level;
+            this.heroAshbite.xp = my_so.data.heroData.heroAshbite.xp;
+            this.heroAshbite.skill1.level = my_so.data.heroData.heroAshbite.skill1.level;
+            this.heroAshbite.skill2.level = my_so.data.heroData.heroAshbite.skill2.level;
+            this.heroAshbite.skill3.level = my_so.data.heroData.heroAshbite.skill3.level;
+            this.heroAshbite.skill4.level = my_so.data.heroData.heroAshbite.skill4.level;
+            this.heroAshbite.skill5.level = my_so.data.heroData.heroAshbite.skill5.level;
+            this.updateSkillPoints();
+            my_so.flush();
+            my_so.close();
+         }
+         catch(err:Error)
+         {
+            trace("error cargar " + err);
+         }
+      }
+      
+      public function updateSkillPoints() : void
+      {
+         this.heroAlric.skillPoints = this.§_-oq§(this.heroAlric);
+         this.heroMirage.skillPoints = this.§_-oq§(this.heroMirage);
+         this.heroCaptain.skillPoints = this.§_-oq§(this.heroCaptain);
+         this.heroCronan.skillPoints = this.§_-oq§(this.heroCronan);
+         this.heroNivus.skillPoints = this.§_-oq§(this.heroNivus);
+         this.heroDierdre.skillPoints = this.§_-oq§(this.heroDierdre);
+         this.heroGrawl.skillPoints = this.§_-oq§(this.heroGrawl);
+         this.heroShatra.skillPoints = this.§_-oq§(this.heroShatra);
+         this.heroAshbite.skillPoints = this.§_-oq§(this.heroAshbite);
+      }
+      
+      public function §_-oq§(param1:Object) : Number
+      {
+         var _loc6_:int = 0;
+         var _loc2_:Number = 0;
+         var _loc3_:* = [0,3,6,10,13,16,20,23,26,30];
+         var _loc4_:int = 0;
+         while(_loc4_ < 5)
+         {
+            if(param1.skillArray[_loc4_].level > 0)
+            {
+               _loc6_ = 0;
+               while(_loc6_ < param1.skillArray[_loc4_].level)
+               {
+                  _loc2_ += param1.skillArray[_loc4_].cost[_loc6_];
+                  _loc6_++;
+               }
+            }
+            _loc4_++;
+         }
+         var _loc5_:Number = Number(_loc3_[param1.level - 1]);
+         return _loc5_ - _loc2_;
+      }
+      
+      public function calculateTotalCost(param1:Object) : Number
+      {
+         var _loc4_:int = 0;
+         var _loc2_:Number = 0;
+         var _loc3_:int = 0;
+         while(_loc3_ < 5)
+         {
+            if(param1.skillArray[_loc3_].level > 0)
+            {
+               _loc4_ = 0;
+               while(_loc4_ < param1.skillArray[_loc3_].level)
+               {
+                  _loc2_ += param1.skillArray[_loc3_].cost[_loc4_];
+                  _loc4_++;
+               }
+            }
+            _loc3_++;
+         }
+         return _loc2_;
+      }
+      
+      public function §switch for set§(param1:Object) : void
+      {
+         switch(param1.selectedHero)
+         {
+            case "alric":
+               this.selectedHero = this.heroAlric;
+               break;
+            case "mirage":
+               this.selectedHero = this.heroMirage;
+               break;
+            case "cronan":
+               this.selectedHero = this.heroCronan;
+               break;
+            case "dierdre":
+               this.selectedHero = this.heroDierdre;
+               break;
+            case "captain":
+               this.selectedHero = this.heroCaptain;
+               break;
+            case "nivus":
+               this.selectedHero = this.heroNivus;
+               break;
+            case "grawl":
+               this.selectedHero = this.heroGrawl;
+               break;
+            case "shatra":
+               this.selectedHero = this.heroShatra;
+               break;
+            case "ashbite":
+               this.selectedHero = this.heroAshbite;
+         }
+         this.heroAlric.level = param1.heroAlric.level;
+         this.heroAlric.xp = param1.heroAlric.xp;
+         this.heroAlric.skill1.level = param1.heroAlric.skill1.level;
+         this.heroAlric.skill2.level = param1.heroAlric.skill2.level;
+         this.heroAlric.skill3.level = param1.heroAlric.skill3.level;
+         this.heroAlric.skill4.level = param1.heroAlric.skill4.level;
+         this.heroAlric.skill5.level = param1.heroAlric.skill5.level;
+         this.heroMirage.level = param1.heroMirage.level;
+         this.heroMirage.xp = param1.heroMirage.xp;
+         this.heroMirage.skill1.level = param1.heroMirage.skill1.level;
+         this.heroMirage.skill2.level = param1.heroMirage.skill2.level;
+         this.heroMirage.skill3.level = param1.heroMirage.skill3.level;
+         this.heroMirage.skill4.level = param1.heroMirage.skill4.level;
+         this.heroMirage.skill5.level = param1.heroMirage.skill5.level;
+         this.heroCronan.level = param1.heroCronan.level;
+         this.heroCronan.xp = param1.heroCronan.xp;
+         this.heroCronan.skill1.level = param1.heroCronan.skill1.level;
+         this.heroCronan.skill2.level = param1.heroCronan.skill2.level;
+         this.heroCronan.skill3.level = param1.heroCronan.skill3.level;
+         this.heroCronan.skill4.level = param1.heroCronan.skill4.level;
+         this.heroCronan.skill5.level = param1.heroCronan.skill5.level;
+         this.heroCaptain.level = param1.heroCaptain.level;
+         this.heroCaptain.xp = param1.heroCaptain.xp;
+         this.heroCaptain.skill1.level = param1.heroCaptain.skill1.level;
+         this.heroCaptain.skill2.level = param1.heroCaptain.skill2.level;
+         this.heroCaptain.skill3.level = param1.heroCaptain.skill3.level;
+         this.heroCaptain.skill4.level = param1.heroCaptain.skill4.level;
+         this.heroCaptain.skill5.level = param1.heroCaptain.skill5.level;
+         this.heroNivus.level = param1.heroNivus.level;
+         this.heroNivus.xp = param1.heroNivus.xp;
+         this.heroNivus.skill1.level = param1.heroNivus.skill1.level;
+         this.heroNivus.skill2.level = param1.heroNivus.skill2.level;
+         this.heroNivus.skill3.level = param1.heroNivus.skill3.level;
+         this.heroNivus.skill4.level = param1.heroNivus.skill4.level;
+         this.heroNivus.skill5.level = param1.heroNivus.skill5.level;
+         this.heroDierdre.level = param1.heroDierdre.level;
+         this.heroDierdre.xp = param1.heroDierdre.xp;
+         this.heroDierdre.skill1.level = param1.heroDierdre.skill1.level;
+         this.heroDierdre.skill2.level = param1.heroDierdre.skill2.level;
+         this.heroDierdre.skill3.level = param1.heroDierdre.skill3.level;
+         this.heroDierdre.skill4.level = param1.heroDierdre.skill4.level;
+         this.heroDierdre.skill5.level = param1.heroDierdre.skill5.level;
+         this.heroGrawl.level = param1.heroGrawl.level;
+         this.heroGrawl.xp = param1.heroGrawl.xp;
+         this.heroGrawl.skill1.level = param1.heroGrawl.skill1.level;
+         this.heroGrawl.skill2.level = param1.heroGrawl.skill2.level;
+         this.heroGrawl.skill3.level = param1.heroGrawl.skill3.level;
+         this.heroGrawl.skill4.level = param1.heroGrawl.skill4.level;
+         this.heroGrawl.skill5.level = param1.heroGrawl.skill5.level;
+         this.heroShatra.level = param1.heroShatra.level;
+         this.heroShatra.xp = param1.heroShatra.xp;
+         this.heroShatra.skill1.level = param1.heroShatra.skill1.level;
+         this.heroShatra.skill2.level = param1.heroShatra.skill2.level;
+         this.heroShatra.skill3.level = param1.heroShatra.skill3.level;
+         this.heroShatra.skill4.level = param1.heroShatra.skill4.level;
+         this.heroShatra.skill5.level = param1.heroShatra.skill5.level;
+         this.heroAshbite.level = param1.heroAshbite.level;
+         this.heroAshbite.xp = param1.heroAshbite.xp;
+         this.heroAshbite.skill1.level = param1.heroAshbite.skill1.level;
+         this.heroAshbite.skill2.level = param1.heroAshbite.skill2.level;
+         this.heroAshbite.skill3.level = param1.heroAshbite.skill3.level;
+         this.heroAshbite.skill4.level = param1.heroAshbite.skill4.level;
+         this.heroAshbite.skill5.level = param1.heroAshbite.skill5.level;
+         this.updateSkillPoints();
+      }
+      
+      public function §_-xs§() : Object
+      {
+         var _loc1_:Object = new Object();
+         var _loc2_:Object = new Object();
+         var _loc3_:Object = new Object();
+         var _loc4_:Object = new Object();
+         var _loc5_:Object = new Object();
+         var _loc6_:Object = new Object();
+         var _loc7_:Object = new Object();
+         var _loc8_:Object = new Object();
+         var _loc9_:Object = new Object();
+         var _loc10_:Object = new Object();
+         var _loc11_:* = new Object();
+         var _loc12_:* = new Object();
+         var _loc13_:* = new Object();
+         var _loc14_:* = new Object();
+         var _loc15_:* = new Object();
+         var _loc16_:* = new Object();
+         var _loc17_:* = new Object();
+         var _loc18_:* = new Object();
+         var _loc19_:* = new Object();
+         var _loc20_:* = new Object();
+         var _loc21_:* = new Object();
+         var _loc22_:* = new Object();
+         var _loc23_:* = new Object();
+         var _loc24_:* = new Object();
+         var _loc25_:* = new Object();
+         var _loc26_:* = new Object();
+         var _loc27_:* = new Object();
+         var _loc28_:* = new Object();
+         var _loc29_:* = new Object();
+         var _loc30_:* = new Object();
+         var _loc31_:* = new Object();
+         var _loc32_:* = new Object();
+         var _loc33_:* = new Object();
+         var _loc34_:* = new Object();
+         var _loc35_:* = new Object();
+         var _loc36_:* = new Object();
+         var _loc37_:* = new Object();
+         var _loc38_:* = new Object();
+         var _loc39_:* = new Object();
+         var _loc40_:* = new Object();
+         var _loc41_:* = new Object();
+         var _loc42_:* = new Object();
+         var _loc43_:* = new Object();
+         var _loc44_:* = new Object();
+         var _loc45_:* = new Object();
+         var _loc46_:* = new Object();
+         var _loc47_:* = new Object();
+         var _loc48_:* = new Object();
+         var _loc49_:* = new Object();
+         var _loc50_:* = new Object();
+         var _loc51_:* = new Object();
+         var _loc52_:* = new Object();
+         var _loc53_:* = new Object();
+         var _loc54_:* = new Object();
+         var _loc55_:* = new Object();
+         _loc1_.heroAlric = _loc2_;
+         _loc1_.heroMirage = _loc3_;
+         _loc1_.heroCronan = _loc4_;
+         _loc1_.heroNivus = _loc6_;
+         _loc1_.heroDierdre = _loc7_;
+         _loc1_.heroGrawl = _loc8_;
+         _loc1_.heroShatra = _loc9_;
+         _loc1_.heroAshbite = _loc10_;
+         _loc1_.heroCaptain = _loc5_;
+         _loc1_.selectedHero = this.selectedHero.name;
+         _loc1_.heroAlric.skill1 = _loc11_;
+         _loc1_.heroAlric.skill2 = _loc12_;
+         _loc1_.heroAlric.skill3 = _loc13_;
+         _loc1_.heroAlric.skill4 = _loc14_;
+         _loc1_.heroAlric.skill5 = _loc15_;
+         _loc1_.heroMirage.skill1 = _loc16_;
+         _loc1_.heroMirage.skill2 = _loc17_;
+         _loc1_.heroMirage.skill3 = _loc18_;
+         _loc1_.heroMirage.skill4 = _loc19_;
+         _loc1_.heroMirage.skill5 = _loc20_;
+         _loc1_.heroCronan.skill1 = _loc21_;
+         _loc1_.heroCronan.skill2 = _loc22_;
+         _loc1_.heroCronan.skill3 = _loc23_;
+         _loc1_.heroCronan.skill4 = _loc24_;
+         _loc1_.heroCronan.skill5 = _loc25_;
+         _loc1_.heroCaptain.skill1 = _loc26_;
+         _loc1_.heroCaptain.skill2 = _loc27_;
+         _loc1_.heroCaptain.skill3 = _loc28_;
+         _loc1_.heroCaptain.skill4 = _loc29_;
+         _loc1_.heroCaptain.skill5 = _loc30_;
+         _loc1_.heroNivus.skill1 = _loc31_;
+         _loc1_.heroNivus.skill2 = _loc32_;
+         _loc1_.heroNivus.skill3 = _loc33_;
+         _loc1_.heroNivus.skill4 = _loc34_;
+         _loc1_.heroNivus.skill5 = _loc35_;
+         _loc1_.heroDierdre.skill1 = _loc36_;
+         _loc1_.heroDierdre.skill2 = _loc37_;
+         _loc1_.heroDierdre.skill3 = _loc38_;
+         _loc1_.heroDierdre.skill4 = _loc39_;
+         _loc1_.heroDierdre.skill5 = _loc40_;
+         _loc1_.heroGrawl.skill1 = _loc41_;
+         _loc1_.heroGrawl.skill2 = _loc42_;
+         _loc1_.heroGrawl.skill3 = _loc43_;
+         _loc1_.heroGrawl.skill4 = _loc44_;
+         _loc1_.heroGrawl.skill5 = _loc45_;
+         _loc1_.heroShatra.skill1 = _loc46_;
+         _loc1_.heroShatra.skill2 = _loc47_;
+         _loc1_.heroShatra.skill3 = _loc48_;
+         _loc1_.heroShatra.skill4 = _loc49_;
+         _loc1_.heroShatra.skill5 = _loc50_;
+         _loc1_.heroAshbite.skill1 = _loc51_;
+         _loc1_.heroAshbite.skill2 = _loc52_;
+         _loc1_.heroAshbite.skill3 = _loc53_;
+         _loc1_.heroAshbite.skill4 = _loc54_;
+         _loc1_.heroAshbite.skill5 = _loc55_;
+         _loc1_.heroAlric.level = this.heroAlric.level;
+         _loc1_.heroAlric.xp = this.heroAlric.xp;
+         _loc1_.heroAlric.skill1.level = this.heroAlric.skill1.level;
+         _loc1_.heroAlric.skill2.level = this.heroAlric.skill2.level;
+         _loc1_.heroAlric.skill3.level = this.heroAlric.skill3.level;
+         _loc1_.heroAlric.skill4.level = this.heroAlric.skill4.level;
+         _loc1_.heroAlric.skill5.level = this.heroAlric.skill5.level;
+         _loc1_.heroMirage.level = this.heroMirage.level;
+         _loc1_.heroMirage.xp = this.heroMirage.xp;
+         _loc1_.heroMirage.skill1.level = this.heroMirage.skill1.level;
+         _loc1_.heroMirage.skill2.level = this.heroMirage.skill2.level;
+         _loc1_.heroMirage.skill3.level = this.heroMirage.skill3.level;
+         _loc1_.heroMirage.skill4.level = this.heroMirage.skill4.level;
+         _loc1_.heroMirage.skill5.level = this.heroMirage.skill5.level;
+         _loc1_.heroCronan.level = this.heroCronan.level;
+         _loc1_.heroCronan.xp = this.heroCronan.xp;
+         _loc1_.heroCronan.skill1.level = this.heroCronan.skill1.level;
+         _loc1_.heroCronan.skill2.level = this.heroCronan.skill2.level;
+         _loc1_.heroCronan.skill3.level = this.heroCronan.skill3.level;
+         _loc1_.heroCronan.skill4.level = this.heroCronan.skill4.level;
+         _loc1_.heroCronan.skill5.level = this.heroCronan.skill5.level;
+         _loc1_.heroCaptain.level = this.heroCaptain.level;
+         _loc1_.heroCaptain.xp = this.heroCaptain.xp;
+         _loc1_.heroCaptain.skill1.level = this.heroCaptain.skill1.level;
+         _loc1_.heroCaptain.skill2.level = this.heroCaptain.skill2.level;
+         _loc1_.heroCaptain.skill3.level = this.heroCaptain.skill3.level;
+         _loc1_.heroCaptain.skill4.level = this.heroCaptain.skill4.level;
+         _loc1_.heroCaptain.skill5.level = this.heroCaptain.skill5.level;
+         _loc1_.heroNivus.level = this.heroNivus.level;
+         _loc1_.heroNivus.xp = this.heroNivus.xp;
+         _loc1_.heroNivus.skill1.level = this.heroNivus.skill1.level;
+         _loc1_.heroNivus.skill2.level = this.heroNivus.skill2.level;
+         _loc1_.heroNivus.skill3.level = this.heroNivus.skill3.level;
+         _loc1_.heroNivus.skill4.level = this.heroNivus.skill4.level;
+         _loc1_.heroNivus.skill5.level = this.heroNivus.skill5.level;
+         _loc1_.heroDierdre.level = this.heroDierdre.level;
+         _loc1_.heroDierdre.xp = this.heroDierdre.xp;
+         _loc1_.heroDierdre.skill1.level = this.heroDierdre.skill1.level;
+         _loc1_.heroDierdre.skill2.level = this.heroDierdre.skill2.level;
+         _loc1_.heroDierdre.skill3.level = this.heroDierdre.skill3.level;
+         _loc1_.heroDierdre.skill4.level = this.heroDierdre.skill4.level;
+         _loc1_.heroDierdre.skill5.level = this.heroDierdre.skill5.level;
+         _loc1_.heroGrawl.level = this.heroGrawl.level;
+         _loc1_.heroGrawl.xp = this.heroGrawl.xp;
+         _loc1_.heroGrawl.skill1.level = this.heroGrawl.skill1.level;
+         _loc1_.heroGrawl.skill2.level = this.heroGrawl.skill2.level;
+         _loc1_.heroGrawl.skill3.level = this.heroGrawl.skill3.level;
+         _loc1_.heroGrawl.skill4.level = this.heroGrawl.skill4.level;
+         _loc1_.heroGrawl.skill5.level = this.heroGrawl.skill5.level;
+         _loc1_.heroShatra.level = this.heroShatra.level;
+         _loc1_.heroShatra.xp = this.heroShatra.xp;
+         _loc1_.heroShatra.skill1.level = this.heroShatra.skill1.level;
+         _loc1_.heroShatra.skill2.level = this.heroShatra.skill2.level;
+         _loc1_.heroShatra.skill3.level = this.heroShatra.skill3.level;
+         _loc1_.heroShatra.skill4.level = this.heroShatra.skill4.level;
+         _loc1_.heroShatra.skill5.level = this.heroShatra.skill5.level;
+         _loc1_.heroAshbite.level = this.heroAshbite.level;
+         _loc1_.heroAshbite.xp = this.heroAshbite.xp;
+         _loc1_.heroAshbite.skill1.level = this.heroAshbite.skill1.level;
+         _loc1_.heroAshbite.skill2.level = this.heroAshbite.skill2.level;
+         _loc1_.heroAshbite.skill3.level = this.heroAshbite.skill3.level;
+         _loc1_.heroAshbite.skill4.level = this.heroAshbite.skill4.level;
+         _loc1_.heroAshbite.skill5.level = this.heroAshbite.skill5.level;
+         return _loc1_;
+      }
+   }
+}
+

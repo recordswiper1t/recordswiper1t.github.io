@@ -1,0 +1,2479 @@
+package
+{
+   import §_-aQ§.*;
+   import §_-aW§.§dynamic const in§;
+   import com.greensock.*;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   import flash.text.TextField;
+   import flash.ui.*;
+   import flash.utils.*;
+   import ironhide.utils.tooltip.*;
+   import §super for super§.*;
+   
+   public class Level extends §extends const true§
+   {
+      
+      public static const LEVEL_NORMAL:int = 0;
+      
+      public static const LEVEL_PAUSED:int = 1;
+      
+      public static const LEVEL_WIN:int = 2;
+      
+      public static const LEVEL_OVER:int = 3;
+      
+      public static const LEVEL_STARTING:int = 4;
+      
+      public static const LEVEL_PRE_WIN:int = 5;
+      
+      public var mode:int;
+      
+      public var §_-BF§:int;
+      
+      public var terrainType:String;
+      
+      public var §try§:int;
+      
+      public var game:§_-BQ§;
+      
+      public var data:§true final§;
+      
+      public var §package do§:§_-a3§ = new §_-a3§();
+      
+      public var §use for throw§:int = 0;
+      
+      public var §_-lx§:§null for function§ = new §null for function§();
+      
+      public var gameSettings:§_-Mm§;
+      
+      public var §_-wi§:int;
+      
+      public var maxWaves:int;
+      
+      public var §_-g3§:int;
+      
+      public var initLives:int;
+      
+      public var lives:int;
+      
+      public var cash:int;
+      
+      public var §_-tA§:int = 0;
+      
+      public var tDamage:Number = 0;
+      
+      public var §_-R4§:Array;
+      
+      public var §_-V8§:Array = [];
+      
+      public var pathsActives:Array = [];
+      
+      public var §var const override§:Boolean;
+      
+      public var §_-W8§:Array;
+      
+      public var §_-b9§:Boolean;
+      
+      public var §_-b§:Array;
+      
+      public var §import const super§:Boolean;
+      
+      public var §_-r6§:Array = [];
+      
+      public var §_-dp§:Array;
+      
+      public var inactiveNodeDistance:int = 13;
+      
+      public var indexWaves:int = 0;
+      
+      public var intervalWaveCounter:int = 0;
+      
+      public var §_-JR§:Tooltip;
+      
+      public var menu:§_-8a§;
+      
+      public var §_-rd§:§do switch§;
+      
+      public var §_-lN§:§case null§;
+      
+      public var §_-6x§:§finally const return§;
+      
+      public var §native const class§:§_-Wt§;
+      
+      public var quickMenu:§_-LZ§;
+      
+      public var §include return§:§false const dynamic§;
+      
+      public var towerRange:§_-qc§ = new §_-qc§();
+      
+      public var towerRangeNew:TowerCircleNew = new TowerCircleNew();
+      
+      public var §_-WL§:§with const§ = new §with const§();
+      
+      public var waves:Array;
+      
+      public var activeWaves:Dictionary = new Dictionary(true);
+      
+      public var §dynamic include§:Boolean;
+      
+      public var §null use§:§try for false§;
+      
+      public var terrain:Sprite = new Sprite();
+      
+      public var ellipses:Sprite = new Sprite();
+      
+      public var §case use§:Sprite = new Sprite();
+      
+      public var enemyDecals:Sprite = new Sprite();
+      
+      public var §_-wR§:Sprite = new Sprite();
+      
+      public var decals:Sprite = new Sprite();
+      
+      public var entities:Sprite = new Sprite();
+      
+      public var frontEntities:Sprite = new Sprite();
+      
+      public var bulletsDecals:Sprite = new Sprite();
+      
+      public var bullets:Sprite = new Sprite();
+      
+      public var §else const native§:Sprite = new Sprite();
+      
+      public var §extends override§:Array = [];
+      
+      public var towers:Dictionary = new Dictionary(true);
+      
+      public var enemies:Dictionary = new Dictionary(true);
+      
+      public var §_-jG§:Dictionary = new Dictionary(true);
+      
+      public var §use extends§:Dictionary = new Dictionary(true);
+      
+      public var §_-9g§:§continue null§;
+      
+      public var staticEnemies:Dictionary = new Dictionary(true);
+      
+      public var §import do§:Array = [];
+      
+      public var rallyPoint:§set try§;
+      
+      public var §false§:PowerPointer;
+      
+      public var enableElements:Boolean = true;
+      
+      public var §finally const static§:§_-BS§;
+      
+      public var heroPortrait2:§_-BS§;
+      
+      public var enemySelection:EnemySelection = new EnemySelection();
+      
+      public var soldierSelection:SoldierSelection = new SoldierSelection();
+      
+      public var §override get§:int = 0;
+      
+      public var §else static§:§_-D7§;
+      
+      public var gTerrain:MovieClip;
+      
+      public var initTime:int = 30;
+      
+      public var initTimeCounter:int = 0;
+      
+      public var §_-jE§:int = 30;
+      
+      public var §_-WR§:int = 0;
+      
+      public var power1:Boolean;
+      
+      public var power2:Boolean;
+      
+      public var power3:Boolean;
+      
+      public var power4:Boolean;
+      
+      public var §final if§:int;
+      
+      public var unlockMaxMages:int;
+      
+      public var §var while§:int;
+      
+      public var unlockMaxBarracks:int;
+      
+      public var §use return§:int;
+      
+      public var §get for super§:int;
+      
+      public var §_-4A§:int;
+      
+      public var §implements override§:int;
+      
+      public var isReadyToWin:Boolean;
+      
+      public var readyToWinTime:int = 30;
+      
+      public var readyToWinTimeCounter:int = 0;
+      
+      public var fearless:Boolean = true;
+      
+      private var fireballCounter:int;
+      
+      private var sellTowersCounter:int;
+      
+      private var §with for package§:int = 0;
+      
+      private var §case switch§:int = 0;
+      
+      public var graveyard:§for for catch§;
+      
+      public var §each const break§:int = 0;
+      
+      public var §_-pr§:int = 0;
+      
+      public var §_-lz§:int = 0;
+      
+      public var §class for var§:Number;
+      
+      public var §continue const function§:Boolean;
+      
+      public var §_-N0§:§_-pO§;
+      
+      public var §false const return§:§case const continue§;
+      
+      public var §while const else§:Boolean;
+      
+      public var isOnComicEnd:Boolean;
+      
+      public var §finally for if§:§const else§;
+      
+      public var comicEnd:§const else§;
+      
+      public var §set break§:Boolean;
+      
+      public var xml:XML;
+      
+      public var heroDied:Boolean = false;
+      
+      public var hero:§dynamic const class§;
+      
+      public var §_-FS§:§continue class§;
+      
+      public var §_-hf§:TextField;
+      
+      private var §implements for switch§:§_-Mm§;
+      
+      public function Level(param1:Array, param2:Array, param3:int = 0, param4:Boolean = false)
+      {
+         super();
+         this.mode = param3;
+         this.§try§ = this.cash;
+         this.isReadyToWin = false;
+         this.§set break§ = param4;
+         this.game.gameSounds.§_-Ov§(this);
+         this.entities.mouseEnabled = false;
+         this.decals.mouseEnabled = false;
+         this.enemyDecals.mouseEnabled = false;
+         this.ellipses.mouseEnabled = false;
+         this.ellipses.mouseChildren = false;
+         this.addChild(this.terrain);
+         this.addChild(this.enemyDecals);
+         this.addChild(this.§_-wR§);
+         this.addChild(this.decals);
+         this.addChild(this.§case use§);
+         this.addChild(this.entities);
+         this.addChild(this.frontEntities);
+         this.addChild(this.bulletsDecals);
+         this.addChild(this.bullets);
+         this.addChild(this.ellipses);
+         this.addChild(this.§else const native§);
+         this.getNumberOfWaves();
+         this.§_-9g§ = new §continue null§(this);
+         this.lives = this.initLives;
+         this.§_-BF§ = LEVEL_STARTING;
+         this.gameSettings = new §_-Mm§(this.game,true,this.§_-wi§);
+         this.§implements for switch§ = new §_-Mm§(this.game,true,this.§_-wi§);
+         this.§_-V8§ = param2;
+         var _loc5_:int = 0;
+         while(_loc5_ < this.§_-V8§.length)
+         {
+            this.pathsActives.push(true);
+            _loc5_++;
+         }
+         this.ellipses.addChild(this.towerRange);
+         this.ellipses.addChild(this.towerRangeNew);
+         this.ellipses.addChild(this.§_-WL§);
+         this.towerRange.visible = false;
+         this.towerRangeNew.visible = false;
+         this.§_-WL§.visible = false;
+         this.towerRange.addEventListener(MouseEvent.MOUSE_DOWN,this.§try const dynamic§,false,0,true);
+         this.towerRangeNew.addEventListener(MouseEvent.MOUSE_DOWN,this.§_-RT§,false,0,true);
+         this.addEventListener(Event.ADDED_TO_STAGE,this.initS,false,0,true);
+         this.§else const native§.addChild(this.§_-lx§);
+         this.§_-lx§.start();
+         this.§_-7d§();
+         this.menu = new §_-8a§(new Point(0,544),this);
+         this.§default for const§();
+         this.initTowers(param1);
+         this.§dynamic const super§();
+         this.quickMenu = new §_-LZ§(this);
+         this.§_-FS§ = new §continue class§();
+         this.addEventListener(Event.DEACTIVATE,this.onDeactivate,false,0,true);
+      }
+      
+      public function §default for const§() : void
+      {
+         this.§null use§ = new §else const include§(new Point(755,542));
+         this.bullets.addChild(this.§null use§);
+      }
+      
+      public function getGridTerrainTypeForPosition(param1:Point) : *
+      {
+         var _loc2_:§_-Sk§ = this.§false const return§.§super for const§.getNodeAtPosition(param1);
+         return _loc2_.terrainType;
+      }
+      
+      public function §_-lm§(param1:Point, param2:Point) : Array
+      {
+         var _loc3_:§_-Sk§ = this.§false const return§.§super for const§.getNodeAtPosition(param1);
+         var _loc4_:§_-Sk§ = this.§false const return§.§super for const§.getNodeAtPosition(param2);
+         if(_loc3_ == null || _loc4_ == null)
+         {
+            return null;
+         }
+         this.§false const return§.§super for const§.setStartNode(_loc3_);
+         this.§false const return§.§super for const§.setEndNode(_loc4_);
+         if(this.§false const return§.§function get§(gridTerrainType))
+         {
+            return this.§false const return§.path;
+         }
+         return null;
+      }
+      
+      public function §dynamic const super§() : void
+      {
+      }
+      
+      public function loadCampaign() : void
+      {
+      }
+      
+      public function loadHeroic() : void
+      {
+      }
+      
+      public function loadIron() : void
+      {
+      }
+      
+      private function onDeactivate(param1:Event) : void
+      {
+         if(this.game.§_-5w§ && this.§_-BF§ == LEVEL_NORMAL)
+         {
+            if(!this.§else const native§.contains(this.§_-lx§))
+            {
+               this.§_-XT§(true);
+            }
+         }
+      }
+      
+      public function findNearestNodeToPosition(param1:Point, param2:Number, param3:int) : Object
+      {
+         var _loc5_:Number = NaN;
+         var _loc7_:Array = null;
+         var _loc8_:int = 0;
+         var _loc9_:Point = null;
+         var _loc4_:Object = new Object();
+         _loc4_.node = -1;
+         _loc4_.subPathIndex = -1;
+         var _loc6_:int = 0;
+         while(_loc6_ < 3)
+         {
+            _loc7_ = this.§_-V8§[param3][_loc6_];
+            _loc8_ = 0;
+            while(_loc8_ < _loc7_.length)
+            {
+               if(!this.§_-ly§(param3,_loc8_))
+               {
+                  _loc9_ = _loc7_[_loc8_];
+                  _loc5_ = Math.sqrt(Math.pow(_loc9_.y - param1.y,2) + Math.pow(_loc9_.x - param1.x,2));
+                  if(_loc5_ < param2)
+                  {
+                     param2 = _loc5_;
+                     _loc4_.node = _loc8_;
+                     _loc4_.subPathIndex = _loc6_;
+                     return _loc4_;
+                  }
+               }
+               _loc8_++;
+            }
+            _loc6_++;
+         }
+         return _loc4_;
+      }
+      
+      protected function initS(param1:Event) : void
+      {
+         this.§_-6D§();
+      }
+      
+      public function §else native§(param1:int, param2:Point) : Object
+      {
+         var _loc5_:int = 0;
+         var _loc7_:Array = null;
+         var _loc8_:int = 0;
+         var _loc9_:Point = null;
+         var _loc3_:Object = new Object();
+         var _loc4_:int = int.MAX_VALUE;
+         _loc3_.referenceNode = -1;
+         _loc3_.pathIndex = -1;
+         var _loc6_:int = 0;
+         while(_loc6_ < this.§_-V8§.length)
+         {
+            _loc7_ = this.§_-V8§[_loc6_][param1];
+            _loc8_ = 0;
+            while(_loc8_ < _loc7_.length)
+            {
+               if(!this.§_-ly§(_loc6_,_loc8_))
+               {
+                  _loc9_ = _loc7_[_loc8_];
+                  _loc5_ = Math.sqrt(Math.pow(_loc9_.y - param2.y,2) + Math.pow(_loc9_.x - param2.x,2));
+                  if(_loc5_ < _loc4_)
+                  {
+                     _loc4_ = _loc5_;
+                     _loc3_.referenceNode = _loc8_;
+                     _loc3_.pathIndex = _loc6_;
+                  }
+               }
+               _loc8_++;
+            }
+            _loc6_++;
+         }
+         return _loc3_;
+      }
+      
+      public function §_-p5§() : void
+      {
+      }
+      
+      public function keyPressed(param1:KeyboardEvent) : void
+      {
+         if(this.§_-FS§.parent != null)
+         {
+            return;
+         }
+         switch(param1.keyCode)
+         {
+            case Keyboard.SPACE:
+               this.§_-fJ§();
+               break;
+            case Keyboard.ESCAPE:
+               this.§_-fJ§();
+               break;
+            case 112:
+               if(this.§_-BF§ == LEVEL_NORMAL)
+               {
+                  this.§_-XT§();
+               }
+               else
+               {
+                  this.§_-mV§();
+               }
+               break;
+            case 80:
+               if(this.§_-BF§ == LEVEL_NORMAL)
+               {
+                  this.§_-XT§();
+               }
+               else
+               {
+                  this.§_-mV§();
+               }
+               break;
+            case Keyboard.NUMPAD_1:
+            case Keyboard.NUMBER_1:
+               this.§_-UR§();
+               if(this.§_-BF§ == LEVEL_NORMAL && this.menu != null && this.menu.§override const get§.numChildren != 0)
+               {
+                  this.§_-Fc§();
+                  if(this.§false§ == null)
+                  {
+                     PowerFireball(this.menu.§override const get§.getChildAt(0)).fireClick();
+                  }
+                  else if(getQualifiedClassName(this.§false§) == "PowerPointerFireball")
+                  {
+                     this.§false§.§_-C§();
+                  }
+                  else
+                  {
+                     this.§false§.§_-C§();
+                     PowerFireball(this.menu.§override const get§.getChildAt(0)).fireClick();
+                  }
+               }
+               break;
+            case Keyboard.NUMPAD_2:
+            case Keyboard.NUMBER_2:
+               this.§_-UR§();
+               if(this.§_-BF§ == LEVEL_NORMAL && this.menu != null && this.menu.§override const get§.numChildren != 0)
+               {
+                  this.§_-Fc§();
+                  if(this.§false§ == null)
+                  {
+                     PowerReinforcement(this.menu.§override const get§.getChildAt(1)).fireClick();
+                  }
+                  else if(Boolean(§else false§.beginsWith(getQualifiedClassName(this.§false§),"PowerPointerReinforcement")) || Boolean(§else false§.beginsWith(getQualifiedClassName(this.§false§),"PowerPointerFarmer")))
+                  {
+                     this.§false§.§_-C§();
+                  }
+                  else
+                  {
+                     this.§false§.§_-C§();
+                     PowerReinforcement(this.menu.§override const get§.getChildAt(1)).fireClick();
+                  }
+               }
+               break;
+            case Keyboard.NUMPAD_3:
+            case Keyboard.NUMBER_3:
+               this.§_-Pt§();
+               this.§_-VU§();
+               if(this.§finally const static§ != null)
+               {
+                  this.§finally const static§.click();
+               }
+               break;
+            case Keyboard.NUMPAD_4:
+            case Keyboard.NUMBER_4:
+               if(this.heroPortrait2 != null)
+               {
+                  this.§_-Pt§();
+                  this.§_-VU§();
+                  if(this.heroPortrait2 != null)
+                  {
+                     this.heroPortrait2.click();
+                  }
+               }
+         }
+         this.§_-17§(param1.keyCode);
+      }
+      
+      public function §_-XT§(param1:Boolean = false) : void
+      {
+         §for for dynamic§.getInstance().§_-u2§();
+         if(this.§_-9g§ != null && !this.§else const native§.contains(this.§_-9g§))
+         {
+            this.pause();
+            if(param1)
+            {
+               this.§_-9g§.enableAutoPause();
+            }
+            else
+            {
+               this.§_-9g§.§_-M1§();
+            }
+            this.§else const native§.addChild(this.§_-9g§);
+            this.§_-fJ§();
+         }
+      }
+      
+      public function §_-mV§() : void
+      {
+         if(this.§_-9g§ != null && this.§else const native§.contains(this.§_-9g§))
+         {
+            this.pause();
+            this.§else const native§.removeChild(this.§_-9g§);
+            §for for dynamic§.getInstance().§final const function§();
+         }
+      }
+      
+      public function §_-17§(param1:uint) : void
+      {
+      }
+      
+      public function §_-Fc§() : void
+      {
+      }
+      
+      public function §_-fJ§() : void
+      {
+         if(this.§false§ != null)
+         {
+            this.§false§.§_-C§();
+            this.menu.§function const extends§();
+         }
+         this.§_-UR§();
+         this.§dynamic null§();
+      }
+      
+      public function §_-UR§() : void
+      {
+         this.§_-VU§();
+         this.§_-K6§();
+      }
+      
+      private function §_-Pt§() : void
+      {
+         if(this.§false§ == null)
+         {
+            return;
+         }
+         this.§false§.§_-C§();
+      }
+      
+      private function §_-K6§() : void
+      {
+         if(this.§_-N0§ == null)
+         {
+            return;
+         }
+         this.§_-N0§.§_-UR§();
+      }
+      
+      private function §_-VU§() : void
+      {
+         if(this.rallyPoint == null)
+         {
+            return;
+         }
+         this.rallyPoint.§_-UR§();
+      }
+      
+      public function §dynamic null§() : void
+      {
+      }
+      
+      public function §_-Eu§() : void
+      {
+         this.game.main.§extends const default§();
+         this.§package do§.x = 370;
+         this.§package do§.y = 5;
+         this.§_-rd§ = new §do switch§(10,10,this.cash,this.initLives,this.maxWaves,this);
+         this.§include return§ = new §false const dynamic§(this);
+         this.§else const native§.addChild(this.§include return§);
+         this.§_-lN§ = new §case null§(this);
+         this.§else const native§.addChild(this.§_-lN§);
+         this.§_-6x§ = new §finally const return§(this);
+         this.§else const native§.addChild(this.§_-6x§);
+         this.§native const class§ = new §_-Wt§(this);
+         this.§else const native§.addChild(this.§native const class§);
+         this.§else const native§.addChild(this.§_-rd§);
+         this.§else const native§.addChild(this.menu);
+         this.decals.addChild(this.enemySelection);
+         this.decals.addChild(this.soldierSelection);
+      }
+      
+      public function §_-6D§() : *
+      {
+         this.game.gameSounds.§_-NA§();
+         this.game.gameSounds.§catch const set§();
+      }
+      
+      public function §class const const§() : void
+      {
+         this.§false const with§();
+         this.freeMenues();
+         this.§_-fJ§();
+         this.§include return§.visible = false;
+         this.menu.§_-sW§();
+         this.§_-rd§.§_-sW§();
+         this.§_-lN§.§_-sW§();
+         this.§_-6x§.§_-sW§();
+         this.§native const class§.§_-sW§();
+         this.§const§();
+      }
+      
+      private function §const§() : void
+      {
+         if(this.§finally const static§ != null)
+         {
+            this.§finally const static§.visible = false;
+            this.§finally const static§.deSelect();
+         }
+         if(this.heroPortrait2 != null)
+         {
+            this.heroPortrait2.visible = false;
+            this.heroPortrait2.deSelect();
+         }
+      }
+      
+      public function §false in§() : void
+      {
+         this.enableLevelElements();
+         this.§include return§.visible = true;
+         this.menu.§_-ig§();
+         this.§_-rd§.§_-ig§(10);
+         this.§_-lN§.§_-ig§();
+         this.§_-6x§.§_-ig§();
+         this.§native const class§.§_-ig§();
+         this.§_-8O§();
+      }
+      
+      private function §_-8O§() : void
+      {
+         if(this.§finally const static§ != null)
+         {
+            this.§finally const static§.visible = true;
+         }
+         if(this.heroPortrait2 != null)
+         {
+            this.heroPortrait2.visible = true;
+         }
+      }
+      
+      public function onPause() : Boolean
+      {
+         if(this.§_-BF§ == LEVEL_PAUSED)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function pause(param1:Boolean = false, param2:Boolean = true) : void
+      {
+         if(!this.onPause())
+         {
+            if(param1)
+            {
+               this.§_-da§();
+            }
+            if(this.§_-BF§ != LEVEL_PRE_WIN)
+            {
+               this.§_-BF§ = LEVEL_PAUSED;
+            }
+            if(param2)
+            {
+               §for for dynamic§.getInstance().§var const implements§();
+            }
+            this.§class do§();
+            this.§return const false§();
+            this.pauseEntities();
+            this.§_-Wm§();
+            this.§final for throw§();
+            this.§_-2C§();
+         }
+         else
+         {
+            if(param1)
+            {
+               this.unBlock();
+            }
+            this.§_-BF§ = LEVEL_NORMAL;
+            this.§_-AC§();
+            this.§_-BC§();
+            this.unPauseEntities();
+            this.§_-oZ§();
+            this.§catch const get§();
+            this.§_-Ae§();
+         }
+      }
+      
+      public function §_-da§() : void
+      {
+         this.§else const native§.addChild(this.§_-lx§);
+         this.§_-lx§.show();
+      }
+      
+      public function unBlock() : void
+      {
+         this.§_-lx§.hide();
+      }
+      
+      public function unPause() : void
+      {
+         this.§_-BF§ = LEVEL_NORMAL;
+      }
+      
+      public function §_-lU§(param1:PowerPointer) : void
+      {
+         this.§false§ = param1;
+         this.§false const with§();
+      }
+      
+      public function §_-Vk§() : void
+      {
+         this.§false§ = null;
+         this.enableLevelElements();
+      }
+      
+      public function enableLevelElements() : void
+      {
+         this.enableElements = true;
+      }
+      
+      public function §false const with§() : void
+      {
+         this.enableElements = false;
+      }
+      
+      public function freeMenues() : void
+      {
+         if(this.quickMenu != null && this.quickMenu.cTower != null)
+         {
+            this.quickMenu.hide();
+         }
+      }
+      
+      public function intro(param1:MouseEvent) : void
+      {
+         if(!this.enableElements)
+         {
+            return;
+         }
+         this.menu.§function const extends§();
+         this.freeMenues();
+         this.removeToopTip();
+      }
+      
+      public function §try const dynamic§(param1:MouseEvent) : void
+      {
+         this.menu.§function const extends§();
+         this.§_-JI§();
+      }
+      
+      public function §_-RT§(param1:MouseEvent) : void
+      {
+         this.menu.§function const extends§();
+         this.§_-JI§();
+      }
+      
+      public function §_-JI§() : void
+      {
+         if(this.quickMenu.cTower == null)
+         {
+            return;
+         }
+         if(this.§else const native§.contains(this.quickMenu))
+         {
+            this.quickMenu.hide();
+         }
+      }
+      
+      public function init(param1:Event) : void
+      {
+      }
+      
+      public function eFrameEvents(param1:Event) : void
+      {
+         if(this.isOnComicEnd)
+         {
+            this.comicEnd.update();
+         }
+         if(this.§_-BF§ == LEVEL_STARTING)
+         {
+            if(this.onStart())
+            {
+               return;
+            }
+            this.§_-BF§ = LEVEL_NORMAL;
+            if(this.data.levelIndex == 0 && this.mode == §_-Mm§.MODE_CAMPAIGN)
+            {
+               this.pause(true);
+               this.§else const native§.addChild(new §dynamic const function§(new Point(0,0),this));
+            }
+            if(!this.game.challengeShow && this.mode != §_-Mm§.MODE_CAMPAIGN)
+            {
+               this.§_-JI§();
+               this.sendPauseNotification("NotificationTipChallenges");
+               this.game.challengeShow = true;
+               this.game.§get final§();
+            }
+         }
+         if(this.§_-BF§ == LEVEL_NORMAL || this.§_-BF§ == LEVEL_PRE_WIN)
+         {
+            this.§override get§ = 0;
+            if(this.§_-BF§ == LEVEL_NORMAL)
+            {
+               this.§_-HR§();
+            }
+            if(this.§_-BF§ == LEVEL_NORMAL || this.§_-BF§ == LEVEL_PRE_WIN)
+            {
+               if(this.stage.focus != this.stage)
+               {
+                  this.stage.focus = this.stage;
+               }
+               this.game.gameSounds.onFrameUpdate();
+               this.updateEnemyDecals();
+               this.updateEntities();
+               this.updateBullets();
+               this.updateBulletsDecals();
+               this.updateDecals();
+               this.updateBackground();
+               this.§_-ai§();
+               this.menu.updateMenu();
+               this.§include return§.update();
+               this.updatePointers();
+            }
+            if(this.§_-BF§ == LEVEL_PRE_WIN)
+            {
+               if(this.§_-WR§ < this.§_-jE§)
+               {
+                  ++this.§_-WR§;
+                  return;
+               }
+               if(this.data.levelIndex < 14 || this.data.levelIndex == 14 && this.mode != §_-Mm§.MODE_CAMPAIGN)
+               {
+                  this.pause(true);
+               }
+               this.§_-BF§ = LEVEL_WIN;
+               this.§_-pp§();
+               this.§super const finally§();
+            }
+         }
+      }
+      
+      public function §_-ai§() : void
+      {
+         this.§_-rN§();
+         this.§switch const each§();
+      }
+      
+      public function onStart() : Boolean
+      {
+         if(this.§while const else§)
+         {
+            this.§finally for if§.update();
+            return true;
+         }
+         if(this.initTimeCounter < this.initTime)
+         {
+            ++this.initTimeCounter;
+            if(this.initTimeCounter + 3 == this.initTime)
+            {
+               this.§_-Eu§();
+            }
+            return true;
+         }
+         return false;
+      }
+      
+      public function onPreWin() : void
+      {
+      }
+      
+      public function §_-pp§() : void
+      {
+         this.game.gameSounds.§while with§();
+      }
+      
+      public function §super const finally§() : void
+      {
+         switch(this.mode)
+         {
+            case §_-Mm§.MODE_CAMPAIGN:
+               this.addChild(new §override const static§(this));
+               break;
+            case §_-Mm§.MODE_HEROIC:
+               this.addChild(new MenuVictoryHeroic(this));
+               break;
+            case §_-Mm§.MODE_IRON:
+               this.addChild(new MenuVictoryIron(this));
+         }
+      }
+      
+      public function updatePointers() : void
+      {
+         if(this.§false§)
+         {
+            this.§false§.onFrameUpdate();
+         }
+      }
+      
+      public function updateEntities() : void
+      {
+         var _loc3_:MovieClip = null;
+         var _loc1_:Dictionary = new Dictionary(true);
+         var _loc2_:int = 0;
+         while(_loc2_ < this.entities.numChildren)
+         {
+            _loc1_[this.entities.getChildAt(_loc2_)] = this.entities.getChildAt(_loc2_);
+            ++this.§override get§;
+            _loc2_++;
+         }
+         for each(_loc3_ in _loc1_)
+         {
+            _loc3_.onFrameUpdate();
+         }
+         _loc1_ = null;
+      }
+      
+      public function updateEnemyDecals() : void
+      {
+         var _loc3_:MovieClip = null;
+         var _loc1_:Dictionary = new Dictionary(true);
+         var _loc2_:int = 0;
+         while(_loc2_ < this.enemyDecals.numChildren)
+         {
+            _loc1_[this.enemyDecals.getChildAt(_loc2_)] = this.enemyDecals.getChildAt(_loc2_);
+            ++this.§override get§;
+            _loc2_++;
+         }
+         for each(_loc3_ in _loc1_)
+         {
+            _loc3_.onFrameUpdate();
+         }
+         _loc1_ = null;
+      }
+      
+      public function updateDecals() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.decals.numChildren)
+         {
+            MovieClip(this.decals.getChildAt(_loc1_)).onFrameUpdate();
+            ++this.§override get§;
+            _loc1_++;
+         }
+      }
+      
+      public function updateBackground() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.§case use§.numChildren)
+         {
+            §extends for§(this.§case use§.getChildAt(_loc1_)).onFrameUpdate();
+            ++this.§override get§;
+            _loc1_++;
+         }
+      }
+      
+      public function updateBullets() : void
+      {
+         var _loc3_:MovieClip = null;
+         var _loc1_:Dictionary = new Dictionary(true);
+         var _loc2_:int = 0;
+         while(_loc2_ < this.bullets.numChildren)
+         {
+            _loc1_[this.bullets.getChildAt(_loc2_)] = this.bullets.getChildAt(_loc2_);
+            _loc2_++;
+         }
+         for each(_loc3_ in _loc1_)
+         {
+            _loc3_.onFrameUpdate();
+         }
+         _loc1_ = null;
+      }
+      
+      public function updateBulletsDecals() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.bulletsDecals.numChildren)
+         {
+            MovieClip(this.bulletsDecals.getChildAt(_loc1_)).onFrameUpdate();
+            ++this.§override get§;
+            _loc1_++;
+         }
+      }
+      
+      public function §class do§() : void
+      {
+         var _loc3_:MovieClip = null;
+         var _loc1_:Dictionary = new Dictionary(true);
+         var _loc2_:int = 0;
+         while(_loc2_ < this.enemyDecals.numChildren)
+         {
+            _loc1_[this.enemyDecals.getChildAt(_loc2_)] = this.enemyDecals.getChildAt(_loc2_);
+            ++this.§override get§;
+            _loc2_++;
+         }
+         for each(_loc3_ in _loc1_)
+         {
+            _loc3_.pause();
+         }
+         _loc1_ = null;
+      }
+      
+      public function §_-AC§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.enemyDecals.numChildren)
+         {
+            MovieClip(this.enemyDecals.getChildAt(_loc1_)).unPause();
+            ++this.§override get§;
+            _loc1_++;
+         }
+      }
+      
+      public function pauseEntities() : void
+      {
+         var _loc3_:MovieClip = null;
+         var _loc1_:Dictionary = new Dictionary(true);
+         var _loc2_:int = 0;
+         while(_loc2_ < this.entities.numChildren)
+         {
+            _loc1_[this.entities.getChildAt(_loc2_)] = this.entities.getChildAt(_loc2_);
+            ++this.§override get§;
+            _loc2_++;
+         }
+         for each(_loc3_ in _loc1_)
+         {
+            _loc3_.pause();
+         }
+         _loc1_ = null;
+      }
+      
+      public function unPauseEntities() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.entities.numChildren)
+         {
+            MovieClip(this.entities.getChildAt(_loc1_)).unPause();
+            ++this.§override get§;
+            _loc1_++;
+         }
+      }
+      
+      public function pauseEnemies() : void
+      {
+         var _loc1_:Enemy = null;
+         for each(_loc1_ in this.enemies)
+         {
+            _loc1_.pause();
+         }
+      }
+      
+      public function unPauseEnemies() : void
+      {
+         var _loc1_:Enemy = null;
+         for each(_loc1_ in this.enemies)
+         {
+            _loc1_.unPause();
+         }
+      }
+      
+      public function §each for§() : void
+      {
+         var _loc1_:Soldier = null;
+         for each(_loc1_ in this.§_-jG§)
+         {
+            _loc1_.pause();
+         }
+      }
+      
+      public function §_-ke§() : void
+      {
+         var _loc1_:Soldier = null;
+         for each(_loc1_ in this.§_-jG§)
+         {
+            _loc1_.unPause();
+         }
+      }
+      
+      public function §_-Wm§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.§case use§.numChildren)
+         {
+            §extends for§(this.§case use§.getChildAt(_loc1_)).pause();
+            _loc1_++;
+         }
+      }
+      
+      public function §catch const get§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.§case use§.numChildren)
+         {
+            §extends for§(this.§case use§.getChildAt(_loc1_)).unPause();
+            _loc1_++;
+         }
+      }
+      
+      public function pauseTowers() : void
+      {
+         var _loc1_:§_-5u§ = null;
+         for each(_loc1_ in this.towers)
+         {
+            _loc1_.pause();
+         }
+      }
+      
+      public function unPauseTowers() : void
+      {
+         var _loc1_:§_-5u§ = null;
+         for each(_loc1_ in this.towers)
+         {
+            _loc1_.unPause();
+         }
+      }
+      
+      public function §_-2C§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.bulletsDecals.numChildren)
+         {
+            MovieClip(this.bulletsDecals.getChildAt(_loc1_)).pause();
+            _loc1_++;
+         }
+      }
+      
+      public function §_-Ae§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.bulletsDecals.numChildren)
+         {
+            MovieClip(this.bulletsDecals.getChildAt(_loc1_)).unPause();
+            _loc1_++;
+         }
+      }
+      
+      public function §final for throw§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.bullets.numChildren)
+         {
+            MovieClip(this.bullets.getChildAt(_loc1_)).pause();
+            _loc1_++;
+         }
+      }
+      
+      public function §_-oZ§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.bullets.numChildren)
+         {
+            MovieClip(this.bullets.getChildAt(_loc1_)).unPause();
+            _loc1_++;
+         }
+      }
+      
+      public function §return const false§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.decals.numChildren)
+         {
+            MovieClip(this.decals.getChildAt(_loc1_)).pause();
+            _loc1_++;
+         }
+      }
+      
+      public function §_-BC§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.decals.numChildren)
+         {
+            MovieClip(this.decals.getChildAt(_loc1_)).unPause();
+            _loc1_++;
+         }
+      }
+      
+      public function initTowers(param1:Array) : void
+      {
+         var _loc2_:int = 0;
+         while(_loc2_ < param1.length)
+         {
+            this.entities.addChild(param1[_loc2_]);
+            _loc2_++;
+         }
+      }
+      
+      public function §return function§(param1:§_-5u§) : void
+      {
+         delete this.towers[param1];
+         this.evalBrilliance();
+      }
+      
+      public function §with for super§(param1:Enemy) : void
+      {
+         delete this.enemies[param1];
+      }
+      
+      public function §_-Wy§(param1:Enemy) : void
+      {
+         delete this.staticEnemies[param1];
+      }
+      
+      public function §break default§(param1:Soldier) : void
+      {
+         this.§_-jG§[param1] = param1;
+      }
+      
+      public function removeSoldier(param1:Soldier) : void
+      {
+         delete this.§_-jG§[param1];
+      }
+      
+      public function §implements final§(param1:§extends for§) : void
+      {
+         this.§case use§.addChild(param1);
+      }
+      
+      public function §else const return§(param1:§extends for§) : void
+      {
+         this.§case use§.removeChild(param1);
+      }
+      
+      public function §_-X1§(param1:MovieClip) : void
+      {
+         this.bullets.removeChild(param1);
+         this.§_-No§(param1);
+      }
+      
+      public function §_-No§(param1:MovieClip) : void
+      {
+         this.decals.addChild(param1);
+      }
+      
+      public function updateCash(param1:int) : void
+      {
+         if(param1 > 0)
+         {
+            this.§_-tA§ += param1;
+         }
+         this.cash += param1;
+         if(this.§_-rd§ != null)
+         {
+            this.§_-rd§.updateCash(this.cash);
+         }
+      }
+      
+      public function onRangeStaticArea(param1:Array, param2:Point) : Boolean
+      {
+         if(Math.sqrt(Math.pow(param1[0] - param2.y,2) + Math.pow(param1[1] - param2.x,2)) < param1[2])
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function §function for const§(param1:int) : void
+      {
+         this.game.gameSounds.playGUILooseLife();
+         this.lives -= param1;
+         if(this.lives <= 0)
+         {
+            this.lives = 0;
+         }
+         this.§_-rd§.updateLives(this.lives);
+         if(this.lives == 0)
+         {
+            this.§_-a5§();
+         }
+      }
+      
+      public function §implements break§() : String
+      {
+         return this.game.§implements break§();
+      }
+      
+      public function §_-a5§() : void
+      {
+         this.pause(true);
+         this.§_-BF§ = LEVEL_OVER;
+         this.addChild(new §native for var§(this));
+      }
+      
+      protected function getNumberOfWaves() : void
+      {
+         var _loc1_:int = 0;
+         var _loc2_:int = 0;
+         while(_loc2_ < this.waves.length)
+         {
+            _loc1_++;
+            while(_loc2_ + 1 < this.waves.length && this.waves[_loc2_ + 1].interval == 0)
+            {
+               _loc2_++;
+            }
+            _loc2_++;
+         }
+         this.maxWaves = _loc1_;
+         this.§_-g3§ = 0;
+      }
+      
+      private function §_-HR§() : void
+      {
+         var _loc2_:Wave = null;
+         var _loc3_:Wave = null;
+         var _loc4_:int = 0;
+         var _loc1_:int = 0;
+         if(!this.§continue const function§)
+         {
+            this.§_-OD§();
+         }
+         if(this.§_-g3§ == 0 && this.§dynamic include§)
+         {
+            return;
+         }
+         for each(_loc2_ in this.activeWaves)
+         {
+            _loc1_++;
+         }
+         if(_loc1_ == 0)
+         {
+            if(this.indexWaves < this.waves.length)
+            {
+               if(this.waves[this.indexWaves].interval == this.intervalWaveCounter)
+               {
+                  if(this.indexWaves != 0 && this.waves[this.indexWaves].notification != "")
+                  {
+                     this.§_-JI§();
+                     this.sendPauseNotification(this.waves[this.indexWaves].notification);
+                  }
+                  ++this.§_-g3§;
+                  if(this.§_-g3§ == 1)
+                  {
+                     this.game.gameSounds.§catch const set§();
+                  }
+                  this.activeWaves[this.waves[this.indexWaves]] = this.waves[this.indexWaves];
+                  this.intervalWaveCounter = 0;
+                  ++this.indexWaves;
+                  this.§_-rd§.updateWaves(this.§_-g3§,this.maxWaves);
+                  this.§else use§();
+                  while(this.indexWaves < this.waves.length && this.waves[this.indexWaves].interval == 0)
+                  {
+                     this.activeWaves[this.waves[this.indexWaves]] = this.waves[this.indexWaves];
+                     ++this.indexWaves;
+                  }
+                  this.menu.§return var§();
+               }
+               else
+               {
+                  if(this.indexWaves == 0 && this.waves[this.indexWaves].notification != "")
+                  {
+                     this.§_-JI§();
+                     this.sendPauseNotification(this.waves[this.indexWaves].notification);
+                  }
+                  if(this.intervalWaveCounter == 50 && this.waves[this.indexWaves].interval != 0 || this.indexWaves == 0)
+                  {
+                     this.waves[this.indexWaves].showWaveFlag(this,this.waves[this.indexWaves].interval - 50,this.indexWaves);
+                     if(this.§null use§ != null)
+                     {
+                        this.game.gameSounds.§_-Mb§();
+                     }
+                     _loc4_ = this.indexWaves + 1;
+                     while(_loc4_ < this.waves.length && this.waves[_loc4_].interval == 0)
+                     {
+                        this.waves[_loc4_].showWaveFlag(this,this.waves[this.indexWaves].interval - 50,this.indexWaves);
+                        _loc4_++;
+                     }
+                     this.§throw const const§();
+                  }
+                  if(this.indexWaves == 0)
+                  {
+                     this.§dynamic include§ = true;
+                  }
+                  else
+                  {
+                     ++this.intervalWaveCounter;
+                  }
+               }
+            }
+            else if(!this.hasEnemies())
+            {
+               this.§_-BF§ = LEVEL_PRE_WIN;
+               this.onPreWin();
+               this.§try each§();
+            }
+         }
+         for each(_loc3_ in this.activeWaves)
+         {
+            _loc3_.spawnEnemies(this);
+         }
+      }
+      
+      public function §_-OD§() : void
+      {
+         if(this.game.currentLevel < 5 && (this.mode == §_-Mm§.MODE_HEROIC || this.mode == §_-Mm§.MODE_IRON))
+         {
+            return;
+         }
+         if(this.game.currentLevel == 1)
+         {
+            if(this.game.gameHeroData.selectedHero.name == "alric")
+            {
+               if(this.§_-g3§ == 4 && this.mode == §_-Mm§.MODE_CAMPAIGN)
+               {
+                  this.game.gameSounds.§catch if§();
+                  this.hero = new SoldierHeroAlric(new Point(this.§_-R4§[0].x - 100,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x + 60,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               }
+            }
+            else
+            {
+               this.switchHeroes();
+            }
+         }
+         else
+         {
+            this.switchHeroes();
+         }
+         if(this.hero != null)
+         {
+            this.entities.addChild(this.hero);
+            this.§continue const function§ = true;
+            this.§_-9B§();
+         }
+      }
+      
+      public function switchHeroes() : void
+      {
+         var _loc1_:Point = null;
+         switch(this.game.gameHeroData.selectedHero.name)
+         {
+            case "alric":
+               this.hero = new SoldierHeroAlric(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "mirage":
+               this.hero = new SoldierHeroMirage(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "captain":
+               this.hero = new SoldierHeroCaptain(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "cronan":
+               this.hero = new SoldierHeroCronan(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "shatra":
+               this.hero = new SoldierHeroAlien(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "grawl":
+               this.hero = new §else const static§(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "nivus":
+               this.hero = new SoldierHeroNivus(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "dierdre":
+               this.hero = new SoldierHeroDierdre(new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),new Point(this.§_-R4§[0].x,this.§_-R4§[0].y),null,new Point(this.§_-R4§[0].x,this.§_-R4§[0].y));
+               break;
+            case "ashbite":
+               switch(this.game.currentLevel)
+               {
+                  case 2:
+                     _loc1_ = new Point(600 * SoldierHeroDragon.DRAGON_GAME_SCALE,600 - 590 * SoldierHeroDragon.DRAGON_GAME_SCALE);
+                     break;
+                  case 4:
+                     _loc1_ = new Point(226 * SoldierHeroDragon.DRAGON_GAME_SCALE,600 - 500 * SoldierHeroDragon.DRAGON_GAME_SCALE);
+                     break;
+                  case 14:
+                     _loc1_ = new Point(255 * SoldierHeroDragon.DRAGON_GAME_SCALE,600 - 510 * SoldierHeroDragon.DRAGON_GAME_SCALE);
+                     break;
+                  default:
+                     _loc1_ = new Point(this.§_-R4§[0].x,this.§_-R4§[0].y);
+               }
+               this.hero = new SoldierHeroDragon(_loc1_,_loc1_,null,_loc1_);
+         }
+      }
+      
+      public function §_-9B§() : void
+      {
+      }
+      
+      public function §throw const const§() : void
+      {
+      }
+      
+      public function §else use§() : void
+      {
+      }
+      
+      public function §try each§() : void
+      {
+         if(this.fearless && this.maxWaves > 1)
+         {
+            this.game.§const for set§.doFearless(this);
+         }
+         this.§_-A9§();
+         switch(this.terrainType)
+         {
+            case "desert":
+               if(!this.heroDied)
+               {
+                  this.game.§const for set§.funcSandWarrior(this);
+               }
+               break;
+            case "jungle":
+               if(!this.heroDied)
+               {
+                  this.game.§const for set§.§_-S9§(this);
+               }
+               break;
+            case "underground":
+               if(!this.heroDied)
+               {
+                  this.game.§const for set§.funcCaveman(this);
+               }
+         }
+      }
+      
+      public function §_-if§() : void
+      {
+         var _loc2_:Boolean = false;
+         var _loc3_:int = 0;
+         var _loc4_:int = 0;
+         var _loc5_:int = 0;
+         if(this.mode == §_-Mm§.MODE_CAMPAIGN && this.game.§const for set§.supremeDefender)
+         {
+            return;
+         }
+         if(this.mode == §_-Mm§.MODE_CAMPAIGN)
+         {
+            _loc2_ = true;
+            _loc3_ = 0;
+            while(_loc3_ < this.game.§native import§.length)
+            {
+               if(§true final§(this.game.§native import§[_loc3_]).campaignDifficulty != §_-Mm§.DIFFICULTY_HARD)
+               {
+                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD)
+                  {
+                     _loc2_ = false;
+                     break;
+                  }
+               }
+               _loc3_++;
+            }
+            if(_loc2_)
+            {
+               this.game.§const for set§.§try const else§(this);
+            }
+         }
+         if(this.mode == §_-Mm§.MODE_CAMPAIGN && this.game.§const for set§.greatDefender)
+         {
+            return;
+         }
+         if(this.mode == §_-Mm§.MODE_HEROIC && this.game.§const for set§.greatDefenderHeroic)
+         {
+            return;
+         }
+         if(this.mode == §_-Mm§.MODE_IRON && this.game.§const for set§.greatDefenderIron)
+         {
+            return;
+         }
+         var _loc1_:Boolean = true;
+         if(this.mode == §_-Mm§.MODE_CAMPAIGN)
+         {
+            _loc3_ = 0;
+            while(_loc3_ < this.game.§native import§.length)
+            {
+               if(§true final§(this.game.§native import§[_loc3_]).campaignDifficulty != §_-Mm§.DIFFICULTY_NORMAL)
+               {
+                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+                  {
+                     _loc1_ = false;
+                     break;
+                  }
+               }
+               _loc3_++;
+            }
+            if(_loc1_)
+            {
+               this.game.§const for set§.§static var§(this);
+            }
+            return;
+         }
+         if(this.mode == §_-Mm§.MODE_HEROIC)
+         {
+            _loc4_ = 0;
+            while(_loc4_ < this.game.§native import§.length)
+            {
+               if(!§true final§(this.game.§native import§[_loc4_]).heroicModeWin || §true final§(this.game.§native import§[_loc4_]).heroicDifficulty != §_-Mm§.DIFFICULTY_NORMAL && §true final§(this.game.§native import§[_loc4_]).heroicDifficulty != §_-Mm§.DIFFICULTY_HARD)
+               {
+                  if(this.data.levelIndex != _loc4_ || this.data.levelIndex == _loc4_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+                  {
+                     _loc1_ = false;
+                     break;
+                  }
+               }
+               _loc4_++;
+            }
+            if(_loc1_)
+            {
+               this.game.§const for set§.chkGreatDefenderHeroic(this);
+            }
+            return;
+         }
+         if(this.mode == §_-Mm§.MODE_IRON)
+         {
+            _loc5_ = 0;
+            while(_loc5_ < this.game.§native import§.length)
+            {
+               if(!§true final§(this.game.§native import§[_loc5_]).ironModeWin || §true final§(this.game.§native import§[_loc5_]).ironDifficulty != §_-Mm§.DIFFICULTY_NORMAL && §true final§(this.game.§native import§[_loc5_]).ironDifficulty != §_-Mm§.DIFFICULTY_HARD)
+               {
+                  if(this.data.levelIndex != _loc5_ || this.data.levelIndex == _loc5_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+                  {
+                     _loc1_ = false;
+                     break;
+                  }
+               }
+               _loc5_++;
+            }
+            if(_loc1_)
+            {
+               this.game.§const for set§.chkGreatDefenderIron(this);
+            }
+            return;
+         }
+      }
+      
+      public function §_-A9§() : void
+      {
+      }
+      
+      public function sendPauseNotification(param1:String) : void
+      {
+         if(param1 == "NotificationTipHero")
+         {
+            if(this.game.currentLevel == 1)
+            {
+               if(this.§include return§ != null)
+               {
+                  TweenMax.to(this.§include return§,0.2,{"y":0});
+               }
+               if(Level1(this).notificationSign != null)
+               {
+                  TweenMax.to(Level1(this).notificationSign,0.2,{"y":158});
+               }
+            }
+         }
+         this.pause(true);
+         if(§else false§.beginsWith(param1,"NotificationEnemy"))
+         {
+            param1 = §_-Mm§.getEnemyString(§else false§.remove(param1,"Notification"));
+            this.§else const native§.addChild(new NotificationEnemy(this,param1,true));
+            return;
+         }
+         var _loc2_:Class = getDefinitionByName(param1) as Class;
+         this.§else const native§.addChild(new _loc2_(this,true));
+      }
+      
+      public function sendSecondLevelNotification(param1:String) : void
+      {
+         this.§include return§.addNotification(param1);
+      }
+      
+      public function §_-gU§() : void
+      {
+         this.§include return§.addNotification(not);
+      }
+      
+      public function §set get§(param1:Point) : void
+      {
+         var _loc2_:int = 0;
+         if(this.intervalWaveCounter - 50 <= 90 && !this.§dynamic include§)
+         {
+            this.game.§const for set§.checkImpatient(this);
+         }
+         if(this.§dynamic include§)
+         {
+            if(this.power1)
+            {
+               this.§finally const function§();
+            }
+            if(this.power2)
+            {
+               this.§do for import§();
+            }
+            if(this.power3)
+            {
+               this.unlockPowerPriest();
+            }
+            if(this.power4)
+            {
+               this.§do var§();
+            }
+            this.§_-yQ§();
+            this.§dynamic include§ = false;
+            if(this.§null use§ != null && this.bullets.contains(this.§null use§))
+            {
+               this.bullets.removeChild(this.§null use§);
+            }
+         }
+         if(this.game.currentLevel == 1 && this.§_-g3§ == 3)
+         {
+            if(this.§include return§ != null)
+            {
+               TweenMax.to(this.§include return§,0.2,{"y":0});
+            }
+            if(Level1(this).notificationSign != null)
+            {
+               TweenMax.to(Level1(this).notificationSign,0.2,{"y":158});
+            }
+         }
+         this.game.§const for set§.checkDaring(this);
+         if(this.indexWaves != 0)
+         {
+            this.menu.§else const final§(this.waves[this.indexWaves].interval - this.intervalWaveCounter);
+            _loc2_ = Math.round((this.waves[this.indexWaves].interval - this.intervalWaveCounter) / this.gameSettings.framesRate);
+            if(_loc2_ >= 1)
+            {
+               this.bullets.addChild(new §_-I0§(param1,Math.round(_loc2_ * 1)));
+               this.game.gameSounds.§_-ab§();
+               this.updateCash(Math.round(_loc2_ * 1));
+            }
+         }
+         this.intervalWaveCounter = this.waves[this.indexWaves].interval;
+         this.§default const try§();
+      }
+      
+      public function §function continue§(param1:§const for const§) : void
+      {
+         var _loc3_:§const for const§ = null;
+         var _loc2_:int = 0;
+         for each(_loc3_ in this.§use extends§)
+         {
+            _loc2_++;
+         }
+         if(_loc2_ == 0)
+         {
+            this.menu.enableNextWave();
+         }
+         this.§use extends§[param1] = param1;
+      }
+      
+      public function §_-a6§(param1:§const for const§, param2:Boolean = false) : void
+      {
+         var _loc3_:int = 0;
+         var _loc4_:§const for const§ = null;
+         param1.§_-sX§();
+         delete this.§use extends§[param1];
+         if(!param2)
+         {
+            _loc3_ = 0;
+            for each(_loc4_ in this.§use extends§)
+            {
+               _loc3_++;
+            }
+            if(_loc3_ == 0)
+            {
+               this.menu.§return var§();
+            }
+         }
+      }
+      
+      public function §_-4a§(param1:§const for const§) : void
+      {
+         var _loc3_:§const for const§ = null;
+         delete this.§use extends§[param1];
+         var _loc2_:int = 0;
+         for each(_loc3_ in this.§use extends§)
+         {
+            _loc2_++;
+         }
+         if(_loc2_ == 0)
+         {
+            this.menu.§return var§();
+         }
+      }
+      
+      public function §default const try§() : void
+      {
+         var _loc1_:§const for const§ = null;
+         for each(_loc1_ in this.§use extends§)
+         {
+            this.§_-a6§(_loc1_,true);
+         }
+         this.menu.§return var§();
+      }
+      
+      public function §do for import§() : void
+      {
+         this.menu.§if const in§(0);
+      }
+      
+      public function §finally const function§() : void
+      {
+         this.menu.§if const in§(1);
+      }
+      
+      public function unlockPowerPriest() : void
+      {
+         this.menu.§if const in§(2);
+      }
+      
+      public function §do var§() : void
+      {
+         this.menu.§if const in§(3);
+      }
+      
+      public function §_-yQ§() : void
+      {
+         if(this.game.§override for if§ && this.game.pcLightning)
+         {
+            this.menu.§if const in§(2);
+         }
+      }
+      
+      public function §implements const final§() : void
+      {
+         ++this.fireballCounter;
+         if(this.fireballCounter == 5)
+         {
+            this.game.§const for set§.checkArmaggedon(this);
+         }
+      }
+      
+      public function §var const native§() : void
+      {
+         ++this.§with for package§;
+      }
+      
+      public function §_-b2§() : void
+      {
+         ++this.§case switch§;
+      }
+      
+      public function §get import§() : void
+      {
+         ++this.sellTowersCounter;
+      }
+      
+      protected function hasEnemies() : Boolean
+      {
+         var _loc1_:Enemy = null;
+         var _loc2_:Enemy = null;
+         if(this.isReadyToWin)
+         {
+            if(this.readyToWinTimeCounter < this.readyToWinTime)
+            {
+               ++this.readyToWinTimeCounter;
+               if(this.readyToWinTimeCounter % 10 == 0)
+               {
+                  for each(_loc2_ in this.enemies)
+                  {
+                     if(!_loc2_.isBoss || _loc2_.isBoss && !_loc2_.isDead)
+                     {
+                        this.isReadyToWin = false;
+                     }
+                  }
+               }
+               return true;
+            }
+            return false;
+         }
+         for each(_loc1_ in this.enemies)
+         {
+            if(!_loc1_.isBoss || _loc1_.isBoss && !_loc1_.isDead)
+            {
+               return true;
+            }
+         }
+         this.isReadyToWin = true;
+         this.readyToWinTimeCounter = 0;
+         return true;
+      }
+      
+      private function traceEnemies() : void
+      {
+         var _loc2_:Enemy = null;
+         var _loc1_:int = 0;
+         for each(_loc2_ in this.enemies)
+         {
+            _loc1_++;
+            if(_loc2_.onTunnel)
+            {
+            }
+         }
+      }
+      
+      private function §switch const each§() : void
+      {
+         var _loc2_:int = 0;
+         var _loc1_:* = int(this.entities.numChildren - 1);
+         while(_loc1_ > 0)
+         {
+            _loc2_ = 0;
+            while(_loc2_ < _loc1_)
+            {
+               if(this.entities.getChildAt(_loc2_).y + MovieClip(this.entities.getChildAt(_loc2_)).orderAdjustY > this.entities.getChildAt(_loc2_ + 1).y + MovieClip(this.entities.getChildAt(_loc2_ + 1)).orderAdjustY)
+               {
+                  this.entities.swapChildrenAt(_loc2_,_loc2_ + 1);
+               }
+               _loc2_++;
+            }
+            _loc1_--;
+         }
+      }
+      
+      private function §_-rN§() : void
+      {
+         var _loc2_:int = 0;
+         var _loc1_:* = int(this.enemyDecals.numChildren - 1);
+         while(_loc1_ > 0)
+         {
+            _loc2_ = 0;
+            while(_loc2_ < _loc1_)
+            {
+               if(this.enemyDecals.getChildAt(_loc2_).y + MovieClip(this.enemyDecals.getChildAt(_loc2_)).orderAdjustY > this.enemyDecals.getChildAt(_loc2_ + 1).y + MovieClip(this.enemyDecals.getChildAt(_loc2_ + 1)).orderAdjustY)
+               {
+                  this.enemyDecals.swapChildrenAt(_loc2_,_loc2_ + 1);
+               }
+               _loc2_++;
+            }
+            _loc1_--;
+         }
+      }
+      
+      protected function §do try§(param1:§dynamic const in§, param2:int) : Point
+      {
+         return param1.§continue super§(param2);
+      }
+      
+      public function §extends use§(param1:int) : Array
+      {
+         var _loc2_:int = Math.ceil(Math.random() * this.§_-V8§[param1].length) - 1;
+         return this.§_-V8§[param1][_loc2_];
+      }
+      
+      public function randomRange(param1:Number, param2:Number) : Number
+      {
+         return Math.ceil(Math.random() * (param2 - param1) + param1) - 1;
+      }
+      
+      public function addToopTip(param1:Tooltip) : void
+      {
+         this.removeToopTip();
+         this.§_-JR§ = param1;
+         this.§else const native§.addChild(this.§_-JR§);
+         param1 = null;
+      }
+      
+      public function removeToopTip() : void
+      {
+         if(this.§_-JR§ != null)
+         {
+            this.§_-JR§.destroyThis();
+            this.§_-JR§ = null;
+         }
+      }
+      
+      public function §_-7d§() : void
+      {
+         var _loc1_:int = 0;
+         while(_loc1_ < this.§_-R4§.length)
+         {
+            if(this.terrainType == "underground")
+            {
+               this.decals.addChild(new §finally for break§(this.§_-R4§[_loc1_]));
+            }
+            else
+            {
+               this.decals.addChild(new DefenseIndicatorCommon(this.§_-R4§[_loc1_]));
+            }
+            _loc1_++;
+         }
+      }
+      
+      public function §_-aG§() : int
+      {
+         if(this.mode != §_-Mm§.MODE_CAMPAIGN)
+         {
+            return 3;
+         }
+         if(this.lives >= 18)
+         {
+            return 3;
+         }
+         if(this.lives > 5 && this.lives < 18)
+         {
+            return 2;
+         }
+         return 1;
+      }
+      
+      public function §_-Hp§(param1:int, param2:Boolean) : void
+      {
+      }
+      
+      public function §_-bY§(param1:*, param2:*) : Boolean
+      {
+         switch(param1)
+         {
+            case §_-Mm§.ARCHERS:
+               if(this.§final if§ >= param2 || this.§final if§ == 0 && param2 != 1 && this.§use return§ >= param2)
+               {
+                  return false;
+               }
+               break;
+            case §_-Mm§.MAGES:
+               if(this.unlockMaxMages >= param2 || this.unlockMaxMages == 0 && param2 != 1 && this.§get for super§ >= param2)
+               {
+                  return false;
+               }
+               break;
+            case §_-Mm§.ENGINEERS:
+               if(this.§var while§ >= param2 || this.§var while§ == 0 && param2 != 1 && this.§_-4A§ >= param2)
+               {
+                  return false;
+               }
+               break;
+            case §_-Mm§.BARRACKS:
+               if(this.unlockMaxBarracks >= param2 || this.unlockMaxBarracks == 0 && param2 != 1 && this.§implements override§ >= param2)
+               {
+                  return false;
+               }
+         }
+         return true;
+      }
+      
+      public function §false for var§() : void
+      {
+         var _loc1_:§_-5u§ = null;
+         for each(_loc1_ in this.towers)
+         {
+            _loc1_.§_-AP§();
+         }
+      }
+      
+      public function §_-nv§(param1:int, param2:int) : int
+      {
+         return 30;
+      }
+      
+      public function §_-ly§(param1:int, param2:int, param3:int = 0) : Boolean
+      {
+         if(param2 == 0)
+         {
+            return true;
+         }
+         if(this.§_-W§(param1))
+         {
+            return true;
+         }
+         if(this.§default for use§(param1,param2))
+         {
+            return true;
+         }
+         if(this.§import for dynamic§(param1,param2,8))
+         {
+            return true;
+         }
+         if(this.§_-lD§(param1,param2,8))
+         {
+            return true;
+         }
+         if(param2 < 0 || param1 >= this.§_-V8§[param1][0].length)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function §_-W§(param1:int) : Boolean
+      {
+         var _loc2_:Boolean = false;
+         if(this.pathsActives.length > 0 && this.pathsActives.length > 1)
+         {
+            _loc2_ = Boolean(this.pathsActives[param1]);
+            if(!_loc2_)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+      
+      public function §default for use§(param1:int, param2:int) : Boolean
+      {
+         if(this.§var const override§)
+         {
+            if(this.§_-W8§[param1][0])
+            {
+               if(param2 >= this.§_-W8§[param1][1] && param2 <= this.§_-W8§[param1][4])
+               {
+                  return true;
+               }
+            }
+         }
+         return false;
+      }
+      
+      public function §default each§(param1:int, param2:int, param3:int) : Point
+      {
+         return this.§_-V8§[param1][param2][param3];
+      }
+      
+      public function §import for dynamic§(param1:int, param2:int, param3:int) : Boolean
+      {
+         var _loc4_:int = 0;
+         if(this.§_-b9§)
+         {
+            if(this.§_-b§[param1][0])
+            {
+               _loc4_ = 0;
+               while(_loc4_ < this.§_-b§[param1][1].length)
+               {
+                  if(param2 >= this.§_-b§[param1][1][_loc4_][0] - param3 && param2 <= this.§_-b§[param1][1][_loc4_][1] + param3)
+                  {
+                     return true;
+                  }
+                  _loc4_++;
+               }
+            }
+         }
+         return false;
+      }
+      
+      public function §_-lD§(param1:int, param2:int, param3:int) : Boolean
+      {
+         if(this.§import const super§)
+         {
+            if(param2 >= this.§_-r6§[param1][0] && param2 <= this.§_-r6§[param1][1] + param3)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+      
+      internal function loadXML(param1:Event) : void
+      {
+         var _loc4_:String = null;
+         var _loc6_:int = 0;
+         var _loc2_:Array = [];
+         var _loc3_:Array = [];
+         this.xml = new XML(param1.target.data);
+         _loc4_ = "this.waves = [ \n ";
+         this.cash = int(this.xml.cash);
+         this.gameSettings.heroes.heroAlric.currentLevel = int(this.xml.heroLevel);
+         this.gameSettings.heroes.heroAlric.swordsmanshipLevel = int(this.xml.hero1);
+         this.gameSettings.heroes.heroAlric.betterArmorLevel = int(this.xml.hero2);
+         this.gameSettings.heroes.heroAlric.toughnessLevel = int(this.xml.hero3);
+         this.gameSettings.heroes.heroAlric.flurryLevel = int(this.xml.hero4);
+         this.gameSettings.heroes.heroAlric.sandWarriorLevel = int(this.xml.hero5);
+         var _loc5_:int = 0;
+         while(_loc5_ < this.xml.wave.length())
+         {
+            _loc2_ = new Array();
+            _loc4_ += "new Wave(\t [ \n";
+            _loc6_ = 0;
+            while(_loc6_ < this.xml.wave[_loc5_].spawns.spawn.length())
+            {
+               _loc2_.push(new §_-VY§(this.xml.wave[_loc5_].spawns.spawn[_loc6_].creep,this.xml.wave[_loc5_].spawns.spawn[_loc6_].creep_aux,int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].max_same),int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].max),int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].interval / 1.28),int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].interval_next),Boolean(int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].fixed_sub_path)),int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].path)));
+               _loc4_ += "new WaveSpawn(\"" + this.xml.wave[_loc5_].spawns.spawn[_loc6_].creep + "\", \"" + this.xml.wave[_loc5_].spawns.spawn[_loc6_].creep_aux + "\"," + int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].max_same) + ", " + int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].max) + ", " + int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].interval) + ", " + int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].interval_next) + ", " + Boolean(int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].fixed_sub_path)).toString() + ", " + int(this.xml.wave[_loc5_].spawns.spawn[_loc6_].path) + ")";
+               if(_loc6_ + 1 < this.xml.wave[_loc5_].spawns.spawn.length())
+               {
+                  _loc4_ += ",\n";
+               }
+               else
+               {
+                  _loc4_ += "]";
+               }
+               _loc6_++;
+            }
+            _loc3_.push(new Wave(_loc2_,int(this.xml.wave[_loc5_].interval),int(this.xml.wave[_loc5_].path_index),"",""));
+            _loc4_ += ", " + int(this.xml.wave[_loc5_].interval) + "," + int(this.xml.wave[_loc5_].path_index) + ",\"" + "" + "\",\"" + "" + "\" ),\n\n\n";
+            _loc5_++;
+         }
+         this.waves = _loc3_;
+         _loc4_ += "];";
+         trace(_loc4_);
+         this.getNumberOfWaves();
+         this.§continue const null§();
+      }
+      
+      public function §_-Vw§() : void
+      {
+         var _loc1_:String = null;
+         var _loc3_:int = 0;
+         _loc1_ = "[NSArray arrayWithObjects: \n";
+         var _loc2_:int = 0;
+         while(_loc2_ < this.waves.length)
+         {
+            _loc1_ += "\t\t\t\t\t[[[Wave alloc] initWithSpawns:[NSArray arrayWithObjects:";
+            _loc3_ = 0;
+            while(_loc3_ < Wave(this.waves[_loc2_]).spawns.length)
+            {
+               _loc1_ += "\n\t\t\t\t\t\t\t\t\t\t\t\t" + "[[[WaveSpawn alloc] initWithCreep:@\"" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).creepType + "\" creepAux:@\"" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).creepTypeAux + "\" maxSame:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).maxSameCreep + " cant:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).cant + " interval:" + Math.round(§_-VY§(this.waves[_loc2_].spawns[_loc3_]).interval * 1.28) + " invervalNextSpawn:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).intervalNextSpawn + " useFixedPath:" + (§_-VY§(this.waves[_loc2_].spawns[_loc3_]).useFixedPath ? "YES" : "NO") + " path:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).path + "] autorelease],\n";
+               _loc3_++;
+            }
+            _loc1_ += "\t\t\t\t\t\t\t\t\t\t\t\t" + " nil] interval:" + Wave(this.waves[_loc2_]).interval + " pathIndex:" + Wave(this.waves[_loc2_]).pathIndex + " notification:@\"\" notificationSecondLevel:@\"\" isFly:NO] autorelease],\n\n";
+            _loc2_++;
+         }
+         _loc1_ += "\t\t\t\t nil";
+         trace(_loc1_);
+      }
+      
+      public function §continue const null§() : void
+      {
+      }
+      
+      public function §function default§() : void
+      {
+      }
+      
+      public function evalBrilliance() : void
+      {
+         var _loc2_:§_-5u§ = null;
+         if(!this.game.gameUpgrades.§extends const import§(GameUpgrades.FRONTIERS_BRILLANCE,this.§_-wi§))
+         {
+            return;
+         }
+         var _loc1_:int = 0;
+         for each(_loc2_ in this.towers)
+         {
+            if(getQualifiedClassName(_loc2_) != "TowerHolder" && Boolean(§else false§.beginsWith(getQualifiedClassName(_loc2_),"TowerMage")))
+            {
+               _loc1_++;
+            }
+         }
+         if(_loc1_ <= 1)
+         {
+            _loc1_ = 0;
+         }
+         var _loc3_:int = §_-Mm§.getFromArraySafe(this.game.gameUpgrades.§_-fy§,_loc1_ - 1);
+         this.§implements for switch§.setBrillianceDamages(this.gameSettings,_loc3_);
+      }
+      
+      public function §_-Yx§() : void
+      {
+         if(this.game.§const for set§.landOwner)
+         {
+            return;
+         }
+         var _loc1_:int = 0;
+         while(_loc1_ < this.entities.numChildren)
+         {
+            if(§else false§.beginsWith(getQualifiedClassName(this.entities.getChildAt(_loc1_)),"TowerHolder"))
+            {
+               return;
+            }
+            _loc1_++;
+         }
+         this.game.§const for set§.§_-X6§(this);
+      }
+      
+      public function §_-ba§(param1:Sprite = null) : void
+      {
+         if(this.§_-FS§.parent == null)
+         {
+            if(param1 == null)
+            {
+               this.§else const native§.addChild(this.§_-FS§);
+            }
+            else
+            {
+               param1.addChild(this.§_-FS§);
+            }
+         }
+      }
+      
+      public function §_-5W§() : void
+      {
+         if(this.§_-FS§.parent != null)
+         {
+            this.§_-FS§.parent.removeChild(this.§_-FS§);
+         }
+      }
+      
+      public function destroyThis() : void
+      {
+         var _loc1_:§const for const§ = null;
+         var _loc2_:Wave = null;
+         this.§_-FS§.destroyThis();
+         this.§_-mV§();
+         this.§_-9g§ = null;
+         this.§function default§();
+         if(this.graveyard != null)
+         {
+            this.graveyard.destroyThis();
+         }
+         this.removeEventListener(Event.DEACTIVATE,this.onDeactivate);
+         this.towerRange.removeEventListener(MouseEvent.MOUSE_DOWN,this.§try const dynamic§);
+         this.towerRangeNew.removeEventListener(MouseEvent.MOUSE_DOWN,this.§_-RT§);
+         this.gTerrain.removeEventListener(MouseEvent.MOUSE_DOWN,this.intro);
+         stage.removeEventListener(KeyboardEvent.KEY_DOWN,this.keyPressed);
+         this.removeEventListener(Event.ENTER_FRAME,this.eFrameEvents);
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.initS);
+         this.game.gameSounds.§_-m8§();
+         for each(_loc1_ in this.§use extends§)
+         {
+            _loc1_.destroyThis(false);
+         }
+         this.quickMenu.destroyThis();
+         this.quickMenu = null;
+         for each(_loc2_ in this.activeWaves)
+         {
+            _loc2_.destroyThis();
+         }
+         if(this.§null use§ != null)
+         {
+            this.§null use§.destroyThis();
+         }
+         this.§null use§ = null;
+         this.data = null;
+         this.§package do§ = null;
+         this.§_-lx§ = null;
+         this.gameSettings.destroyThis();
+         this.gameSettings = null;
+         this.§_-R4§ = null;
+         this.§_-V8§ = null;
+         this.§_-W8§ = null;
+         this.§_-dp§ = null;
+         if(this.§_-JR§ != null)
+         {
+            this.§else const native§.removeChild(this.§_-JR§);
+            this.§_-JR§ = null;
+         }
+         this.menu = null;
+         this.§_-rd§ = null;
+         this.§include return§ = null;
+         this.§_-lN§.destroyThis();
+         this.§_-lN§ = null;
+         this.§_-6x§.destroyThis();
+         this.§_-6x§ = null;
+         this.§native const class§.destroyThis();
+         this.§native const class§ = null;
+         this.ellipses.removeChild(this.towerRange);
+         this.ellipses.removeChild(this.towerRangeNew);
+         this.ellipses.removeChild(this.§_-WL§);
+         this.towerRange = null;
+         this.towerRangeNew = null;
+         this.§_-WL§ = null;
+         this.waves = null;
+         this.activeWaves = null;
+         this.terrain.removeChild(this.gTerrain);
+         this.gTerrain = null;
+         this.removeChild(this.terrain);
+         this.terrain = null;
+         this.removeChild(this.ellipses);
+         this.ellipses = null;
+         this.removeChild(this.§case use§);
+         this.§case use§ = null;
+         this.removeChild(this.decals);
+         this.decals = null;
+         this.removeChild(this.entities);
+         this.entities = null;
+         this.removeChild(this.frontEntities);
+         this.frontEntities = null;
+         this.removeChild(this.bulletsDecals);
+         this.bulletsDecals = null;
+         this.removeChild(this.bullets);
+         this.bullets = null;
+         this.removeChild(this.§else const native§);
+         this.§else const native§ = null;
+         this.towers = null;
+         this.enemies = null;
+         this.§_-jG§ = null;
+         this.§use extends§ = null;
+         this.staticEnemies = null;
+         this.§import do§ = null;
+         this.rallyPoint = null;
+         this.§false§ = null;
+         this.§finally const static§ = null;
+         this.heroPortrait2 = null;
+         this.enemySelection = null;
+         this.soldierSelection = null;
+         this.§else static§ = null;
+         this.game = null;
+         this.parent.removeChild(this);
+      }
+      
+      public function forceUnselectTowers() : void
+      {
+         var _loc1_:§_-5u§ = null;
+         for each(_loc1_ in this.towers)
+         {
+            _loc1_.unSelect();
+         }
+      }
+      
+      public function §_-NP§(param1:§_-BS§) : *
+      {
+         if(this.§finally const static§ == null)
+         {
+            this.§finally const static§ = param1;
+         }
+         else if(this.heroPortrait2 == null)
+         {
+            this.heroPortrait2 = param1;
+         }
+      }
+   }
+}
+

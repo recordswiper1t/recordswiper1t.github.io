@@ -1,0 +1,59 @@
+Unlock-related ActionScript exported from Kingdom Rush Frontiers
+
+scripts/AgiV2Handler.as	heroPrices, Premium, purchases, purchase
+scripts/ButPremiumContentMainMenu.as	Premium
+scripts/EnemyModifierSlowKraken.as	gameHeroData, heroCaptain
+scripts/Level.as	unlockMax, selectedHero, gameHeroData, heroAlric, unlock
+scripts/Level1.as	unlockMax, selectedHero, gameHeroData, unlock
+scripts/Level10.as	unlockMax, unlock
+scripts/Level11.as	unlockMax, unlock
+scripts/Level12.as	unlockMax, unlock
+scripts/Level13.as	unlockMax, unlock
+scripts/Level14.as	unlockMax, unlock
+scripts/Level15.as	unlockMax, unlock
+scripts/Level2.as	unlockMax, unlock
+scripts/Level3.as	unlockMax, unlock
+scripts/Level4.as	unlockMax, unlock
+scripts/Level5.as	unlockMax, unlock
+scripts/Level6.as	unlockMax, unlock
+scripts/Level7.as	unlockMax, unlock
+scripts/Level8.as	unlockMax, unlock
+scripts/Level9.as	unlockMax, unlock
+scripts/MainMenu.as	Premium
+scripts/MirageArrow.as	gameHeroData, heroMirage
+scripts/NotificationTowerLevel2.as	unlockMax, unlock
+scripts/NotificationTowerLevel3.as	unlockMax, unlock
+scripts/NotificationTowerMageArchmage.as	unlockMax, unlock
+scripts/NotificationTowerMageNecromancer.as	unlockMax, unlock
+scripts/NotificationTowerSoldierAssassin.as	unlockMax, unlock
+scripts/NotificationTowerSoldierTemplar.as	unlockMax, unlock
+scripts/PriestRangedAttackBolt.as	gameHeroData, heroDierdre
+scripts/SoldierHeroAlien.as	gameHeroData, heroShatra
+scripts/SoldierHeroAlric.as	gameHeroData, heroAlric
+scripts/SoldierHeroCaptain.as	gameHeroData, heroCaptain, locked
+scripts/SoldierHeroCronan.as	gameHeroData, heroCronan
+scripts/SoldierHeroDierdre.as	gameHeroData, heroDierdre
+scripts/SoldierHeroDragon.as	gameHeroData, heroAshbite
+scripts/SoldierHeroDragonLongRangeAttackExplosion1.as	gameHeroData, heroAshbite
+scripts/SoldierHeroDragonLongRangeAttackExplosion2.as	gameHeroData, heroAshbite
+scripts/SoldierHeroMirage.as	gameHeroData, heroMirage, locked
+scripts/SoldierHeroNivus.as	gameHeroData, heroNivus
+scripts/SoldierSandWarrior.as	gameHeroData, heroAlric, locked
+scripts/TowerModifierHeroPriestConsecrate.as	heroDierdre
+scripts/§_-2i§.as	selectedHero, heroAlric, heroMirage, heroCronan, heroCaptain, heroNivus, heroGrawl, heroDierdre, heroShatra, heroAshbite
+scripts/§_-BQ§.as	selectedHero, gameHeroData, heroAlric, purchase, locked
+scripts/§_-Mm§.as	gameHeroData, heroAlric, heroMirage, heroCronan, heroCaptain, heroNivus, heroGrawl, heroDierdre, heroShatra, heroAshbite
+scripts/§_-WZ§.as	gameHeroData, heroAshbite
+scripts/§_-Wl§.as	Premium, purchase
+scripts/§_-pA§.as	unlockMax, unlock
+scripts/§class const for§.as	selectedHero, Premium, gameHeroData, locked
+scripts/§dynamic const class§.as	selectedHero, gameHeroData
+scripts/§dynamic else§.as	gameHeroData, heroAshbite
+scripts/§each const each§.as	heroPrices, purchase, locked
+scripts/§else const static§.as	gameHeroData, heroGrawl
+scripts/§false const dynamic§.as	selectedHero, gameHeroData
+scripts/§false for while§.as	selectedHero, gameHeroData
+scripts/§if const function§.as	selectedHero, heroPrices, Premium, gameHeroData, heroAlric, heroMirage, heroCronan, heroCaptain, heroNivus, heroGrawl, heroDierdre, heroShatra, heroAshbite, purchase, unlock
+scripts/§include function§.as	gameHeroData, heroCronan
+scripts/§override use§.as	gameHeroData, heroCaptain
+scripts/§switch for for§.as	gameHeroData, heroCaptain

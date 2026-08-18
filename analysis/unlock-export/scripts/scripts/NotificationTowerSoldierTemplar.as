@@ -1,0 +1,39 @@
+package
+{
+   import flash.display.MovieClip;
+   
+   [Embed(source="/_assets/assets.swf", symbol="symbol11161")]
+   public class NotificationTowerSoldierTemplar extends Notification
+   {
+      
+      public var butClose:MovieClip;
+      
+      public function NotificationTowerSoldierTemplar(param1:Level, param2:Boolean = true)
+      {
+         addFrameScript(12,this.frame13,24,this.frame25);
+         super(param1,param2);
+      }
+      
+      override protected function onInit() : void
+      {
+         this.level.unlockMaxBarracks = 7;
+         this.level.game.§_-Pg§.notificationTowerSoldiersTemplar = true;
+         this.level.game.§_-Pg§.§case super§();
+      }
+      
+      override protected function onExit() : void
+      {
+      }
+      
+      internal function frame13() : *
+      {
+         stop();
+      }
+      
+      internal function frame25() : *
+      {
+         stop();
+      }
+   }
+}
+
