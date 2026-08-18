@@ -32,17 +32,17 @@ jobs:
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
           test -f /tmp/ffdec/ffdec.jar
 
-      - name: Export current V3 ActionScript and select controllers
+      - name: Export current V3 ActionScript and write compact source reports
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/v4scripts
-          mkdir -p /tmp/v4scripts analysis
+          rm -rf /tmp/v4scripts analysis/v4-core analysis/v4-inventory.txt analysis/v4-snippets.txt
+          mkdir -p /tmp/v4scripts analysis/v4-core
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4scripts assets/kingdom-rush-frontiers-v3.swf > /tmp/v4-export.log 2>&1 || true
           test -d /tmp/v4scripts/scripts
           python3 - <<'PY'
           from pathlib import Path
-          import re
+          import re, shutil
 
           root = Path('/tmp/v4scripts/scripts')
           files = []
@@ -53,94 +53,91 @@ jobs:
                   continue
               files.append((p, text))
 
-          categories = {
-              'pause_settings': ['onPause','pause(','unPause','resume','restart','quit','settings','sound','music','sandbox'],
-              'hero_selection_spawn': ['selectedHero','heroPortrait','SoldierHero','heroDied','heroLevel','heroes','hero'],
-              'hero_currency': ['skillPoints','calculateTotalCost','updateCosts','heroSkill','points'],
-              'upgrade_stars': ['MenuUpgrades','gameUpgrades','stars','archersUpLevel','barracksUpLevel','magesUpLevel','engineersUpLevel','rainUpLevel','reinforcementLevel'],
-              'wave_dispatch': ['indexWaves','activeWaves','maxWaves','Wave(','intervalWave','sendWave','nextWave','waveFlag','wave'],
-              'cash_gold': ['updateCash','this.cash','cash +=','cash -=','gold','coins'],
-              'tower_build_menu': ['quickMenu','TowerHolder','buildTower','towerName','TowerDwarfRiflemen','TowerSoldierPirates','cost'],
-              'tower_positioning': ['this.x','this.y','holder','cTower','tower.x','tower.y','position'],
-              'input': ['MouseEvent','TouchEvent','Multitouch','stageX','stageY','CLICK','MOUSE_DOWN','MOUSE_UP'],
-              'performance_cleanup': ['removeChild','dispose','destroy','removeEventListener','ENTER_FRAME','activeWaves','enemies','bullets']
+          # Copy the exact controllers V3 verified, plus upgrade/currency controllers,
+          # into small repository files that can be reviewed directly.
+          wanted = {
+              'Level.as': 'Level.as.txt',
+              'TowerHolder.as': 'TowerHolder.as.txt',
+              'MenuUpgrades.as': 'MenuUpgrades.as.txt',
+              'GameUpgrades.as': 'GameUpgrades.as.txt',
+              '§_-2i§.as': 'pause-obfuscated.as.txt',
+              '§_-BQ§.as': 'wave-ui-obfuscated.as.txt',
+              '§_-LZ§.as': 'tower-menu-obfuscated.as.txt',
+              '§_-8a§.as': 'hero-currency-obfuscated.as.txt',
           }
-
-          explicit_names = {
-              'Level.as','TowerHolder.as','MenuUpgrades.as','GameUpgrades.as',
-              '§_-2i§.as','§_-BQ§.as','§_-LZ§.as','§_-8a§.as'
-          }
-
-          selected = set()
-          report = ['=== Frontiers v4 targeted source selection from current V3 ===', '']
-
-          for cat, pats in categories.items():
-              scored = []
-              for p, text in files:
-                  score = sum(1 for pat in pats if pat in text)
-                  if score:
-                      scored.append((score, p, text))
-              scored.sort(key=lambda x: (-x[0], len(x[2]), str(x[1])))
-              report.append(f'===== CATEGORY {cat} =====')
-              for score, p, text in scored[:18]:
-                  rel = p.relative_to(root)
-                  report.append(f'{score}\t{rel}\t{len(text)} bytes')
-                  if score >= 2:
-                      selected.add(p)
-              report.append('')
-
-          tower_classes = []
-          hero_classes = []
-          enemy_classes = []
+          found = {}
           for p, text in files:
-              rel = p.relative_to(root)
-              for m in re.finditer(r'public\s+class\s+([A-Za-z0-9_§$-]+)', text):
+              if p.name in wanted and p.name not in found:
+                  dst = Path('analysis/v4-core') / wanted[p.name]
+                  dst.write_text(text, encoding='utf-8')
+                  found[p.name] = str(p.relative_to(root))
+
+          # Inventory every public class so we can enumerate all built-in special heroes/towers.
+          towers, heroes, allclasses = [], [], []
+          class_re = re.compile(r'public\s+(?:final\s+)?class\s+([A-Za-z0-9_§$-]+)')
+          for p, text in files:
+              rel = str(p.relative_to(root))
+              for m in class_re.finditer(text):
                   name = m.group(1)
+                  allclasses.append((name, rel))
                   if name.startswith('Tower'):
-                      tower_classes.append((name, str(rel)))
-                  elif 'Hero' in name or name.startswith('SoldierHero'):
-                      hero_classes.append((name, str(rel)))
-                  elif name.startswith('Enemy'):
-                      enemy_classes.append((name, str(rel)))
-              if p.name in explicit_names:
-                  selected.add(p)
+                      towers.append((name, rel))
+                  if 'Hero' in name or name.startswith('SoldierHero') or 'hero' in rel.lower():
+                      heroes.append((name, rel))
 
-          report.append('===== TOWER CLASS INVENTORY =====')
-          for name, rel in sorted(set(tower_classes)):
-              report.append(f'{name}\t{rel}')
-          report.append('')
-          report.append('===== HERO CLASS INVENTORY =====')
-          for name, rel in sorted(set(hero_classes)):
-              report.append(f'{name}\t{rel}')
-          report.append('')
-          report.append('===== ENEMY CLASS INVENTORY (first 250) =====')
-          for name, rel in sorted(set(enemy_classes))[:250]:
-              report.append(f'{name}\t{rel}')
-          report.append('')
+          inv = ['=== EXACT CORE FILES ===']
+          for src, dst in wanted.items():
+              inv.append(f'{src}\t{found.get(src, "NOT FOUND")}\tanalysis/v4-core/{dst}')
+          inv += ['', '=== TOWER CLASSES ===']
+          inv += [f'{name}\t{rel}' for name, rel in sorted(set(towers))]
+          inv += ['', '=== HERO-RELATED CLASSES ===']
+          inv += [f'{name}\t{rel}' for name, rel in sorted(set(heroes))]
+          Path('analysis/v4-inventory.txt').write_text('\n'.join(inv) + '\n', encoding='utf-8')
 
-          report.append('===== FULL SELECTED SOURCES =====')
-          for p in sorted(selected, key=lambda x: str(x)):
-              text = p.read_text(encoding='utf-8')
-              if len(text) > 220000:
-                  report.append(f'\n===== {p.relative_to(root)} (OMITTED: {len(text)} bytes) =====')
-                  continue
-              report.extend(['', f'===== {p.relative_to(root)} =====', text])
+          # Compact context snippets around the exact behaviors requested for V4.
+          patterns = [
+              'qol_', 'selectedHero', 'SoldierHero', 'skillPoints', 'calculateTotalCost',
+              'archersUpLevel', 'stars', 'indexWaves', 'activeWaves', 'maxWaves',
+              'intervalWave', 'Wave(', 'updateCash', 'cash +=', 'cash -=',
+              'TowerDwarfRiflemen', 'TowerSoldierPirates', 'quickMenu', 'cTower',
+              'MouseEvent', 'TouchEvent', 'stageX', 'stageY', 'removeChild', 'ENTER_FRAME'
+          ]
+          out = []
+          for pat in patterns:
+              out.append(f'===== {pat} =====')
+              hits = 0
+              for p, text in files:
+                  lines = text.splitlines()
+                  for i, line in enumerate(lines):
+                      if pat not in line:
+                          continue
+                      rel = p.relative_to(root)
+                      out.append(f'--- {rel}:{i+1} ---')
+                      a, b = max(0, i-8), min(len(lines), i+9)
+                      for j in range(a, b):
+                          out.append(f'{j+1:05d}: {lines[j]}')
+                      hits += 1
+                      if hits >= 16:
+                          break
+                  if hits >= 16:
+                      break
+              out.append('')
+          Path('analysis/v4-snippets.txt').write_text('\n'.join(out), encoding='utf-8')
 
-          out = Path('analysis/v4-selected.txt')
-          out.write_text('\n'.join(report), encoding='utf-8')
           print('ActionScript files:', len(files))
-          print('Selected source files:', len(selected))
-          print('Report bytes:', out.stat().st_size)
+          print('Core files found:', found)
+          print('Tower classes:', len(set(towers)))
+          print('Hero-related classes:', len(set(heroes)))
           PY
 
-      - name: Commit analysis report to branch
+      - name: Commit compact analysis to branch
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add analysis/v4-selected.txt
-          git commit -m 'Add Frontiers v4 source selection [skip ci]' || exit 0
+          git add analysis/v4-core analysis/v4-inventory.txt analysis/v4-snippets.txt
+          git commit -m 'Add compact Frontiers v4 controller analysis [skip ci]' || exit 0
           git pull --rebase origin agent/v4-frontiers-fixes
           git push origin HEAD:agent/v4-frontiers-fixes
 
