@@ -1,0 +1,10 @@
+Kingdom Rush Frontiers — V4 Sandbox + Stability
+Based on the verified V3 SWF.
+Replaces hero count with per-hero toggles for all 9 hero implementations in this Flash build.
+Starts sessions with tower upgrades and hero skill trees maxed; pause tools can reset/max them.
+Replaces +100 gold with a numeric amount field and Add button.
+Shows the next-wave flag immediately after the previous wave is sent.
+Paces Send All Waves across frames instead of activating every remaining wave in one frame.
+Expands the special tower page from 2 to 8 buildable towers, with costs.
+Fixes special-tower Y placement and TowerHolder mouse-listener cleanup.
+Built and re-export verified with FFDec 26.2.1.
