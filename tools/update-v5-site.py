@@ -16,7 +16,7 @@ s = s.replace("Fast V4 — best for iPhone", "Fast V5 — best for iPhone")
 s = s.replace("Use ⋯ → Fast V4 for the lighter iPhone player", "Use ⋯ → Fast V5 for the lighter iPhone player")
 p.write_text(s, encoding="utf-8", newline="\n")
 
-# Fast player: direct same-origin V5 fetch, low visual quality by default on iOS.
+# Fast player: direct same-origin V5 URL load, low visual quality by default on iOS.
 p = Path("mod/fast.html")
 s = p.read_text(encoding="utf-8")
 s = s.replace("Fast V4", "Fast V5")
@@ -26,6 +26,12 @@ s = s.replace("fetch(V4_URL,{cache:'force-cache'})", "fetch(V5_URL,{cache:'force
 s = s.replace("V4 asset unavailable", "V5 asset unavailable")
 s = s.replace("Loading V4 • ", "Loading V5 • ")
 s = s.replace("Fast V4 • ", "Fast V5 • ")
+s = replace_once(
+    s,
+    "const resp=await fetch(V5_URL,{cache:'force-cache'});if(!resp.ok)throw new Error('V5 asset unavailable (HTTP '+resp.status+')');const data=await resp.arrayBuffer();const p=player||makePlayer();await p.ruffle().load({data,",
+    "const p=player||makePlayer();await p.ruffle().load({url:V5_URL,",
+    "Fast V5 direct URL loading",
+)
 p.write_text(s, encoding="utf-8", newline="\n")
 
 # Existing Mod Lab player: keep historical installers, but make the player itself
