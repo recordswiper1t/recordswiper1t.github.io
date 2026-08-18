@@ -31,7 +31,7 @@ jobs:
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
           test -f /tmp/ffdec/ffdec.jar
 
-      - name: Export current v2 ActionScript and build targeted grep report
+      - name: Export v2 ActionScript and select controller sources
         shell: bash
         run: |
           set -euo pipefail
@@ -39,25 +39,57 @@ jobs:
           mkdir -p /tmp/v3scripts analysis
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 -export script /tmp/v3scripts assets/kingdom-rush-frontiers-qol-v2.swf > /tmp/v3-export.log 2>&1 || true
           test -d /tmp/v3scripts/scripts
-          {
-            echo '=== Frontiers v3 targeted source grep ==='
-            echo
-            for pattern in \
-              'onPause|pause\(|unPause|resume|restart|quit|settings|sound|music' \
-              'TowerHolder|quickMenu|TowerDwarfRiflemen|TowerSoldierPirates|Tower[A-Za-z]+' \
-              'selectedHero|heroPortrait|skillPoints|hero[A-Z]|SoldierHero' \
-              'Wave\(|sendWave|nextWave|indexWaves|maxWaves|activeWaves|intervalWave' \
-              'Enemy[A-Za-z]+|getDefinitionByName\("Enemy|new Enemy' \
-              'cash|addCash|coins|gold' \
-              'MouseEvent|TouchEvent|Multitouch|stageX|stageY'; do
-              echo "===== PATTERN: $pattern ====="
-              grep -R -n -E -C 3 "$pattern" /tmp/v3scripts/scripts 2>/dev/null | head -n 6000 || true
-              echo
-            done
-          } > analysis/v3-grep.txt
-          wc -c analysis/v3-grep.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('/tmp/v3scripts/scripts')
+          files=[]
+          for p in root.rglob('*.as'):
+              try: t=p.read_text(encoding='utf-8')
+              except Exception: continue
+              files.append((p,t))
 
-      - name: Commit analysis report to PR branch
+          categories={
+            'pause_settings': ['restart','quit','onPause','sound','music','pause('],
+            'tower_build_menu': ['quickMenu','cTower','TowerHolder','buildTower','hide()'],
+            'hero_spawn': ['selectedHero','heroPortrait','SoldierHero','heroDied'],
+            'hero_currency': ['skillPoints','calculateTotalCost','updateCosts'],
+            'wave_dispatch': ['indexWaves','activeWaves','maxWaves','Wave(','intervalWaveCounter'],
+            'cash': ['updateCash','this.cash','cash +=','cash -='],
+            'enemy_spawn': ['getDefinitionByName("Enemy','EnemyCommon','enemyPathIndex','addChild(new Enemy'],
+            'upgrade_stars': ['MenuUpgrades','gameUpgrades','stars','archersUpLevel']
+          }
+          explicit={'Level.as','TowerHolder.as','MenuUpgrades.as','GameUpgrades.as','§_-2i§.as','§_-LZ§.as','§_-8a§.as'}
+          selected=set()
+          report=[]
+          for cat,pats in categories.items():
+              scored=[]
+              for p,t in files:
+                  score=sum(1 for pat in pats if pat in t)
+                  if score:
+                      scored.append((score,p,t))
+              scored.sort(key=lambda x:(-x[0],len(x[2]),str(x[1])))
+              report.append(f'===== CATEGORY {cat} =====')
+              for score,p,t in scored[:8]:
+                  rel=p.relative_to(root)
+                  report.append(f'{score}\t{rel}\t{len(t)} bytes')
+                  if score >= 2:
+                      selected.add(p)
+              report.append('')
+          for p,t in files:
+              if p.name in explicit:
+                  selected.add(p)
+          out=['=== Frontiers v3 controller-source selection ===','']+report
+          out.append('=== FULL SELECTED SOURCES ===')
+          for p in sorted(selected,key=lambda x:str(x)):
+              t=p.read_text(encoding='utf-8')
+              if len(t)>140000:
+                  continue
+              out += ['',f'===== {p.relative_to(root)} =====',t]
+          Path('analysis/v3-selected.txt').write_text('\n'.join(out),encoding='utf-8')
+          print('selected files',len(selected),'report bytes',Path('analysis/v3-selected.txt').stat().st_size)
+          PY
+
+      - name: Commit selected-source report to PR branch
         env:
           TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
         shell: bash
@@ -65,7 +97,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add analysis/v3-grep.txt
-          git commit -m 'Add Frontiers v3 source grep [skip ci]' || exit 0
+          git add analysis/v3-selected.txt
+          git commit -m 'Add Frontiers v3 controller source selection [skip ci]' || exit 0
           git pull --rebase origin "${TARGET_BRANCH}"
           git push origin HEAD:"${TARGET_BRANCH}"
