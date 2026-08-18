@@ -1,28 +1,30 @@
-name: Publish Frontiers v4 installer UI
+name: PR Publish Frontiers v4 installer UI
 
 on:
-  push:
-    branches: [agent/v4-frontiers-fixes]
-    paths:
-      - '.github/workflows/pr-patch-v4-index.yml'
-      - 'tools/patch-v4-index.py'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   publish-index:
+    if: github.head_ref == 'agent/v4-frontiers-fixes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
       - name: Patch V4 installer
         run: python3 tools/patch-v4-index.py
       - name: Commit installer
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add mod/index.html
           git commit -m 'Make verified Frontiers v4 the recommended build [skip ci]' || exit 0
-          git pull --rebase origin agent/v4-frontiers-fixes
-          git push origin HEAD:agent/v4-frontiers-fixes
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
