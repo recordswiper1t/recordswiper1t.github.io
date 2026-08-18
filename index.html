@@ -5,31 +5,335 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#10120f">
+  <meta name="format-detection" content="telephone=no">
   <title>Kingdom Rush Frontiers</title>
   <style>
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      background:#000;
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; height: 100%; min-height: 100dvh; overflow: hidden; background: #10120f; color: #f5f0dc; }
+    button, .button {
+      appearance: none; border: 0; border-radius: 12px; padding: 12px 15px; font: inherit; font-weight: 700;
+      background: #d3a64b; color: #1b160d; cursor: pointer; text-decoration: none; text-align: center;
     }
-    iframe{
-      display:block;
-      border:0;
-      width:100vw;
-      height:100dvh;
-      background:#000;
+    button.secondary, .button.secondary { background: #2c312a; color: #f5f0dc; border: 1px solid #4c5548; }
+    button.danger { background: #4b2622; color: #ffe7df; border: 1px solid #7f3b33; }
+    button:disabled { opacity: .5; cursor: default; }
+
+    #setup {
+      min-height: 100dvh; padding: calc(env(safe-area-inset-top) + 24px) 22px calc(env(safe-area-inset-bottom) + 24px);
+      display: grid; place-items: center; overflow: auto;
+      background: radial-gradient(circle at 50% 15%, #37432e 0, #1b2018 42%, #10120f 100%);
+    }
+    .card { width: min(620px, 100%); padding: 24px; border: 1px solid #46503f; border-radius: 20px; background: rgba(18, 22, 16, .94); box-shadow: 0 18px 60px rgba(0,0,0,.35); }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 8vw, 46px); line-height: .98; letter-spacing: -.03em; }
+    h2 { margin: 0 0 10px; font-size: 20px; }
+    p { color: #cfd6c8; line-height: 1.45; }
+    .muted { color: #9ea898; font-size: 13px; }
+    .actions { display: grid; gap: 10px; margin-top: 18px; }
+    .status { min-height: 20px; margin-top: 10px; color: #e4d5a8; font-size: 14px; }
+    .divider { height: 1px; background: #343c30; margin: 20px 0; }
+
+    #playerShell, #archiveShell { display: none; width: 100vw; height: 100dvh; background: #000; }
+    #toolbar {
+      position: fixed; z-index: 30; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top));
+      display: flex; gap: 8px; align-items: center; transition: opacity .2s ease;
+    }
+    #toolbar button { padding: 9px 11px; border-radius: 10px; background: rgba(18, 22, 16, .88); color: #f5f0dc; border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(10px); }
+    #toolbar button.primary { background: rgba(211, 166, 75, .94); color: #1b160d; }
+    #player { width: 100vw; height: 100dvh; display: grid; place-items: center; background: #000; touch-action: manipulation; }
+    ruffle-player { width: 100% !important; height: 100% !important; display: block; }
+
+    #archiveShell iframe { display: block; border: 0; width: 100vw; height: 100dvh; background: #000; }
+    #archiveBack { position: fixed; z-index: 40; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); }
+
+    dialog { width: min(560px, calc(100% - 28px)); border: 1px solid #46503f; border-radius: 18px; padding: 0; background: #171b15; color: #f5f0dc; box-shadow: 0 25px 80px rgba(0,0,0,.6); }
+    dialog::backdrop { background: rgba(0,0,0,.65); backdrop-filter: blur(4px); }
+    .modal-body { padding: 20px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 0 20px 20px; }
+    ol { color: #cfd6c8; line-height: 1.5; padding-left: 22px; }
+    code { color: #f4d990; }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      #toolbar { opacity: .32; }
+      #toolbar:focus-within, #toolbar:hover { opacity: 1; }
+      #toolbar button { padding: 7px 9px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-  <iframe
-    src="https://archive.org/embed/kingdom-rush-frontie-15717"
-    title="Kingdom Rush Frontiers"
-    allow="fullscreen; autoplay"
-    allowfullscreen>
-  </iframe>
+  <main id="setup">
+    <section class="card">
+      <h1>Kingdom Rush Frontiers</h1>
+      <p><strong>Persistent iPhone mode</strong> runs your own SWF in Ruffle on this site. The SWF stays on this device, and Flash save data stays under this GitHub Pages origin so it can be backed up and later edited.</p>
+      <div class="actions">
+        <button id="chooseButton">Choose Kingdom Rush Frontiers .swf</button>
+        <button id="resumeButton" class="secondary" hidden>Resume saved local copy</button>
+      </div>
+      <input id="fileInput" type="file" accept=".swf,application/x-shockwave-flash" hidden>
+      <div id="setupStatus" class="status" role="status" aria-live="polite"></div>
+      <p class="muted">The game file is not uploaded to GitHub or any server. Use a copy you are entitled to use. Safari site-data clearing can erase browser saves, so make periodic Ruffle save backups.</p>
+
+      <div class="divider"></div>
+      <h2>Existing archive player</h2>
+      <p class="muted">This keeps your previous embed available. Its save storage belongs to the embedded site and is separate from Persistent mode, so it is not the mode we will mod.</p>
+      <div class="actions">
+        <button id="archiveButton" class="secondary">Open archive mode</button>
+      </div>
+    </section>
+  </main>
+
+  <section id="playerShell" aria-label="Persistent game player">
+    <div id="toolbar">
+      <button id="menuButton" class="primary" title="Open the Ruffle context menu">Saves</button>
+      <button id="fullscreenButton" title="Enter fullscreen">Full screen</button>
+      <button id="helpButton" title="Save instructions">Help</button>
+      <button id="changeButton" title="Replace the stored SWF">Change file</button>
+    </div>
+    <div id="player"></div>
+  </section>
+
+  <section id="archiveShell" aria-label="Archive player">
+    <button id="archiveBack" class="secondary">Back</button>
+    <iframe id="archiveFrame" title="Kingdom Rush Frontiers archive player" allow="fullscreen; autoplay" allowfullscreen></iframe>
+  </section>
+
+  <dialog id="helpDialog">
+    <div class="modal-body">
+      <h2>Saving on iPhone</h2>
+      <ol>
+        <li>Play normally. Ruffle stores Flash <code>SharedObject</code> save data in browser storage automatically.</li>
+        <li>Tap <strong>Saves</strong> to try opening the Ruffle menu. If iOS blocks the synthetic menu, press and hold inside the game area instead.</li>
+        <li>Choose <strong>Open Save Manager</strong> in Ruffle to download a backup. That backup is what we can inspect and mod next.</li>
+        <li>For the most app-like setup, open this page in Safari, use Share, then <strong>Add to Home Screen</strong>.</li>
+      </ol>
+      <p class="muted">Do not clear Safari website data for this GitHub Pages site until you have exported a save backup.</p>
+    </div>
+    <div class="modal-actions"><button id="closeHelp">Done</button></div>
+  </dialog>
+
+  <script src="https://unpkg.com/@ruffle-rs/ruffle@0.4.1"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const DB_NAME = "kr-frontiers-local";
+      const DB_VERSION = 1;
+      const STORE = "files";
+      const GAME_KEY = "kingdom-rush-frontiers";
+      const CANONICAL_SWF_NAME = "kingdom-rush-frontiers.swf";
+      const ARCHIVE_URL = "https://archive.org/embed/kingdom-rush-frontie-15717";
+
+      const setup = document.getElementById("setup");
+      const playerShell = document.getElementById("playerShell");
+      const archiveShell = document.getElementById("archiveShell");
+      const playerHost = document.getElementById("player");
+      const fileInput = document.getElementById("fileInput");
+      const chooseButton = document.getElementById("chooseButton");
+      const resumeButton = document.getElementById("resumeButton");
+      const archiveButton = document.getElementById("archiveButton");
+      const archiveBack = document.getElementById("archiveBack");
+      const archiveFrame = document.getElementById("archiveFrame");
+      const setupStatus = document.getElementById("setupStatus");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      const menuButton = document.getElementById("menuButton");
+      const helpButton = document.getElementById("helpButton");
+      const changeButton = document.getElementById("changeButton");
+      const helpDialog = document.getElementById("helpDialog");
+      const closeHelp = document.getElementById("closeHelp");
+
+      let rufflePlayer = null;
+
+      function setStatus(message) {
+        setupStatus.textContent = message || "";
+      }
+
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function readGame() {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readonly");
+          const request = tx.objectStore(STORE).get(GAME_KEY);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+          tx.oncomplete = () => db.close();
+        });
+      }
+
+      async function writeGame(file) {
+        const db = await openDb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE, "readwrite");
+          tx.objectStore(STORE).put({ id: GAME_KEY, name: file.name, blob: file, savedAt: Date.now() });
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        });
+        db.close();
+      }
+
+      function looksLikeSwf(buffer) {
+        if (!buffer || buffer.byteLength < 8) return false;
+        const bytes = new Uint8Array(buffer, 0, 3);
+        const signature = String.fromCharCode(bytes[0], bytes[1], bytes[2]);
+        return signature === "FWS" || signature === "CWS" || signature === "ZWS";
+      }
+
+      async function requestDurableStorage() {
+        try {
+          if (navigator.storage && navigator.storage.persist) await navigator.storage.persist();
+        } catch (_) {
+          // Browser persistence hints are best-effort only.
+        }
+      }
+
+      async function ensureRufflePlayer() {
+        if (rufflePlayer) return rufflePlayer;
+        if (!window.RufflePlayer || !window.RufflePlayer.newest) throw new Error("Ruffle failed to load.");
+        const ruffle = window.RufflePlayer.newest();
+        rufflePlayer = ruffle.createPlayer();
+        rufflePlayer.id = "krf-ruffle-player";
+        playerHost.replaceChildren(rufflePlayer);
+        return rufflePlayer;
+      }
+
+      async function launchBuffer(buffer) {
+        if (!looksLikeSwf(buffer)) throw new Error("That file does not look like a valid SWF.");
+        const player = await ensureRufflePlayer();
+        setup.style.display = "none";
+        archiveShell.style.display = "none";
+        playerShell.style.display = "block";
+        await player.ruffle().load({
+          data: buffer,
+          swfFileName: CANONICAL_SWF_NAME,
+          autoplay: "on",
+          unmuteOverlay: "visible",
+          contextMenu: true,
+          menu: true,
+          allowFullscreen: true,
+          fullScreenAspectRatio: "landscape",
+          scale: "showAll",
+          quality: "high",
+          allowScriptAccess: false,
+          openUrlMode: "confirm",
+          upgradeToHttps: true,
+          compatibilityRules: true
+        });
+      }
+
+      async function launchStored() {
+        setStatus("Loading your saved local game file…");
+        const record = await readGame();
+        if (!record || !record.blob) {
+          setStatus("No local SWF is stored yet.");
+          return;
+        }
+        const buffer = await record.blob.arrayBuffer();
+        await launchBuffer(buffer);
+      }
+
+      async function inspectStoredGame() {
+        try {
+          const record = await readGame();
+          if (record && record.blob) {
+            resumeButton.hidden = false;
+            chooseButton.textContent = "Replace stored Kingdom Rush Frontiers .swf";
+            setStatus("A local SWF is stored on this device.");
+          }
+        } catch (error) {
+          setStatus("Local storage is unavailable: " + error.message);
+        }
+      }
+
+      chooseButton.addEventListener("click", () => fileInput.click());
+      changeButton.addEventListener("click", () => fileInput.click());
+      resumeButton.addEventListener("click", () => launchStored().catch(error => {
+        setup.style.display = "grid";
+        playerShell.style.display = "none";
+        setStatus(error.message);
+      }));
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        fileInput.value = "";
+        if (!file) return;
+        try {
+          setStatus("Checking and storing the SWF on this iPhone…");
+          const buffer = await file.arrayBuffer();
+          if (!looksLikeSwf(buffer)) throw new Error("Choose a real .swf file (FWS/CWS/ZWS signature not found).");
+          await writeGame(file);
+          await requestDurableStorage();
+          await launchBuffer(buffer);
+        } catch (error) {
+          setup.style.display = "grid";
+          playerShell.style.display = "none";
+          setStatus(error.message || String(error));
+        }
+      });
+
+      fullscreenButton.addEventListener("click", () => {
+        try {
+          if (rufflePlayer && rufflePlayer.ruffle().fullscreenEnabled) {
+            rufflePlayer.ruffle().requestFullscreen();
+          } else {
+            helpDialog.showModal();
+          }
+        } catch (_) {
+          helpDialog.showModal();
+        }
+      });
+
+      menuButton.addEventListener("click", () => {
+        if (!rufflePlayer) return;
+        const rect = rufflePlayer.getBoundingClientRect();
+        const target = (rufflePlayer.shadowRoot && rufflePlayer.shadowRoot.querySelector("canvas")) || rufflePlayer;
+        const event = new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          view: window,
+          button: 2,
+          buttons: 2,
+          clientX: Math.round(rect.left + Math.min(rect.width - 24, 140)),
+          clientY: Math.round(rect.top + Math.min(rect.height - 24, 90))
+        });
+        target.dispatchEvent(event);
+      });
+
+      helpButton.addEventListener("click", () => helpDialog.showModal());
+      closeHelp.addEventListener("click", () => helpDialog.close());
+
+      archiveButton.addEventListener("click", () => {
+        setup.style.display = "none";
+        playerShell.style.display = "none";
+        archiveShell.style.display = "block";
+        if (!archiveFrame.src) archiveFrame.src = ARCHIVE_URL;
+      });
+
+      archiveBack.addEventListener("click", () => {
+        archiveShell.style.display = "none";
+        setup.style.display = "grid";
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden" && rufflePlayer) {
+          // The game itself controls its Flash SharedObject writes; this just leaves the player intact.
+        }
+      });
+
+      inspectStoredGame();
+    })();
+  </script>
 </body>
 </html>
