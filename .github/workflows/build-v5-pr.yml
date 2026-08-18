@@ -37,8 +37,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/krf-v5
-          mkdir -p /tmp/krf-v5
+          rm -rf /tmp/krf-v5 /tmp/v5-patches
+          mkdir -p /tmp/krf-v5 /tmp/v5-patches
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
             -onerror ignore -timeout 60 -exportFileTimeout 120 \
             -export script /tmp/krf-v5 assets/kingdom-rush-frontiers-v4.swf \
@@ -47,6 +47,12 @@ jobs:
           echo "Exported scripts: $count"
           test "$count" -gt 1200
           python3 tools/build-v5.py /tmp/krf-v5/scripts
+          cp /tmp/krf-v5/scripts/Level.as /tmp/v5-patches/Level.as
+          cp /tmp/krf-v5/scripts/Level6.as /tmp/v5-patches/Level6.as
+          cp /tmp/krf-v5/scripts/Level11.as /tmp/v5-patches/Level11.as
+          cp /tmp/krf-v5/scripts/Level15.as /tmp/v5-patches/Level15.as
+          cp /tmp/krf-v5/scripts/TowerHolder.as /tmp/v5-patches/TowerHolder.as
+          test "$(find /tmp/v5-patches -type f | wc -l)" -eq 5
 
       - name: Import patched scripts into V5 SWF
         shell: bash
@@ -55,7 +61,7 @@ jobs:
           rm -f /tmp/kingdom-rush-frontiers-v5.swf
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
             -onerror abort -timeout 180 \
-            -importScript assets/kingdom-rush-frontiers-v4.swf /tmp/kingdom-rush-frontiers-v5.swf /tmp/krf-v5/scripts \
+            -importScript assets/kingdom-rush-frontiers-v4.swf /tmp/kingdom-rush-frontiers-v5.swf /tmp/v5-patches \
             > /tmp/v5-import.log 2>&1
           test -s /tmp/kingdom-rush-frontiers-v5.swf
           test "$(stat -c '%s' /tmp/kingdom-rush-frontiers-v5.swf)" -gt 50000000
