@@ -1,0 +1,84 @@
+name: Analyze V6 settings for lives control
+
+on:
+  pull_request:
+    types: [reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    if: github.head_ref == 'agent/sandbox-completeness-unlimited-ios'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export Level settings context
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v6-analysis
+          mkdir -p /tmp/v6-analysis analysis
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 -selectclass 'Level' \
+            -export script /tmp/v6-analysis assets/kingdom-rush-frontiers-v5.swf \
+            > /tmp/v6-analysis.log 2>&1 || true
+          test -f /tmp/v6-analysis/scripts/Level.as
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/v6-analysis/scripts/Level.as')
+          lines = p.read_text(encoding='utf-8', errors='replace').splitlines()
+          keys = ('qolSettings','TextField','cash','gold','coin','qolInput','qolAmount','qolButton','qolAction','lives','life')
+          hits=[]
+          for i,line in enumerate(lines):
+              low=line.lower()
+              if any(k.lower() in low for k in keys):
+                  hits.append(i)
+          ranges=[]
+          for i in hits:
+              a=max(0,i-8); b=min(len(lines),i+10)
+              if ranges and a <= ranges[-1][1]+2:
+                  ranges[-1]=(ranges[-1][0],max(ranges[-1][1],b))
+              else:
+                  ranges.append((a,b))
+          out=[]
+          for a,b in ranges:
+              out.append(f'--- lines {a+1}-{b} ---')
+              for n in range(a,b):
+                  out.append(f'{n+1:05d}: {lines[n]}')
+          Path('analysis/v6-lives-context.txt').write_text('\n'.join(out)+'\n', encoding='utf-8')
+          PY
+          test -s analysis/v6-lives-context.txt
+
+      - name: Publish analysis context
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/v6-lives-context.txt
+          git commit -m 'Capture V6 settings context for lives control [skip ci]' || exit 0
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
