@@ -22,14 +22,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 1
 
-      - name: Fetch exact PR base commit
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch --no-tags --depth=1 origin "${BASE_SHA}"
-
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
@@ -48,13 +40,14 @@ jobs:
       - name: Export and patch the PR base V5
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
           rm -rf /tmp/krf-v6 /tmp/v6-patches /tmp/v6-verify
           rm -f /tmp/base-v5.swf /tmp/kingdom-rush-frontiers-v5.swf
           mkdir -p /tmp/krf-v6 /tmp/v6-patches
-          git show "${BASE_SHA}:assets/kingdom-rush-frontiers-v5.swf" > /tmp/base-v5.swf
+          curl -fL --retry 4 "https://raw.githubusercontent.com/${REPOSITORY}/${BASE_SHA}/assets/kingdom-rush-frontiers-v5.swf" -o /tmp/base-v5.swf
           test "$(stat -c '%s' /tmp/base-v5.swf)" -gt 50000000
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
             -onerror ignore -timeout 60 -exportFileTimeout 120 \
