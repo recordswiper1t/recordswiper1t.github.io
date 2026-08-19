@@ -1,0 +1,507 @@
+--- lines 1-18 ---
+00001: package
+00002: {
+00003:    import §_-aQ§.*;
+00004:    import §_-aW§.§dynamic const in§;
+00005:    import com.greensock.*;
+00006:    import flash.display.*;
+00007:    import flash.events.*;
+00008:    import flash.geom.*;
+00009:    import flash.text.TextField;
+00010:    import flash.text.TextFormat;
+00011:    import flash.ui.*;
+00012:    import flash.utils.*;
+00013:    import ironhide.utils.tooltip.*;
+00014:    import §super for super§.*;
+00015:    
+00016:    public class Level extends §extends const true§
+00017:    {
+00018:       
+--- lines 33-70 ---
+00033:       public static const LEVEL_STARTING:int = 4;
+00034:       
+00035:       public static const LEVEL_PRE_WIN:int = 5;
+00036:       
+00037:       public var mode:int;
+00038:       
+00039:       private var qolSpeedButton:Sprite;
+00040:       
+00041:       private var qolSpeedLabel:TextField;
+00042:       
+00043:       private var qolSettings:Sprite;
+00044:       
+00045:       private var qolGoldInput:TextField;
+00046:       
+00047:       private var qolLivesInput:TextField;
+00048:       
+00049:       private var qolSendAllPending:Boolean = false;
+00050:       
+00051:       private var qolSendAllCooldown:int = 0;
+00052:       
+00053:       private var qolPerfFrame:int = 0;
+00054:       
+00055:       private var qolEntityScratch:Array = [];
+00056:       
+00057:       private var qolEnemyDecalScratch:Array = [];
+00058:       
+00059:       private var qolBulletScratch:Array = [];
+00060:       
+00061:       private var qolSettingsPage:int = 0;
+00062:       
+00063:       private var qolEnemyIndex:int = 0;
+00064:       
+00065:       private var qolEnemyCount:int = 10;
+00066:       
+00067:       private var qolEnemyPath:int = 0;
+00068:       
+00069:       private var qolExtraHeroes:Array = [];
+00070:       
+--- lines 91-112 ---
+00091:       public var gameSettings:§_-Mm§;
+00092:       
+00093:       public var §_-wi§:int;
+00094:       
+00095:       public var maxWaves:int;
+00096:       
+00097:       public var §_-g3§:int;
+00098:       
+00099:       public var initLives:int;
+00100:       
+00101:       public var lives:int;
+00102:       
+00103:       public var cash:int;
+00104:       
+00105:       public var §_-tA§:int = 0;
+00106:       
+00107:       public var tDamage:Number = 0;
+00108:       
+00109:       public var §_-R4§:Array;
+00110:       
+00111:       public var §_-V8§:Array = [];
+00112:       
+--- lines 297-322 ---
+00297:       public var xml:XML;
+00298:       
+00299:       public var heroDied:Boolean = false;
+00300:       
+00301:       public var hero:§dynamic const class§;
+00302:       
+00303:       public var §_-FS§:§continue class§;
+00304:       
+00305:       public var §_-hf§:TextField;
+00306:       
+00307:       private var §implements for switch§:§_-Mm§;
+00308:       
+00309:       public function Level(param1:Array, param2:Array, param3:int = 0, param4:Boolean = false)
+00310:       {
+00311:          super();
+00312:          this.mode = param3;
+00313:          this.§try§ = this.cash;
+00314:          this.isReadyToWin = false;
+00315:          this.§set break§ = param4;
+00316:          this.game.gameSounds.§_-Ov§(this);
+00317:          this.entities.mouseEnabled = false;
+00318:          this.decals.mouseEnabled = false;
+00319:          this.enemyDecals.mouseEnabled = false;
+00320:          this.ellipses.mouseEnabled = false;
+00321:          this.ellipses.mouseChildren = false;
+00322:          this.addChild(this.terrain);
+--- lines 327-344 ---
+00327:          this.addChild(this.entities);
+00328:          this.addChild(this.frontEntities);
+00329:          this.addChild(this.bulletsDecals);
+00330:          this.addChild(this.bullets);
+00331:          this.addChild(this.ellipses);
+00332:          this.addChild(this.§else const native§);
+00333:          this.getNumberOfWaves();
+00334:          this.§_-9g§ = new §continue null§(this);
+00335:          this.lives = this.initLives;
+00336:          this.§_-BF§ = LEVEL_STARTING;
+00337:          this.gameSettings = new §_-Mm§(this.game,true,this.§_-wi§);
+00338:          this.§implements for switch§ = new §_-Mm§(this.game,true,this.§_-wi§);
+00339:          this.§_-V8§ = param2;
+00340:          var _loc5_:int = 0;
+00341:          while(_loc5_ < this.§_-V8§.length)
+00342:          {
+00343:             this.pathsActives.push(true);
+00344:             _loc5_++;
+--- lines 686-703 ---
+00686:       {
+00687:       }
+00688:       
+00689:       public function §_-Eu§() : void
+00690:       {
+00691:          this.game.main.§extends const default§();
+00692:          this.§package do§.x = 370;
+00693:          this.§package do§.y = 5;
+00694:          this.§_-rd§ = new §do switch§(10,10,this.cash,this.initLives,this.maxWaves,this);
+00695:          this.§include return§ = new §false const dynamic§(this);
+00696:          this.§else const native§.addChild(this.§include return§);
+00697:          this.§_-lN§ = new §case null§(this);
+00698:          this.§else const native§.addChild(this.§_-lN§);
+00699:          this.§_-6x§ = new §finally const return§(this);
+00700:          this.§else const native§.addChild(this.§_-6x§);
+00701:          this.§native const class§ = new §_-Wt§(this);
+00702:          this.§else const native§.addChild(this.§native const class§);
+00703:          this.§else const native§.addChild(this.§_-rd§);
+--- lines 908-925 ---
+00908:          this.qolSpeedButton.graphics.lineStyle(1,16777215,0.45);
+00909:          this.qolSpeedButton.graphics.drawRoundRect(0,0,58,30,10,10);
+00910:          this.qolSpeedButton.graphics.endFill();
+00911:          this.qolSpeedButton.x = 734;
+00912:          this.qolSpeedButton.y = 552;
+00913:          this.qolSpeedButton.buttonMode = true;
+00914:          this.qolSpeedButton.mouseChildren = false;
+00915:          this.qolSpeedButton.addEventListener(MouseEvent.CLICK,this.qolToggleSpeed,false,0,true);
+00916:          this.qolSpeedLabel = new TextField();
+00917:          this.qolSpeedLabel.width = 46;
+00918:          this.qolSpeedLabel.height = 22;
+00919:          this.qolSpeedLabel.x = 12;
+00920:          this.qolSpeedLabel.y = 5;
+00921:          this.qolSpeedLabel.textColor = 16777215;
+00922:          this.qolSpeedLabel.selectable = false;
+00923:          this.qolSpeedLabel.mouseEnabled = false;
+00924:          this.qolSpeedButton.addChild(this.qolSpeedLabel);
+00925:          this.qolUpdateSpeedLabel();
+--- lines 962-1168 ---
+00962:             }
+00963:             this.§_-ai§();
+00964:             this.menu.updateMenu();
+00965:             this.§include return§.update();
+00966:             this.updatePointers();
+00967:          }
+00968:       }
+00969:       
+00970:       private function qolButton(param1:String, param2:Number, param3:Number, param4:Number, param5:String) : Sprite
+00971:       {
+00972:          var b:Sprite = new Sprite();
+00973:          b.graphics.beginFill(2500134,0.96);
+00974:          b.graphics.lineStyle(1,16777215,0.35);
+00975:          b.graphics.drawRoundRect(0,0,param4,42,10,10);
+00976:          b.graphics.endFill();
+00977:          b.x = param2;
+00978:          b.y = param3;
+00979:          b.name = param5;
+00980:          b.buttonMode = true;
+00981:          b.mouseChildren = false;
+00982:          var tf:TextField = new TextField();
+00983:          tf.defaultTextFormat = new TextFormat("_sans",16,16777215,true);
+00984:          tf.width = param4;
+00985:          tf.height = 28;
+00986:          tf.y = 9;
+00987:          tf.selectable = false;
+00988:          tf.mouseEnabled = false;
+00989:          tf.text = param1;
+00990:          tf.autoSize = "center";
+00991:          tf.x = Math.max(4,(param4 - tf.width) / 2);
+00992:          b.addChild(tf);
+00993:          b.addEventListener(MouseEvent.MOUSE_DOWN,this.qolSettingsClick,false,0,true);
+00994:          return b;
+00995:       }
+00996:       
+00997:       private function qolInput(param1:String, param2:Number, param3:Number, param4:Number) : TextField
+00998:       {
+00999:          var tf:TextField = new TextField();
+01000:          tf.defaultTextFormat = new TextFormat("_sans",18,16777215,true);
+01001:          tf.type = "input";
+01002:          tf.restrict = "0-9";
+01003:          tf.maxChars = 10;
+01004:          tf.background = true;
+01005:          tf.backgroundColor = 2302755;
+01006:          tf.border = true;
+01007:          tf.borderColor = 11184810;
+01008:          tf.textColor = 16777215;
+01009:          tf.width = param4;
+01010:          tf.height = 42;
+01011:          tf.x = param2;
+01012:          tf.y = param3;
+01013:          tf.text = param1;
+01014:          return tf;
+01015:       }
+01016:       
+01017:       private function qolLabel(param1:String, param2:Number, param3:Number, param4:int = 18) : TextField
+01018:       {
+01019:          var tf:TextField = new TextField();
+01020:          tf.defaultTextFormat = new TextFormat("_sans",param4,16777215,true);
+01021:          tf.width = 500;
+01022:          tf.height = 36;
+01023:          tf.x = param2;
+01024:          tf.y = param3;
+01025:          tf.selectable = false;
+01026:          tf.mouseEnabled = false;
+01027:          tf.text = param1;
+01028:          return tf;
+01029:       }
+01030:       
+01031:       private function qolShowSettings() : void
+01032:       {
+01033:          if(this.qolSettings == null)
+01034:          {
+01035:             this.qolSettings = new Sprite();
+01036:             this.qolSettings.x = 110;
+01037:             this.qolSettings.y = 70;
+01038:          }
+01039:          if(this.qolSettings.parent == null)
+01040:          {
+01041:             this.§else const native§.addChild(this.qolSettings);
+01042:          }
+01043:          this.qolRenderSettings();
+01044:       }
+01045:       
+01046:       private function qolHideSettings() : void
+01047:       {
+01048:          if(this.qolSettings != null && this.qolSettings.parent != null)
+01049:          {
+01050:             this.qolSettings.parent.removeChild(this.qolSettings);
+01051:          }
+01052:       }
+01053:       
+01054:       private function qolRenderSettings() : void
+01055:       {
+01056:          if(this.qolSettings == null)
+01057:          {
+01058:             return;
+01059:          }
+01060:          while(this.qolSettings.numChildren > 0)
+01061:          {
+01062:             this.qolSettings.removeChildAt(0);
+01063:          }
+01064:          this.qolSettings.graphics.clear();
+01065:          this.qolSettings.graphics.beginFill(1118481,0.97);
+01066:          this.qolSettings.graphics.lineStyle(2,13983051,0.8);
+01067:          this.qolSettings.graphics.drawRoundRect(0,0,580,515,18,18);
+01068:          this.qolSettings.graphics.endFill();
+01069:          if(this.qolSettingsPage == 0)
+01070:          {
+01071:             this.qolSettings.addChild(this.qolLabel("V6 LEVEL SETTINGS",28,20,24));
+01072:             this.qolSettings.addChild(this.qolButton("Speed: " + (Level.qolSpeed == 3 ? "3x" : "1x"),28,72,250,"speed"));
+01073:             this.qolSettings.addChild(this.qolButton(this.game.qolTreesMaxed ? "RESET FOR CUSTOM" : "MAX ALL",302,72,250,"trees_toggle"));
+01074:             this.qolSettings.addChild(this.qolLabel("Add gold:",28,142,18));
+01075:             this.qolGoldInput = this.qolInput("0",130,130,215);
+01076:             this.qolSettings.addChild(this.qolGoldInput);
+01077:             this.qolSettings.addChild(this.qolButton("ADD",360,130,192,"gold_add"));
+01078:             this.qolSettings.addChild(this.qolLabel("Add lives:",28,202,18));
+01079:             this.qolLivesInput = this.qolInput("0",130,190,215);
+01080:             this.qolSettings.addChild(this.qolLivesInput);
+01081:             this.qolSettings.addChild(this.qolButton("ADD",360,190,192,"lives_add"));
+01082:             this.qolSettings.addChild(this.qolButton("Hero selection  →",28,262,250,"page_heroes"));
+01083:             this.qolSettings.addChild(this.qolButton(this.qolSendAllPending ? "Sending all waves…" : "Send all waves",302,262,250,"all_waves"));
+01084:             this.qolSettings.addChild(this.qolButton("Enemy tools  →",28,322,250,"page_enemy"));
+01085:             this.qolSettings.addChild(this.qolButton("Hide V6 tools",302,322,250,"hide"));
+01086:             this.qolSettings.addChild(this.qolButton("Unlimited: " + (this.qolUnlimitedMode ? "ON" : "OFF"),28,382,250,"unlimited"));
+01087:             this.qolSettings.addChild(this.qolButton("INSTANT WIN",302,382,250,"instant_win"));
+01088:             this.qolSettings.addChild(this.qolLabel("Send-all pauses new waves while the board is overloaded.",28,442,14));
+01089:          }
+01090:          else if(this.qolSettingsPage == 1)
+01091:          {
+01092:             this.qolSettings.addChild(this.qolLabel("CUSTOM ENEMY ROUND",28,20,24));
+01093:             var shortName:String = String(this.qolEnemies[this.qolEnemyIndex]).replace("Enemy","");
+01094:             this.qolSettings.addChild(this.qolButton("<",28,72,58,"enemy_prev"));
+01095:             this.qolSettings.addChild(this.qolButton(shortName,98,72,384,"noop"));
+01096:             this.qolSettings.addChild(this.qolButton(">",494,72,58,"enemy_next"));
+01097:             this.qolSettings.addChild(this.qolLabel("Count: " + this.qolEnemyCount,28,142,18));
+01098:             this.qolSettings.addChild(this.qolButton("-5",220,130,78,"count_minus"));
+01099:             this.qolSettings.addChild(this.qolButton("+5",310,130,78,"count_plus"));
+01100:             this.qolSettings.addChild(this.qolLabel("Path: " + (this.qolEnemyPath + 1),28,204,18));
+01101:             this.qolSettings.addChild(this.qolButton("Prev path",220,192,110,"path_prev"));
+01102:             this.qolSettings.addChild(this.qolButton("Next path",342,192,110,"path_next"));
+01103:             this.qolSettings.addChild(this.qolButton("SEND CUSTOM ROUND",28,270,524,"send_custom"));
+01104:             this.qolSettings.addChild(this.qolButton("←  Main settings",165,350,250,"page_main"));
+01105:          }
+01106:          else
+01107:          {
+01108:             this.qolEnsureHeroSelection();
+01109:             this.qolSettings.addChild(this.qolLabel("HEROES FOR THIS GAME",28,20,24));
+01110:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("alric","Alric"),28,72,250,"hero_alric"));
+01111:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("mirage","Mirage"),302,72,250,"hero_mirage"));
+01112:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("captain","Blackthorne"),28,120,250,"hero_captain"));
+01113:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("cronan","Cronan"),302,120,250,"hero_cronan"));
+01114:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("shatra","Sha\'tra"),28,168,250,"hero_shatra"));
+01115:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("grawl","Grawl"),302,168,250,"hero_grawl"));
+01116:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("nivus","Nivus"),28,216,250,"hero_nivus"));
+01117:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("dierdre","Dierdre"),302,216,250,"hero_dierdre"));
+01118:             this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("ashbite","Ashbite"),28,264,250,"hero_ashbite"));
+01119:             this.qolSettings.addChild(this.qolLabel("All 9 start ON. Tap any hero to toggle it for this level.",28,326,14));
+01120:             this.qolSettings.addChild(this.qolButton("←  Main settings",165,374,250,"page_main"));
+01121:          }
+01122:       }
+01123:       
+01124:       private function qolSettingsClick(param1:MouseEvent) : void
+01125:       {
+01126:          var action:String = Sprite(param1.currentTarget).name;
+01127:          if(action == "speed")
+01128:          {
+01129:             Level.qolSpeed = Level.qolSpeed == 1 ? 3 : 1;
+01130:          }
+01131:          else if(action == "gold_add")
+01132:          {
+01133:             var amount:Number = this.qolGoldInput == null ? 0 : Number(this.qolGoldInput.text);
+01134:             if(isNaN(amount) || amount < 0)
+01135:             {
+01136:                amount = 0;
+01137:             }
+01138:             this.updateCash(int(Math.min(2000000000,amount)));
+01139:          }
+01140:          else if(action == "lives_add")
+01141:          {
+01142:             var livesAmount:Number = this.qolLivesInput == null ? 0 : Number(this.qolLivesInput.text);
+01143:             if(isNaN(livesAmount) || livesAmount < 0)
+01144:             {
+01145:                livesAmount = 0;
+01146:             }
+01147:             this.lives = Math.min(2000000000,this.lives + livesAmount);
+01148:             if(this.§_-rd§ != null)
+01149:             {
+01150:                this.§_-rd§.updateLives(this.lives);
+01151:             }
+01152:          }
+01153:          else if(action == "trees_toggle")
+01154:          {
+01155:             this.game.qolSetTreesMaxed(!this.game.qolTreesMaxed);
+01156:          }
+01157:          else if(action == "page_heroes")
+01158:          {
+01159:             this.qolSettingsPage = 2;
+01160:          }
+01161:          else if(action.indexOf("hero_") == 0)
+01162:          {
+01163:             this.qolToggleHero(action.substr(5));
+01164:          }
+01165:          else if(action == "unlimited")
+01166:          {
+01167:             this.qolUnlimitedMode = !this.qolUnlimitedMode;
+01168:             this.isReadyToWin = false;
+--- lines 1176-1197 ---
+01176:                return;
+01177:             }
+01178:             if(action == "all_waves")
+01179:             {
+01180:                this.qolSendAllWaves();
+01181:             }
+01182:             else if(action == "page_enemy")
+01183:             {
+01184:                this.qolSettingsPage = 1;
+01185:             }
+01186:             else if(action == "page_main")
+01187:             {
+01188:                this.qolSettingsPage = 0;
+01189:             }
+01190:             else if(action == "enemy_prev")
+01191:             {
+01192:                this.qolEnemyIndex = (this.qolEnemyIndex + this.qolEnemies.length - 1) % this.qolEnemies.length;
+01193:             }
+01194:             else if(action == "enemy_next")
+01195:             {
+01196:                this.qolEnemyIndex = (this.qolEnemyIndex + 1) % this.qolEnemies.length;
+01197:             }
+--- lines 1869-1917 ---
+01869:          this.§_-No§(param1);
+01870:       }
+01871:       
+01872:       public function §_-No§(param1:MovieClip) : void
+01873:       {
+01874:          this.decals.addChild(param1);
+01875:       }
+01876:       
+01877:       public function updateCash(param1:int) : void
+01878:       {
+01879:          if(param1 > 0)
+01880:          {
+01881:             this.§_-tA§ += param1;
+01882:          }
+01883:          this.cash += param1;
+01884:          if(this.§_-rd§ != null)
+01885:          {
+01886:             this.§_-rd§.updateCash(this.cash);
+01887:          }
+01888:       }
+01889:       
+01890:       public function onRangeStaticArea(param1:Array, param2:Point) : Boolean
+01891:       {
+01892:          if(Math.sqrt(Math.pow(param1[0] - param2.y,2) + Math.pow(param1[1] - param2.x,2)) < param1[2])
+01893:          {
+01894:             return true;
+01895:          }
+01896:          return false;
+01897:       }
+01898:       
+01899:       public function §function for const§(param1:int) : void
+01900:       {
+01901:          this.game.gameSounds.playGUILooseLife();
+01902:          this.lives -= param1;
+01903:          if(this.lives <= 0)
+01904:          {
+01905:             this.lives = 0;
+01906:          }
+01907:          this.§_-rd§.updateLives(this.lives);
+01908:          if(this.lives == 0)
+01909:          {
+01910:             this.§_-a5§();
+01911:          }
+01912:       }
+01913:       
+01914:       public function §implements break§() : String
+01915:       {
+01916:          return this.game.§implements break§();
+01917:       }
+--- lines 2337-2354 ---
+02337:          if(this.indexWaves != 0)
+02338:          {
+02339:             this.menu.§else const final§(this.waves[this.indexWaves].interval - this.intervalWaveCounter);
+02340:             _loc2_ = Math.round((this.waves[this.indexWaves].interval - this.intervalWaveCounter) / this.gameSettings.framesRate);
+02341:             if(_loc2_ >= 1)
+02342:             {
+02343:                this.bullets.addChild(new §_-I0§(param1,Math.round(_loc2_ * 1)));
+02344:                this.game.gameSounds.§_-ab§();
+02345:                this.updateCash(Math.round(_loc2_ * 1));
+02346:             }
+02347:          }
+02348:          this.intervalWaveCounter = this.waves[this.indexWaves].interval;
+02349:          this.§default const try§();
+02350:       }
+02351:       
+02352:       public function §function continue§(param1:§const for const§) : void
+02353:       {
+02354:          var _loc3_:§const for const§ = null;
+--- lines 2598-2619 ---
+02598:       }
+02599:       
+02600:       public function §_-aG§() : int
+02601:       {
+02602:          if(this.mode != §_-Mm§.MODE_CAMPAIGN)
+02603:          {
+02604:             return 3;
+02605:          }
+02606:          if(this.lives >= 18)
+02607:          {
+02608:             return 3;
+02609:          }
+02610:          if(this.lives > 5 && this.lives < 18)
+02611:          {
+02612:             return 2;
+02613:          }
+02614:          return 1;
+02615:       }
+02616:       
+02617:       public function §_-Hp§(param1:int, param2:Boolean) : void
+02618:       {
+02619:       }
+--- lines 2736-2753 ---
+02736:       internal function loadXML(param1:Event) : void
+02737:       {
+02738:          var _loc4_:String = null;
+02739:          var _loc6_:int = 0;
+02740:          var _loc2_:Array = [];
+02741:          var _loc3_:Array = [];
+02742:          this.xml = new XML(param1.target.data);
+02743:          _loc4_ = "this.waves = [ \n ";
+02744:          this.cash = int(this.xml.cash);
+02745:          this.gameSettings.heroes.heroAlric.currentLevel = int(this.xml.heroLevel);
+02746:          this.gameSettings.heroes.heroAlric.swordsmanshipLevel = int(this.xml.hero1);
+02747:          this.gameSettings.heroes.heroAlric.betterArmorLevel = int(this.xml.hero2);
+02748:          this.gameSettings.heroes.heroAlric.toughnessLevel = int(this.xml.hero3);
+02749:          this.gameSettings.heroes.heroAlric.flurryLevel = int(this.xml.hero4);
+02750:          this.gameSettings.heroes.heroAlric.sandWarriorLevel = int(this.xml.hero5);
+02751:          var _loc5_:int = 0;
+02752:          while(_loc5_ < this.xml.wave.length())
+02753:          {
