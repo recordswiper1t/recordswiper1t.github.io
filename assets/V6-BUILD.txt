@@ -1,7 +1,7 @@
-Frontiers V6 sandbox completeness build
-- 47 real enemy classes in the custom Send Unit/round selector, including bosses and spawned special units
-- Unlimited mode toggle blocks normal end-of-stage victory after the authored wave list
-- Instant Win button immediately runs the native stage victory path
-- Send All uses board-load backpressure and stronger cosmetic throttling for iPhone/Ruffle stability
-- Added Legion Archer, Mercenary Camp, and Spear Maiden Hut to the special-building pages
-- Existing V5 native boss entrance hooks and nine bundled hero implementations are preserved
+Kingdom Rush Frontiers — V6 Sandbox + iPhone Stability
+Builds on the verified V5 SWF.
+Exposes the complete 47-class enemy selector and remaining original-stage special buildings.
+Adds Unlimited Mode, Instant Win, boss-safe custom counts, and Send All overload back-pressure.
+Adds a numeric Add Lives field in the in-level V6 settings, matching the existing Add Gold control.
+Keeps the low-overhead iPhone/Ruffle player and aggressive cosmetic throttling under extreme swarms.
+Built, re-exported, and structurally verified with FFDec 26.2.1.
