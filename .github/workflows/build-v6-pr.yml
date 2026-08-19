@@ -1,0 +1,132 @@
+name: Build Frontiers V6 sandbox
+
+on:
+  push:
+    branches:
+      - agent/sandbox-completeness-unlimited-ios
+    paths:
+      - '.github/workflows/build-v6-pr.yml'
+      - 'tools/build-v6.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/sandbox-completeness-unlimited-ios
+          fetch-depth: 1
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export current V5 and apply V6 patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v6 /tmp/v6-patches
+          mkdir -p /tmp/krf-v6 /tmp/v6-patches
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v6 assets/kingdom-rush-frontiers-v5.swf \
+            > /tmp/v6-export.log 2>&1 || true
+          count=$(find /tmp/krf-v6/scripts -type f | wc -l | tr -d ' ')
+          echo "Exported scripts: $count"
+          test "$count" -gt 1200
+          python3 tools/build-v6.py /tmp/krf-v6/scripts
+          cp /tmp/krf-v6/scripts/Level.as /tmp/v6-patches/Level.as
+          cp /tmp/krf-v6/scripts/TowerHolder.as /tmp/v6-patches/TowerHolder.as
+          test "$(find /tmp/v6-patches -type f | wc -l | tr -d ' ')" -eq 2
+
+      - name: Import patched scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/kingdom-rush-frontiers-v6.swf
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort -timeout 180 \
+            -importScript assets/kingdom-rush-frontiers-v5.swf /tmp/kingdom-rush-frontiers-v6.swf /tmp/v6-patches \
+            > /tmp/v6-import.log 2>&1
+          test -s /tmp/kingdom-rush-frontiers-v6.swf
+          test "$(stat -c '%s' /tmp/kingdom-rush-frontiers-v6.swf)" -gt 50000000
+
+      - name: Re-export and verify compiled V6
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/verify-v6
+          mkdir -p /tmp/verify-v6
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/verify-v6 /tmp/kingdom-rush-frontiers-v6.swf \
+            > /tmp/v6-verify-export.log 2>&1 || true
+          level=/tmp/verify-v6/scripts/Level.as
+          holder=/tmp/verify-v6/scripts/TowerHolder.as
+          test -s "$level"
+          test -s "$holder"
+          grep -Fq 'EnemyCanibalZombie' "$level"
+          grep -Fq 'EnemyEfreeti' "$level"
+          grep -Fq 'EnemyFinalBoss' "$level"
+          grep -Fq 'EnemyGorillaBoss' "$level"
+          grep -Fq 'EnemyJungleSpiderTiny' "$level"
+          grep -Fq 'qolUnlimitedMode' "$level"
+          grep -Fq 'qolInstantWin' "$level"
+          grep -Fq 'numChildren > 340' "$level"
+          grep -Fq 'qol_legion_archer' "$holder"
+          grep -Fq 'qol_mercenary' "$holder"
+          grep -Fq 'qol_amazona' "$holder"
+          grep -Fq 'qol_specials4' "$holder"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('/tmp/verify-v6/scripts/Level.as').read_text(encoding='utf-8-sig')
+          m = re.search(r'private var qolEnemies:Array\s*=\s*\[(.*?)\];', text, re.S)
+          assert m, 'qolEnemies missing after re-export'
+          names = re.findall(r'"(Enemy[A-Za-z0-9_]+)"', m.group(1))
+          assert len(names) == 47, len(names)
+          assert len(set(names)) == 47, 'duplicate enemy entries'
+          print('Verified enemy catalog:', len(names))
+          PY
+
+      - name: Publish rebuilt game asset and build metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/kingdom-rush-frontiers-v6.swf assets/kingdom-rush-frontiers-v5.swf
+          sha256sum assets/kingdom-rush-frontiers-v5.swf > assets/V6-SHA256SUMS.txt
+          cat > assets/V6-BUILD.txt <<'EOF'
+          Frontiers V6 sandbox completeness build
+          - 47 real enemy classes in the custom Send Unit/round selector, including bosses and spawned special units
+          - Unlimited mode toggle blocks normal end-of-stage victory after the authored wave list
+          - Instant Win button immediately runs the native stage victory path
+          - Send All uses board-load backpressure and stronger cosmetic throttling for iPhone/Ruffle stability
+          - Added Legion Archer, Mercenary Camp, and Spear Maiden Hut to the special-building pages
+          - Existing V5 native boss entrance hooks and nine bundled hero implementations are preserved
+          EOF
+
+      - name: Commit rebuilt asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt
+          git commit -m 'Build complete V6 sandbox [skip ci]' || exit 0
+          git pull --rebase origin agent/sandbox-completeness-unlimited-ios
+          git push origin HEAD:agent/sandbox-completeness-unlimited-ios
