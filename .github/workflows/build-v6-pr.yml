@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/build-v6-pr.yml'
       - 'tools/build-v6.py'
+      - 'tools/normalize-v5-perf-anchors.py'
   pull_request:
     types: [opened, reopened, synchronize]
 
@@ -52,6 +53,7 @@ jobs:
           count=$(find /tmp/krf-v6/scripts -type f | wc -l | tr -d ' ')
           echo "Exported scripts: $count"
           test "$count" -gt 1200
+          python3 tools/normalize-v5-perf-anchors.py /tmp/krf-v6/scripts/Level.as
           python3 tools/build-v6.py /tmp/krf-v6/scripts
           cp /tmp/krf-v6/scripts/Level.as /tmp/v6-patches/Level.as
           cp /tmp/krf-v6/scripts/TowerHolder.as /tmp/v6-patches/TowerHolder.as
