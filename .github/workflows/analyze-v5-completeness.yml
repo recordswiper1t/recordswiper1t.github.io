@@ -7,17 +7,21 @@ on:
     paths:
       - '.github/workflows/analyze-v5-completeness.yml'
       - 'assets/kingdom-rush-frontiers-v5.swf'
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   analyze:
+    if: github.event_name == 'push' || github.head_ref == 'agent/sandbox-completeness-unlimited-ios'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out branch
+      - name: Check out feature branch
         uses: actions/checkout@v4
         with:
+          ref: agent/sandbox-completeness-unlimited-ios
           fetch-depth: 1
 
       - name: Set up Java
@@ -76,19 +80,19 @@ jobs:
             grep -HnEi 'SPECIAL_|special tower|special building|pirate|dwarf|mercenar|tribal|crossbow|archmage|necromancer|dwaarp|mech|towerholder' /tmp/krf-v5/scripts/*.as 2>/dev/null | sed 's#^/tmp/krf-v5/scripts/##' | cut -c1-500 | head -n 5000 || true
             echo
             echo '=== Level sandbox source ==='
-            nl -ba /tmp/krf-v5/scripts/Level.as | sed -n '1,2600p'
+            nl -ba /tmp/krf-v5/scripts/Level.as | sed -n '1,3000p'
             echo
             echo '=== TowerHolder source ==='
-            nl -ba /tmp/krf-v5/scripts/TowerHolder.as | sed -n '1,1800p'
+            nl -ba /tmp/krf-v5/scripts/TowerHolder.as | sed -n '1,2200p'
             echo
             echo '=== Pause/menu source candidates ==='
             grep -RilE 'SEND ALL|RESET FOR CUSTOM|MAX ALL|qolEnemies|qolHeroes|SEND UNIT|UNLIMITED|INSTANT WIN' /tmp/krf-v5/scripts 2>/dev/null | while read -r f; do
               echo "----- ${f#/tmp/krf-v5/scripts/} -----"
-              nl -ba "$f" | sed -n '1,2200p'
+              nl -ba "$f" | sed -n '1,2600p'
             done
             echo
             echo '=== Stage ending / victory references ==='
-            grep -HnEi 'endLevel|end level|victory|winLevel|win level|maxWaves|gameWon|levelWon|campaignWon|finishLevel|stageWon|wave.*max' /tmp/krf-v5/scripts/Level*.as 2>/dev/null | sed 's#^/tmp/krf-v5/scripts/##' | cut -c1-500 | head -n 4000 || true
+            grep -HnEi 'endLevel|end level|victory|winLevel|win level|maxWaves|gameWon|levelWon|campaignWon|finishLevel|stageWon|wave.*max|showWin|victory' /tmp/krf-v5/scripts/Level*.as 2>/dev/null | sed 's#^/tmp/krf-v5/scripts/##' | cut -c1-500 | head -n 5000 || true
             echo
             echo '=== Export log tail ==='
             tail -n 80 /tmp/v5-completeness-export.log || true
@@ -103,4 +107,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add analysis/v5-completeness-index.txt
           git commit -m 'Index V5 sandbox completeness [skip ci]' || exit 0
-          git push
+          git pull --rebase origin agent/sandbox-completeness-unlimited-ios
+          git push origin HEAD:agent/sandbox-completeness-unlimited-ios
