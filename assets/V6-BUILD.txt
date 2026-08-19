@@ -1,0 +1,7 @@
+Frontiers V6 sandbox completeness build
+- 47 real enemy classes in the custom Send Unit/round selector, including bosses and spawned special units
+- Unlimited mode toggle blocks normal end-of-stage victory after the authored wave list
+- Instant Win button immediately runs the native stage victory path
+- Send All uses board-load backpressure and stronger cosmetic throttling for iPhone/Ruffle stability
+- Added Legion Archer, Mercenary Camp, and Spear Maiden Hut to the special-building pages
+- Existing V5 native boss entrance hooks and nine bundled hero implementations are preserved
