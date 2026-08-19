@@ -155,7 +155,10 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -f analysis/v6-build-failure.txt
-          git add assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt mod/fast.html analysis/v6-build-failure.txt || true
+          git add assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt mod/fast.html
+          if git ls-files --error-unmatch analysis/v6-build-failure.txt >/dev/null 2>&1; then
+            git add -u analysis/v6-build-failure.txt
+          fi
           git commit -m 'Build verified V6 lives control [skip ci]'
           git pull --rebase origin "${TARGET_BRANCH}"
           git push origin HEAD:"${TARGET_BRANCH}"
