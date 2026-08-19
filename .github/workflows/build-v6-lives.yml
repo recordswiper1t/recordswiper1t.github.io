@@ -7,6 +7,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: v6-lives-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   build:
     if: github.head_ref == 'agent/sandbox-completeness-unlimited-ios'
@@ -16,7 +20,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
+          fetch-depth: 1
+
+      - name: Fetch exact PR base commit
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "${BASE_SHA}"
 
       - name: Set up Java
         uses: actions/setup-java@v5
