@@ -1,0 +1,192 @@
+name: Build Frontiers V6 lives update
+
+on:
+  pull_request:
+    types: [reopened, synchronize]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v6-lives-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.head_ref == 'agent/sandbox-completeness-unlimited-ios'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out only build inputs
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/build-v6-lives.yml
+            tools
+            mod/fast.html
+            analysis
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export and patch the PR base V5
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v6 /tmp/v6-patches /tmp/v6-verify
+          rm -f /tmp/base-v5.swf /tmp/kingdom-rush-frontiers-v5.swf
+          mkdir -p /tmp/krf-v6 /tmp/v6-patches
+          curl -fL --retry 4 "https://raw.githubusercontent.com/${REPOSITORY}/${BASE_SHA}/assets/kingdom-rush-frontiers-v5.swf" -o /tmp/base-v5.swf
+          test "$(stat -c '%s' /tmp/base-v5.swf)" -gt 50000000
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v6 /tmp/base-v5.swf \
+            > /tmp/v6-export.log 2>&1 || true
+          count=$(find /tmp/krf-v6/scripts -type f | wc -l | tr -d ' ')
+          echo "Exported scripts: $count"
+          test "$count" -gt 1200
+          python3 tools/normalize-v5-perf-anchors.py /tmp/krf-v6/scripts/Level.as
+          python3 tools/build-v6.py /tmp/krf-v6/scripts
+          python3 tools/add-v6-lives.py /tmp/krf-v6/scripts
+          cp /tmp/krf-v6/scripts/Level.as /tmp/v6-patches/Level.as
+          cp /tmp/krf-v6/scripts/TowerHolder.as /tmp/v6-patches/TowerHolder.as
+          test "$(find /tmp/v6-patches -type f | wc -l)" -eq 2
+
+      - name: Import patched scripts into V6 SWF
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort -timeout 180 \
+            -importScript /tmp/base-v5.swf /tmp/kingdom-rush-frontiers-v5.swf /tmp/v6-patches \
+            > /tmp/v6-import.log 2>&1
+          test -s /tmp/kingdom-rush-frontiers-v5.swf
+          test "$(stat -c '%s' /tmp/kingdom-rush-frontiers-v5.swf)" -gt 50000000
+          head -c 3 /tmp/kingdom-rush-frontiers-v5.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify V6 plus lives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v6-verify
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -selectclass 'Level,TowerHolder' \
+            -export script /tmp/v6-verify /tmp/kingdom-rush-frontiers-v5.swf \
+            > /tmp/v6-verify.log 2>&1 || true
+          level=/tmp/v6-verify/scripts/Level.as
+          holder=/tmp/v6-verify/scripts/TowerHolder.as
+          test -f "$level"
+          test -f "$holder"
+          grep -q 'qolUnlimitedMode' "$level"
+          grep -q 'qolInstantWin' "$level"
+          grep -q 'numChildren > 340' "$level"
+          grep -q 'qolEnemySpawnCount' "$level"
+          grep -q 'qolLivesInput' "$level"
+          grep -q 'Add lives:' "$level"
+          grep -q 'lives_add' "$level"
+          grep -q 'updateLives(this.lives)' "$level"
+          grep -q 'V6 LEVEL SETTINGS' "$level"
+          grep -q 'qol_legion_archer' "$holder"
+          grep -q 'qol_mercenary' "$holder"
+          grep -q 'qol_amazona' "$holder"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('/tmp/v6-verify/scripts/Level.as').read_text(encoding='utf-8', errors='replace')
+          m=re.search(r'private var qolEnemies:Array\s*=\s*\[(.*?)\];', text, re.S)
+          assert m, 'enemy selector missing'
+          entries=re.findall(r'"(Enemy[^"]+)"', m.group(1))
+          assert len(entries) == 47, len(entries)
+          assert len(set(entries)) == 47, 'enemy selector contains duplicates'
+          print('V6 lives re-export verification passed with 47 unique enemy entries.')
+          PY
+
+      - name: Publish rebuilt V6 artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          cp /tmp/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.swf
+          cat > assets/V6-BUILD.txt <<'EOF'
+          Kingdom Rush Frontiers — V6 Sandbox + iPhone Stability
+          Builds on the verified V5 SWF.
+          Exposes the complete 47-class enemy selector and remaining original-stage special buildings.
+          Adds Unlimited Mode, Instant Win, boss-safe custom counts, and Send All overload back-pressure.
+          Adds a numeric Add Lives field in the in-level V6 settings, matching the existing Add Gold control.
+          Keeps the low-overhead iPhone/Ruffle player and aggressive cosmetic throttling under extreme swarms.
+          Built, re-exported, and structurally verified with FFDec 26.2.1.
+          EOF
+          sha256sum assets/kingdom-rush-frontiers-v5.swf > assets/V6-SHA256SUMS.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('mod/fast.html')
+          s=p.read_text(encoding='utf-8')
+          if "'/assets/kingdom-rush-frontiers-v5.swf?v=6'" in s:
+              s=s.replace("'/assets/kingdom-rush-frontiers-v5.swf?v=6'", "'/assets/kingdom-rush-frontiers-v5.swf?v=6-lives'", 1)
+          elif "'/assets/kingdom-rush-frontiers-v5.swf?v=6-lives'" not in s:
+              raise SystemExit('fast-player V6 URL anchor missing')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Push verified V6 update to PR branch
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f analysis/v6-build-failure.txt
+          git add --sparse assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt mod/fast.html
+          if git ls-files --error-unmatch analysis/v6-build-failure.txt >/dev/null 2>&1; then
+            git add -u analysis/v6-build-failure.txt
+          fi
+          git commit -m 'Build verified V6 lives control [skip ci]'
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"
+
+      - name: Save V6 build failure report
+        if: failure()
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set +e
+          mkdir -p analysis
+          {
+            echo 'Frontiers V6 lives build failure'
+            echo "UTC: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo '=== export log tail ==='
+            tail -n 120 /tmp/v6-export.log 2>/dev/null
+            echo
+            echo '=== import log tail ==='
+            tail -n 220 /tmp/v6-import.log 2>/dev/null
+            echo
+            echo '=== verify log tail ==='
+            tail -n 140 /tmp/v6-verify.log 2>/dev/null
+          } > analysis/v6-build-failure.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/v6-build-failure.txt
+          git commit -m 'Record V6 lives build failure [skip ci]' || exit 0
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin HEAD:"${TARGET_BRANCH}"

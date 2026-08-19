@@ -1,0 +1,7 @@
+Kingdom Rush Frontiers — V6 Sandbox + iPhone Stability
+Builds on the verified V5 SWF.
+Exposes the complete 47-class enemy selector and remaining original-stage special buildings.
+Adds Unlimited Mode, Instant Win, boss-safe custom counts, and Send All overload back-pressure.
+Adds a numeric Add Lives field in the in-level V6 settings, matching the existing Add Gold control.
+Keeps the low-overhead iPhone/Ruffle player and aggressive cosmetic throttling under extreme swarms.
+Built, re-exported, and structurally verified with FFDec 26.2.1.

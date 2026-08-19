@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
-<title>Kingdom Rush Frontiers — Fast V5</title>
+<title>Kingdom Rush Frontiers — Fast V6</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}
@@ -25,7 +25,7 @@ button,a{appearance:none;border:0;border-radius:10px;min-height:42px;padding:10p
 </head>
 <body>
 <div id="player"></div>
-<div id="loading"><div>Loading optimized V5…</div></div>
+<div id="loading"><div>Loading optimized V6…</div></div>
 <button id="menu" aria-label="Game controls">⋯</button>
 <div id="panel">
 <button id="quality">Visual quality: Auto</button>
@@ -35,12 +35,12 @@ button,a{appearance:none;border:0;border-radius:10px;min-height:42px;padding:10p
 <a class="secondary" href="/mod/">Mod Lab / other builds</a>
 <a class="secondary" href="/">Clean player</a>
 </div>
-<div id="status">Low-overhead player • iPhone defaults to low Flash quality</div>
+<div id="status">V6 low-overhead player • iPhone defaults to low Flash quality</div>
 <script src="https://unpkg.com/@ruffle-rs/ruffle@0.5.0"></script>
 <script>
 (()=>{
 'use strict';
-const V5_URL='/assets/kingdom-rush-frontiers-v5.swf';
+const V6_URL='/assets/kingdom-rush-frontiers-v5.swf?v=6-lives';
 const CANONICAL_SWF_NAME='kingdom-rush-frontiers.swf';
 const playerHost=document.getElementById('player'),panel=document.getElementById('panel'),loading=document.getElementById('loading'),status=document.getElementById('status');
 const touch=('ontouchstart' in window)||(navigator.maxTouchPoints||0)>0||(matchMedia&&matchMedia('(pointer:coarse)').matches);
@@ -50,7 +50,7 @@ function defaultQuality(){return ios?'low':touch?'medium':'high'}
 function selectedQuality(){return localStorage.getItem('krf-fast-quality')||defaultQuality()}
 function updateQualityLabel(){document.getElementById('quality').textContent='Visual quality: '+selectedQuality().toUpperCase()}
 function makePlayer(){const api=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!api)throw new Error('Ruffle failed to load.');const p=api.createPlayer();p.tabIndex=0;p.style.touchAction='none';playerHost.replaceChildren(p);player=p;return p}
-async function load(){loading.classList.remove('hidden');status.textContent='Loading V5 • '+selectedQuality().toUpperCase()+' quality';try{const p=player||makePlayer();await p.ruffle().load({url:V5_URL,swfFileName:CANONICAL_SWF_NAME,autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:selectedQuality(),backgroundColor:'#000000',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,preloader:false,splashScreen:false,polyfills:false,backgroundExecutionMode:'none',base:location.origin+'/mod/'});try{p.focus({preventScroll:true})}catch(_){try{p.focus()}catch(__){}}status.textContent='Fast V5 • '+selectedQuality().toUpperCase()+' quality';}catch(e){status.textContent=e.message||String(e);throw e}finally{loading.classList.add('hidden')}}
+async function load(){loading.classList.remove('hidden');status.textContent='Loading V6 • '+selectedQuality().toUpperCase()+' quality';try{const p=player||makePlayer();await p.ruffle().load({url:V6_URL,swfFileName:CANONICAL_SWF_NAME,autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:selectedQuality(),backgroundColor:'#000000',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,preloader:false,splashScreen:false,polyfills:false,backgroundExecutionMode:'none',base:location.origin+'/mod/'});try{p.focus({preventScroll:true})}catch(_){try{p.focus()}catch(__){}}status.textContent='Fast V6 • '+selectedQuality().toUpperCase()+' quality • load-aware Send All';}catch(e){status.textContent=e.message||String(e);throw e}finally{loading.classList.add('hidden')}}
 function saveMenu(){if(!player)return;try{const r=player.getBoundingClientRect();player.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+Math.min(100,r.width/2),clientY:r.top+Math.min(100,r.height/2),button:2,buttons:2,view:window}));status.textContent='Ruffle menu requested • choose Save Manager';}catch(_){status.textContent='Long-press inside the game for Ruffle save controls'}}
 document.getElementById('menu').onclick=()=>panel.classList.toggle('open');
 document.getElementById('reload').onclick=()=>location.reload();
