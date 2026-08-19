@@ -16,11 +16,17 @@ jobs:
     if: github.head_ref == 'agent/sandbox-completeness-unlimited-ios'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out PR branch
+      - name: Check out only build inputs
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github/workflows/build-v6-lives.yml
+            tools
+            mod/fast.html
+            analysis
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -117,6 +123,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p assets
           cp /tmp/kingdom-rush-frontiers-v5.swf assets/kingdom-rush-frontiers-v5.swf
           cat > assets/V6-BUILD.txt <<'EOF'
           Kingdom Rush Frontiers — V6 Sandbox + iPhone Stability
@@ -148,7 +155,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -f analysis/v6-build-failure.txt
-          git add assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt mod/fast.html
+          git add --sparse assets/kingdom-rush-frontiers-v5.swf assets/V6-BUILD.txt assets/V6-SHA256SUMS.txt mod/fast.html
           if git ls-files --error-unmatch analysis/v6-build-failure.txt >/dev/null 2>&1; then
             git add -u analysis/v6-build-failure.txt
           fi
