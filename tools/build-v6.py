@@ -295,4 +295,5 @@ for name, needles in checks.items():
         if needle not in text:
             raise SystemExit(f"validation failed: {needle!r} missing from {name}")
 
+# This file intentionally patches only Level.as and TowerHolder.as on top of V5.
 print(f"V6 patches applied successfully. Enemy selector entries: {len(enemies)}")
