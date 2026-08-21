@@ -3,6 +3,7 @@ name: Build V8 performance + tower clipboard
 on:
   push:
     branches:
+      - main
       - agent/native-desktop-performance
     paths:
       - 'tools/build-v8.py'
@@ -111,10 +112,13 @@ jobs:
           p = Path('desktop/run_native.py')
           s = p.read_text(encoding='utf-8')
           old = "SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v5.swf'"
-          new = "SWF = (ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf') if (ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf').exists() else (ROOT / 'assets' / 'kingdom-rush-frontiers-v5.swf')"
+          old2 = 'SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"'
+          new = "V8_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf'\nV7_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v5.swf'\nSWF = V8_SWF if V8_SWF.exists() else V7_SWF"
           if old in s:
               s = s.replace(old, new, 1)
-              p.write_text(s, encoding='utf-8', newline='\n')
+          elif old2 in s:
+              s = s.replace(old2, new, 1)
+          p.write_text(s, encoding='utf-8', newline='\n')
           PY
 
       - name: Commit verified V8 build
