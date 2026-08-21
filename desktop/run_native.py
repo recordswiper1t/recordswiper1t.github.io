@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Launch the current KRF V7 mod in native Ruffle instead of WebAssembly.
+"""Launch the optimized Kingdom Rush Frontiers V8 mod in native Ruffle.
 
-This keeps the SWF and its saves/game logic unchanged, but removes the browser,
-JavaScript glue, DOM compositor, and WebAssembly runtime from the hot path.
-The launcher downloads a recent official Ruffle desktop build once into
-`.native/ruffle/`, then reuses it on future launches.
+The launcher prefers the verified V8 SWF and falls back to the historical V7
+asset only if V8 is missing. Ruffle is downloaded once and cached locally.
 """
 
 from __future__ import annotations
@@ -17,26 +15,21 @@ import platform
 import shutil
 import stat
 import subprocess
-import sys
 import tarfile
 import tempfile
 import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"
+V8_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v8.swf"
+V7_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"
+SWF = V8_SWF if V8_SWF.exists() else V7_SWF
 CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
 
 def request_json(url: str):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "krf-native-launcher",
-        },
-    )
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": "krf-native-launcher"})
     with urllib.request.urlopen(req, timeout=30) as response:
         return json.load(response)
 
@@ -44,7 +37,6 @@ def request_json(url: str):
 def platform_patterns() -> tuple[list[str], list[str]]:
     system = platform.system().lower()
     machine = platform.machine().lower()
-
     if system == "windows":
         return ["windows"], ["x86_64", "x64", "64"]
     if system == "darwin":
@@ -61,9 +53,7 @@ def platform_patterns() -> tuple[list[str], list[str]]:
 def score_asset(name: str) -> int:
     low = name.lower()
     os_words, arch_words = platform_patterns()
-    if not any(word in low for word in os_words):
-        return -1
-    if not any(word in low for word in arch_words):
+    if not any(word in low for word in os_words) or not any(word in low for word in arch_words):
         return -1
     if not (low.endswith(".zip") or low.endswith(".tar.gz") or low.endswith(".tgz")):
         return -1
@@ -94,11 +84,7 @@ def choose_release(channel: str):
 
 
 def choose_asset(release):
-    ranked = sorted(
-        ((score_asset(a.get("name", "")), a) for a in release.get("assets", [])),
-        key=lambda item: item[0],
-        reverse=True,
-    )
+    ranked = sorted(((score_asset(a.get("name", "")), a) for a in release.get("assets", [])), key=lambda item: item[0], reverse=True)
     if not ranked or ranked[0][0] < 0:
         names = ", ".join(a.get("name", "?") for a in release.get("assets", []))
         raise SystemExit(f"Could not find a desktop Ruffle build for this laptop. Assets: {names}")
@@ -121,22 +107,17 @@ def install(channel: str) -> Path:
     asset = choose_asset(release)
     tag = release.get("tag_name", "unknown")
     marker = CACHE / "VERSION"
-
-    if marker.exists():
-        installed = marker.read_text(encoding="utf-8").strip()
-        if installed == tag:
-            try:
-                return find_executable(CACHE)
-            except SystemExit:
-                pass
-
+    if marker.exists() and marker.read_text(encoding="utf-8").strip() == tag:
+        try:
+            return find_executable(CACHE)
+        except SystemExit:
+            pass
     CACHE.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="krf-ruffle-") as tmp:
         archive = Path(tmp) / asset["name"]
         req = urllib.request.Request(asset["browser_download_url"], headers={"User-Agent": "krf-native-launcher"})
         with urllib.request.urlopen(req, timeout=120) as src, archive.open("wb") as dst:
             shutil.copyfileobj(src, dst)
-
         staging = Path(tmp) / "unpacked"
         staging.mkdir()
         low = archive.name.lower()
@@ -148,35 +129,29 @@ def install(channel: str) -> Path:
                 tf.extractall(staging)
         else:
             raise SystemExit(f"Unsupported Ruffle archive: {archive.name}")
-
         if CACHE.exists():
             shutil.rmtree(CACHE)
         shutil.copytree(staging, CACHE)
         marker.write_text(tag + "\n", encoding="utf-8")
-
     return find_executable(CACHE)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run Kingdom Rush Frontiers V7 in native Ruffle")
-    parser.add_argument("--stable", action="store_true", help="Prefer the latest stable Ruffle release instead of nightly")
-    parser.add_argument("--refresh", action="store_true", help="Redownload Ruffle even if a cached build exists")
+    parser = argparse.ArgumentParser(description="Run optimized Kingdom Rush Frontiers V8 in native Ruffle")
+    parser.add_argument("--stable", action="store_true", help="Use the latest stable Ruffle instead of nightly")
+    parser.add_argument("--refresh", action="store_true", help="Redownload Ruffle")
     parser.add_argument("ruffle_args", nargs=argparse.REMAINDER, help="Extra arguments forwarded to Ruffle after --")
     args = parser.parse_args()
-
     if not SWF.exists():
-        raise SystemExit(f"Missing V7 SWF: {SWF}")
-
+        raise SystemExit(f"Missing game SWF: {SWF}")
     if args.refresh and CACHE.exists():
         shutil.rmtree(CACHE)
-
     channel = "stable" if args.stable else "nightly"
     exe = install(channel)
-    extra = args.ruffle_args
-    if extra and extra[0] == "--":
-        extra = extra[1:]
-
-    print(f"Launching {SWF.name} with native Ruffle ({channel})")
+    extra = args.ruffle_args[1:] if args.ruffle_args and args.ruffle_args[0] == "--" else args.ruffle_args
+    version = "V8 optimized" if SWF == V8_SWF else "V7 fallback"
+    print(f"Launching Kingdom Rush Frontiers {version} with native Ruffle ({channel})")
+    print(f"Game: {SWF}")
     print(f"Ruffle: {exe}")
     return subprocess.call([str(exe), str(SWF), *extra], cwd=str(ROOT))
 
