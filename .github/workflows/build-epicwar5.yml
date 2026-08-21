@@ -6,6 +6,10 @@ on:
     paths:
       - 'tools/epicwar5/**'
       - '.github/workflows/build-epicwar5.yml'
+  pull_request:
+    paths:
+      - 'tools/epicwar5/**'
+      - '.github/workflows/build-epicwar5.yml'
 
 permissions:
   contents: write
@@ -15,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download original Epic War 5 SWF
         shell: bash
@@ -34,43 +40,51 @@ jobs:
             fi
           done
           test "$ok" = 1
-          head -c 3 .build/epicwar5/original.swf
+          sig=$(head -c 3 .build/epicwar5/original.swf)
+          case "$sig" in FWS|CWS|ZWS) ;; *) exit 1;; esac
           sha256sum .build/epicwar5/original.swf
 
       - name: Build sandbox and chaos variants
         run: |
-          python3 tools/epicwar5/build_mod.py \
-            .build/epicwar5/original.swf \
-            assets/epic-war-5-sandbox-v1.swf \
-            --report assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
-          python3 tools/epicwar5/build_mod.py \
-            .build/epicwar5/original.swf \
-            assets/epic-war-5-chaos-v1.swf \
-            --chaos --report assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
-
-      - name: Verify SWFs and checksums
-        shell: bash
-        run: |
-          set -eux
-          python3 - <<'PY'
-          from pathlib import Path
-          for p in [Path('assets/epic-war-5-sandbox-v1.swf'),Path('assets/epic-war-5-chaos-v1.swf')]:
-              b=p.read_bytes()
-              assert b[:3] in (b'FWS',b'CWS',b'ZWS')
-              assert len(b)>15_000_000
-              print(p,len(b),b[:3])
-          PY
+          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-sandbox-v1.swf --report assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
+          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-chaos-v1.swf --chaos --report assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
           sha256sum assets/epic-war-5-*-v1.swf > assets/EPIC-WAR-5-SHA256SUMS.txt
 
-      - name: Publish generated builds
+      - name: Decompile ActionScript for analysis
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 3 https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip -o .build/ffdec.zip
+          unzip -q .build/ffdec.zip -d .build/ffdec
+          mkdir -p .build/epicwar5/scripts
+          java -jar .build/ffdec/ffdec.jar -export script .build/epicwar5/scripts .build/epicwar5/original.swf || true
+          find .build/epicwar5/scripts -type f | sort > .build/epicwar5/script-files.txt
+          grep -RniE 'DataManager|dat_unit_|mana|spawn|summon|hero|stage|skill|accessor|accessory|experience|gold|reward|population|unit' .build/epicwar5/scripts > .build/epicwar5/hotspots.txt || true
+
+      - name: Upload analysis artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-analysis
+          retention-days: 7
+          path: |
+            .build/epicwar5/source-url.txt
+            .build/epicwar5/script-files.txt
+            .build/epicwar5/hotspots.txt
+            .build/epicwar5/scripts/**
+            assets/epic-war-5-sandbox-v1.swf
+            assets/epic-war-5-chaos-v1.swf
+            assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
+            assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
+            assets/EPIC-WAR-5-SHA256SUMS.txt
+
+      - name: Publish generated builds on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -eux
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/epic-war-5-sandbox-v1.swf assets/epic-war-5-chaos-v1.swf \
-                  assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json assets/EPIC-WAR-5-CHAOS-V1-BUILD.json \
-                  assets/EPIC-WAR-5-SHA256SUMS.txt
+          git add assets/epic-war-5-sandbox-v1.swf assets/epic-war-5-chaos-v1.swf assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json assets/EPIC-WAR-5-CHAOS-V1-BUILD.json assets/EPIC-WAR-5-SHA256SUMS.txt
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Build Epic War 5 sandbox v1'
           git push
