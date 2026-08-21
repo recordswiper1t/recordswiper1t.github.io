@@ -1,0 +1,1549 @@
+=== Enemy.as ===
+package
+{
+   import §_-nh§.§case import§;
+   import flash.display.*;
+   import flash.events.*;
+   import flash.geom.*;
+   import flash.utils.*;
+   
+   public class Enemy extends §case import§
+   {
+      
+      public var §_-qg§:Boolean;
+      
+      public var isActive:Boolean;
+      
+      public var enterSpecialWhenInactive:Boolean;
+      
+      public var isBoss:Boolean;
+      
+      public var isFlying:Boolean;
+      
+      public var isDead:Boolean;
+      
+      public var §const const each§:Boolean;
+      
+      public var isRespawning:Boolean;
+      
+      public var §_-uc§:Boolean;
+      
+      public var isCharging:Boolean;
+      
+      public var isFighting:Boolean;
+      
+      public var isBlocked:Boolean;
+      
+      public var onTunnel:Boolean = false;
+      
+      public var lifeBar:LifeBar;
+      
+      public var §extends each§:Boolean = true;
+      
+      public var §_-sh§:Boolean = true;
+      
+      public var §_-aa§:Boolean = true;
+      
+      public var canPoison:Boolean = true;
+      
+      public var §_-pu§:Boolean = false;
+      
+      public var §do for super§:Boolean = false;
+      
+      public var canSkeleton:Boolean = true;
+      
+      public var §extends for use§:Boolean = true;
+      
+      public var §_-w§:Boolean = true;
+      
+      public var §_-Bb§:Boolean = true;
+      
+      public var §_-7y§:Boolean = true;
+      
+      public var §_-NU§:Boolean = true;
+      
+      public var §catch default§:Boolean = false;
+      
+      public var §_-kt§:Boolean = false;
+      
+      public var §_-7G§:Boolean = false;
+      
+      public var §super static§:Boolean = true;
+      
+      public var §_-o§:Boolean = true;
+      
+      public var §dynamic const for§:Boolean = true;
+      
+      public var §_-eb§:Boolean = true;
+      
+      public var §_-On§:Boolean = true;
+      
+      public var level:int;
+      
+      public var size:int;
+      
+      public var initHealth:int;
+      
+      public var health:int;
+      
+      public var speed:Number;
+      
+      public var armor:int;
+      
+      public var magicArmor:int;
+      
+      public var dodge:int;
+      
+      public var cost:int;
+      
+      public var gold:int;
+      
+      public var §_-Z4§:int;
+      
+      public var soldier:Soldier;
+      
+      public var fighterPosition:Array = [0,0];
+      
+      public var maxDamage:int;
+      
+      public var minDamage:int;
+      
+      public var §implements const else§:int = 8;
+      
+      public var §break finally§:int;
+      
+      public var attackReloadTime:int;
+      
+      public var §_-NL§:int;
+      
+      public var §catch for dynamic§:int;
+      
+      public var §_-K5§:Boolean;
+      
+      public var canFightMultiples:Boolean = true;
+      
+      public var deadTime:int = 50;
+      
+      public var deadTimeCounter:int = 0;
+      
+      public var §false include§:int;
+      
+      public var §with const static§:Array;
+      
+      public var §package for var§:int = 0;
+      
+      public var §_-HE§:int = 10;
+      
+      public var nodeMarginError:Number;
+      
+      public var §_-1v§:String;
+      
+      public var xSpeed:Number = 0;
+      
+      public var ySpeed:Number = 0;
+      
+      public var xSoldierAdjust:int;
+      
+      public var xAdjust:int;
+      
+      public var yAdjust:int;
+      
+      public var §const const true§:int;
+      
+      public var §_-18§:int;
+      
+      public var §static super§:int;
+      
+      public var §_-3m§:Dictionary = new Dictionary(true);
+      
+      public var bloodClass:String = "Blood";
+      
+      public var §import for dynamic§:Boolean;
+      
+      public var isOnCliffFallingDown:Boolean;
+      
+      public var fallingDestination:Point;
+      
+      public var fallingSpeed:Number = 1;
+      
+      public var fallingSpeedAceleration:Number = 1.5;
+      
+      public var §override while§:Boolean;
+      
+      public var cRoot:Level;
+      
+      public var §_-6o§:Boolean = false;
+      
+      public var §get for catch§:Boolean = true;
+      
+      public function Enemy(param1:int, param2:Array)
+      {
+         super();
+         this.§false include§ = param1;
+         this.§with const static§ = param2;
+         this.x = param2[this.§package for var§].x;
+         this.y = param2[this.§package for var§].y;
+         this.isActive = false;
+         this.isDead = false;
+         this.isCharging = false;
+         this.isFighting = false;
+         this.isBlocked = false;
+         this.isRespawning = false;
+         this.soldier = null;
+         this.alphaTolerance = 0;
+         this.§_-uc§ = false;
+         this.§_-Z4§ = 30;
+         this.§catch for dynamic§ = 5;
+         this.orderAdjustY = 0;
+         this.enterSpecialWhenInactive = false;
+         this.addEventListener(Event.ADDED_TO_STAGE,this.init,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OVER,this.rollOver,false,0,true);
+         this.addEventListener(MouseEvent.ROLL_OUT,this.rollOut,false,0,true);
+      }
+      
+      public function getHealthForEnemy(param1:Object, param2:int, param3:int) : Number
+      {
+         return §_-Mm§.getHealthForEnemy(param1,param2,param3);
+      }
+      
+      public function §continue const static§(param1:int) : void
+      {
+         var _loc2_:Shape = new Shape();
+         _loc2_.graphics.beginFill(0);
+         _loc2_.graphics.lineStyle(0,6710886);
+         _loc2_.graphics.drawCircle(this.§with const static§[param1].x,this.§with const static§[param1].y,2);
+         _loc2_.graphics.endFill();
+         Level(this.parent.parent).addChild(_loc2_);
+      }
+      
+      public function init(param1:Event) : void
+      {
+      }
+      
+      public function clickEvents(param1:MouseEvent) : void
+      {
+         if(!this.isDead)
+         {
+            this.cRoot.freeMenues();
+            this.cRoot.enemySelection.§override const extends§(this);
+            this.cRoot.menu.§_-KI§(this);
+         }
+      }
+      
+      public function rollOver(param1:MouseEvent) : void
+      {
+         this.buttonMode = true;
+         this.mouseChildren = false;
+         this.useHandCursor = true;
+      }
+      
+      public function rollOut(param1:MouseEvent) : void
+      {
+         this.useHandCursor = false;
+      }
+      
+      public function getInfo() : Object
+      {
+         var _loc1_:Object = {};
+         _loc1_.eHealth = this.health;
+         _loc1_.eInitHealth = this.initHealth;
+         _loc1_.eCost = this.cost;
+         _loc1_.eArmor = this.armor;
+         _loc1_.eMagicArmor = this.magicArmor;
+         _loc1_.eReload = this.attackReloadTime;
+         _loc1_.eDamageMin = this.minDamage;
+         _loc1_.eDamageMax = this.maxDamage;
+         this.§_-dz§(_loc1_);
+         return _loc1_;
+      }
+      
+      public function §_-ZJ§(param1:int) : void
+      {
+         this.§package for var§ = param1;
+         this.x = this.§with const static§[this.§package for var§].x;
+         this.y = this.§with const static§[this.§package for var§].y;
+      }
+      
+      public function §_-dz§(param1:Object) : void
+      {
+         param1.tIconName = "p_enemy_bandit";
+         param1.eName = "Enemy";
+      }
+      
+      public function onFrameUpdate() : void
+      {
+         if(this.isDead)
+         {
+            if(!this.§import for dynamic§ || this.isFlying)
+            {
+               if(this.deadTimeCounter == 0)
+               {
+                  this.§continue catch§();
+                  this.§_-GH§(false);
+               }
+               ++this.deadTimeCounter;
+               if(this.deadTime == this.deadTimeCounter)
+               {
+                  this.necromancerChk();
+                  this.destroyThis();
+               }
+               this.§_-o6§();
+            }
+            else
+            {
+               if(this.deadTimeCounter == 0)
+               {
+                  this.§_-SU§();
+               }
+               ++this.deadTimeCounter;
+               this.§_-1L§();
+            }
+            return;
+         }
+         if(this.§_-hd§())
+         {
+            return;
+         }
+         if(this.isDead)
+         {
+            return;
+         }
+         this.§_-ND§();
+         if(this.isDead)
+         {
+            return;
+         }
+         if(this.§_-6o§)
+         {
+            return;
+         }
+         this.§_-cx§();
+         this.§_-PH§();
+         if((this.isActive || this.enterSpecialWhenInactive) && !this.isCharging && this.§_-U7§())
+         {
+            return;
+         }
+         if(this.isBlocked)
+         {
+            if(this.soldier == null || !this.soldier.isActive || !this.soldier.isFighting)
+            {
+               this.§_-6i§();
+            }
+         }
+         if(this.isFighting)
+         {
+            if(this.soldier == null || !this.soldier.isActive)
+            {
+               this.§_-6i§();
+            }
+            else if(this.isCharging)
+            {
+               if(!this.readyToDamage())
+               {
+                  return;
+               }
+               this.isCharging = false;
+               this.attack();
+               this.§_-cN§();
+               if(this.soldier.isDead)
+               {
+                  this.§_-6i§();
+               }
+            }
+            else
+            {
+               this.readyToAttack();
+            }
+         }
+         else
+         {
+            this.§do else§();
+         }
+      }
+      
+      public function §_-o6§() : void
+      {
+      }
+      
+      public function §continue catch§() : void
+      {
+         this.gotoAndPlay("dead");
+      }
+      
+      public function §_-PH§() : void
+      {
+      }
+      
+      public function attack() : void
+      {
+         if(this.§_-K5§)
+         {
+            return;
+         }
+         if(Math.random() < 0.1)
+         {
+            if(this.size < §_-Mm§.LARGE)
+            {
+               if(Math.random() > 0.5)
+               {
+                  this.cRoot.bullets.addChild(new §_-pZ§(new Point(this.soldier.x,this.soldier.y),"pow"));
+               }
+               else
+               {
+                  this.cRoot.bullets.addChild(new §_-pZ§(new Point(this.soldier.x,this.soldier.y),"sok"));
+               }
+            }
+            else if(Math.random() > 0.5)
+            {
+               this.cRoot.bullets.addChild(new §_-pZ§(new Point(this.soldier.x,this.soldier.y),"whaam"));
+            }
+            else
+            {
+               this.cRoot.bullets.addChild(new §_-pZ§(new Point(this.soldier.x,this.soldier.y),"kapow"));
+            }
+         }
+         this.§native native§();
+         this.soldier.setDamage(this.getDamage());
+      }
+      
+      public function pause() : void
+      {
+         this.stop();
+      }
+      
+      public function unPause() : void
+      {
+         if(!this.§_-6o§)
+         {
+            switch(this.currentFrameLabel)
+            {
+               case "walkingEnd":
+                  this.gotoAndPlay("walking");
+                  break;
+               case "walkingUpEnd":
+                  this.gotoAndPlay("walkingUp");
+                  break;
+               case "walkingDownEnd":
+                  this.gotoAndPlay("walkingDown");
+                  break;
+               case "fightingEnd":
+               case "thorEnd":
+               case "thorFreeEnd":
+               case "deadEnd":
+               case "teleportEnd":
+                  break;
+               case "idle":
+                  if(EnemyCommon(this).abducting)
+                  {
+                     play();
+                  }
+                  break;
+               default:
+                  this.play();
+            }
+         }
+         this.§_-Hm§();
+      }
+      
+      public function §_-Hm§() : void
+      {
+      }
+      
+      protected function getDamage() : int
+      {
+         return this.minDamage + Math.ceil(Math.random() * (this.maxDamage - this.minDamage));
+      }
+      
+      public function §_-da§(param1:Soldier) : void
+      {
+         this.soldier = param1;
+         this.isBlocked = true;
+         this.§_-cN§();
+      }
+      
+      public function startFighting() : void
+      {
+         this.isFighting = true;
+         this.§_-1v§ = "";
+         this.y += 0.1;
+         this.§_-Vs§();
+      }
+      
+      public function §_-6i§() : void
+      {
+         this.isBlocked = false;
+         this.isFighting = false;
+         this.isCharging = false;
+         this.soldier = null;
+         this.§_-1v§ = "";
+         this.§return case§();
+      }
+      
+      public function getFighterPosition() : int
+      {
+         if(this.fighterPosition[0] == 0)
+         {
+            this.fighterPosition[0] += 1;
+            return 0;
+         }
+         if(this.fighterPosition[1] == 0)
+         {
+            this.fighterPosition[1] += 1;
+            return 1;
+         }
+         if(Math.random() >= 0.5)
+         {
+            this.fighterPosition[0] += 1;
+            return 0;
+         }
+         this.fighterPosition[1] += 1;
+         return 1;
+      }
+      
+      public function §native for if§(param1:int) : void
+      {
+         if(this.fighterPosition == null)
+         {
+            return;
+         }
+         if(param1 < this.fighterPosition.length)
+         {
+            this.fighterPosition[param1] = this.fighterPosition[param1] - 1;
+         }
+      }
+      
+      public function §_-ZL§() : Boolean
+      {
+         if(this.dodge == 0)
+         {
+            return false;
+         }
+         if(Math.random() * 100 <= this.dodge)
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      public function §_-aH§(param1:*, param2:int) : int
+      {
+         if(this.§_-Z4§ == 0)
+         {
+            return 0;
+         }
+         var _loc3_:int = Math.round(Math.random() * (param2 - param1)) + param1;
+         if(_loc3_ > this.§_-Z4§)
+         {
+            _loc3_ = this.§_-Z4§;
+         }
+         this.§_-Z4§ -= _loc3_;
+         this.cRoot.game.§const for set§.§throw override§(this.cRoot,_loc3_);
+         this.cRoot.bullets.addChild(new §super extends§(new Point(this.x,this.y + this.yAdjust - 13)));
+         this.cRoot.updateCash(_loc3_);
+         return _loc3_;
+      }
+      
+      public function §extends const if§() : void
+      {
+         if(!this.canSkeleton)
+         {
+            return;
+         }
+         if(this.cRoot.graveyard != null)
+         {
+            this.cRoot.graveyard.spawnSkeleton(this.initHealth);
+         }
+      }
+      
+      public function necromancerChk() : void
+      {
+         var _loc1_:§_-5u§ = null;
+         if(!this.canSkeleton || this.§import for dynamic§)
+         {
+            return;
+         }
+         for each(_loc1_ in this.cRoot.towers)
+         {
+            if(getQualifiedClassName(_loc1_) == "TowerMageNecromancer")
+            {
+               if(TowerMageNecromancer(_loc1_).spawnSkeleton(this))
+               {
+                  break;
+               }
+            }
+         }
+      }
+      
+      public function setDamage(param1:int, param2:int = 3, param3:§_-td§ = null, param4:int = 0, param5:Boolean = false) : void
+      {
+         if(this.hasDebuff("DebuffWeakness"))
+         {
+            param1 += param1 * (this.cRoot.gameSettings.archers.totem.weaknessExtraDamagePercent / 100);
+         }
+         if(param2 != §_-Mm§.I_ARMOR)
+         {
+            this.health -= this.getArmorDamage(param2,param1,param4);
+         }
+         else
+         {
+            this.health -= param1;
+         }
+         if(this.health <= 0)
+         {
+            this.health = 0;
+            if(this.receivedDeadlyDamage(param1))
+            {
+               this.§extends const if§();
+               this.§_-5C§(true);
+               if(!this.§import for dynamic§)
+               {
+                  this.§each while§();
+               }
+               return;
+            }
+         }
+         if(this.isDead)
+         {
+            return;
+         }
+         this.lifeBar.updateProgress(this.health);
+         if(param3 != null)
+         {
+            this.§_-qI§(param3);
+         }
+         this.afterDamage();
+      }
+      
+      protected function afterDamage() : void
+      {
+      }
+      
+      public function instaKill() : void
+      {
+         this.health = 0;
+         this.§extends const if§();
+         this.§_-5C§(true);
+         this.§each while§();
+      }
+      
+      protected function receivedDeadlyDamage(param1:int) : Boolean
+      {
+         return true;
+      }
+      
+      public function §each while§() : void
+      {
+         this.cRoot.§_-No§(new §_-Ay§(new Point(this.x,this.y)));
+      }
+      
+      public function §_-av§(param1:int) : void
+      {
+         if(this.armor == 0)
+         {
+            return;
+         }
+         this.armor -= param1;
+         if(this.armor < 0)
+         {
+            this.armor = 0;
+         }
+      }
+      
+      public function §_-5C§(param1:Boolean = false) : void
+      {
+         this.isActive = false;
+         this.isDead = true;
+         this.lifeBar.hide();
+         this.cRoot.updateCash(this.gold);
+         this.cRoot.data.§_-g§ += 1;
+         this.cRoot.game.§const for set§.§_-jy§(this.cRoot,getQualifiedClassName(this));
+         if(param1)
+         {
+            this.§finally const final§();
+         }
+         if(this.cRoot.§var const override§ && this.§default for use§())
+         {
+            this.§_-bG§();
+         }
+      }
+      
+      public function §_-hd§() : Boolean
+      {
+         return false;
+      }
+      
+      public function §_-cx§() : Boolean
+      {
+         return false;
+      }
+      
+      public function §_-U7§() : Boolean
+      {
+         return false;
+      }
+      
+      public function §_-AA§() : Boolean
+      {
+         return false;
+      }
+      
+      public function §finally const final§() : void
+      {
+      }
+      
+      public function §native native§() : void
+      {
+      }
+      
+      public function §_-Vs§() : void
+      {
+         this.gotoAndPlay("fighting");
+         this.isCharging = true;
+      }
+      
+      public function §_-cN§() : void
+      {
+         this.gotoAndStop("idle");
+      }
+      
+      public function §return case§() : void
+      {
+         if(this.§_-6o§)
+         {
+            return this.§_-cN§();
+         }
+         if(this.isFighting)
+         {
+            this.§break finally§ = 0;
+            this.§_-cN§();
+            return;
+         }
+         var _loc1_:* = this.§with const static§[this.§package for var§ + 1].y - this.§with const static§[this.§package for var§].y;
+         var _loc2_:* = this.§with const static§[this.§package for var§ + 1].x - this.§with const static§[this.§package for var§].x;
+         var _loc3_:* = Math.round(Math.atan2(-_loc1_,_loc2_) * 180 / Math.PI);
+         if(_loc3_ < 0)
+         {
+            _loc3_ += 360;
+         }
+         if(_loc3_ > 55 && _loc3_ < 135)
+         {
+            if(this.§_-1v§ != "up")
+            {
+               this.gotoAndPlay("walkingUp");
+               this.§_-1v§ = "up";
+            }
+         }
+         else if(_loc3_ >= 135 && _loc3_ <= 240)
+         {
+            if(this.§_-1v§ != "left")
+            {
+               this.gotoAndPlay("walking");
+               this.scaleX = -1;
+               this.lifeBar.§dynamic for const§(-1);
+               this.§_-1v§ = "left";
+            }
+         }
+         else if(_loc3_ > 240 && _loc3_ < 315)
+         {
+            if(this.§_-1v§ != "down")
+            {
+               this.gotoAndPlay("walkingDown");
+               this.§_-1v§ = "down";
+            }
+         }
+         else if(this.§_-1v§ != "right")
+         {
+            this.gotoAndPlay("walking");
+            this.scaleX = 1;
+            this.lifeBar.§dynamic for const§(1);
+            this.§_-1v§ = "right";
+         }
+      }
+      
+      public function getNodesSpeed(param1:Number = 5.5) : int
+      {
+         if(this.isBlocked)
+         {
+            return 0;
+         }
+         if(this.§const const each§)
+         {
+            return 0;
+         }
+         if(this.§_-6o§)
+         {
+            return 0;
+         }
+         var _loc2_:int = Math.ceil(param1 * this.speed);
+         if(this.§package for var§ + _loc2_ >= this.§with const static§.length)
+         {
+            return this.§with const static§.length - this.§package for var§ - 1;
+         }
+         return _loc2_;
+      }
+      
+      public function §_-E6§(param1:int, param2:int, param3:Boolean) : int
+      {
+         if(param3)
+         {
+            return Math.round(this.x) + param1 + this.xSoldierAdjust - param2;
+         }
+         return Math.round(this.x) - param1 - this.xSoldierAdjust + param2;
+      }
+      
+      public function §_-9N§() : Boolean
+      {
+         return false;
+      }
+      
+      public function §_-qI§(param1:§_-td§) : void
+      {
+         var _loc2_:§_-td§ = null;
+         for each(_loc2_ in this.§_-3m§)
+         {
+            if(getQualifiedClassName(_loc2_) == getQualifiedClassName(param1))
+            {
+               if(_loc2_.level > param1.level)
+               {
+                  return;
+               }
+               _loc2_.§_-Yp§(param1.level);
+               return;
+            }
+         }
+         this.§_-3m§[param1] = param1;
+         param1.init();
+      }
+      
+      public function §class for set§() : void
+      {
+         var _loc1_:§_-td§ = null;
+         for each(_loc1_ in this.§_-3m§)
+         {
+            _loc1_.§throw for dynamic§();
+         }
+      }
+      
+      public function §throw with§(param1:§_-td§) : void
+      {
+         delete this.§_-3m§[param1];
+      }
+      
+      public function §_-NE§(param1:String) : void
+      {
+         var _loc2_:§_-td§ = null;
+         for each(_loc2_ in this.§_-3m§)
+         {
+            if(getQualifiedClassName(_loc2_) == param1)
+            {
+               _loc2_.§throw with§(true);
+               this.§throw with§(_loc2_);
+            }
+         }
+      }
+      
+      public function hasDebuff(param1:String) : Boolean
+      {
+         var _loc2_:§_-td§ = null;
+         for each(_loc2_ in this.§_-3m§)
+         {
+            if(getQualifiedClassName(_loc2_) == param1)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+      
+      public function §_-GH§(param1:Boolean) : void
+      {
+         var _loc2_:§_-td§ = null;
+         for each(_loc2_ in this.§_-3m§)
+         {
+            _loc2_.§throw with§(param1);
+         }
+      }
+      
+      public function §each default§(param1:Boolean) : void
+      {
+         var _loc2_:§_-td§ = null;
+         for each(_loc2_ in this.§_-3m§)
+         {
+            if(!_loc2_.§_-Tb§)
+            {
+               _loc2_.§throw with§(param1);
+            }
+         }
+      }
+      
+      protected function §default for use§() : Boolean
+      {
+         if(Boolean(this.cRoot.§_-W8§[this.§false include§][0]) && (this.§package for var§ >= this.cRoot.§_-W8§[this.§false include§][1] && this.§package for var§ <= this.cRoot.§_-W8§[this.§false include§][4]))
+         {
+            return true;
+         }
+         return false;
+      }
+      
+      protected function §_-ND§() : void
+      {
+         var _loc1_:§_-td§ = null;
+         for each(_loc1_ in this.§_-3m§)
+         {
+            _loc1_.run();
+            if(this.isDead)
+            {
+               return;
+            }
+         }
+      }
+      
+      public function getArmorDamage(param1:int, param2:int, param3:int = 0) : int
+      {
+         var _loc4_:int = 0;
+         _loc4_ = this.armor;
+         if(param3 != 0)
+         {
+            _loc4_ -= param3;
+            if(_loc4_ < 0)
+            {
+               _loc4_ = 0;
+            }
+         }
+         switch(param1)
+         {
+            case §_-Mm§.P_ARMOR:
+               return param2 - _loc4_ * param2 / 100;
+            case §_-Mm§.M_ARMOR:
+               return param2 - this.magicArmor * param2 / 100;
+            case §_-Mm§.E_ARMOR:
+               return param2 - _loc4_ / 2 * param2 / 100;
+            default:
+               return param2;
+         }
+      }
+      
+      protected function §do else§() : void
+      {
+         if(this.isBlocked)
+         {
+            this.xSpeed = 0;
+            this.ySpeed = 0;
+            return;
+         }
+         var _loc1_:Number = this.§with const static§[this.§package for var§ + 1].y - this.y;
+         var _loc2_:Number = this.§with const static§[this.§package for var§ + 1].x - this.x;
+         var _loc3_:Number = Math.atan2(_loc1_,_loc2_);
+         this.ySpeed = Math.sin(_loc3_) * this.speed;
+         this.xSpeed = Math.cos(_loc3_) * this.speed;
+         this.x += this.xSpeed;
+         this.y += this.ySpeed;
+         if(Math.sqrt(Math.pow(this.§with const static§[this.§package for var§ + 1].y - this.y,2) + Math.pow(this.§with const static§[this.§package for var§ + 1].x - this.x,2)) < this.nodeMarginError)
+         {
+            ++this.§package for var§;
+            if(this.§with catch§())
+            {
+               return;
+            }
+            if(!this.§import for dynamic§)
+            {
+               this.§return case§();
+            }
+         }
+      }
+      
+      protected function readyToAttack() : Boolean
+      {
+         ++this.§_-NL§;
+         if(this.§_-NL§ == this.attackReloadTime)
+         {
+            this.§_-Vs§();
+            this.§_-NL§ = 0;
+            this.§_-K5§ = false;
+            return true;
+         }
+         return false;
+      }
+      
+      protected function readyToDamage() : Boolean
+      {
+         ++this.§break finally§;
+         if(this.§break finally§ == this.§implements const else§)
+         {
+            this.§break finally§ = 0;
+            return true;
+         }
+         if(this.§break finally§ == this.§catch for dynamic§)
+         {
+            if(this.soldier != null && this.soldier.isActive)
+            {
+               if(this.soldier.§_-7X§())
+               {
+                  this.§_-K5§ = true;
+               }
+            }
+         }
+         return false;
+      }
+      
+      protected function §with catch§() : Boolean
+      {
+         var _loc1_:int = 0;
+         if(this.§package for var§ == 1)
+         {
+            this.visible = true;
+         }
+         if(this.§package for var§ == this.§_-HE§)
+         {
+            this.isActive = true;
+            return false;
+         }
+         if(this.§package for var§ + 11 == this.§with const static§.length)
+         {
+            this.isActive = false;
+            return false;
+         }
+         if(this.cRoot.§var const override§)
+         {
+            if(this.cRoot.§_-W8§[this.§false include§][0] == true)
+            {
+               if(this.§package for var§ == this.cRoot.§_-W8§[this.§false include§][1])
+               {
+                  this.isActive = false;
+                  this.enterTunnel();
+               }
+               else if(this.§package for var§ == this.cRoot.§_-W8§[this.§false include§][2])
+               {
+                  this.visible = false;
+                  this.speed *= 2;
+                  this.nodeMarginError = this.speed + 0.1;
+               }
+               else if(this.§package for var§ == this.cRoot.§_-W8§[this.§false include§][3])
+               {
+                  this.visible = true;
+                  this.speed /= 2;
+                  this.nodeMarginError = this.speed + 0.1;
+               }
+               else if(this.§package for var§ == this.cRoot.§_-W8§[this.§false include§][4])
+               {
+                  this.isActive = true;
+                  this.§_-bG§();
+               }
+            }
+         }
+         if(this.cRoot.§_-b9§)
+         {
+            if(this.cRoot.§_-b§[this.§false include§][0] == true)
+            {
+               _loc1_ = 0;
+               while(_loc1_ < this.cRoot.§_-b§[this.§false include§][1].length)
+               {
+                  if(this.§package for var§ == this.cRoot.§_-b§[this.§false include§][1][_loc1_][0])
+                  {
+                     this.§import for dynamic§ = true;
+                     this.§override while§ = this.§extends each§;
+                     this.§extends each§ = false;
+                     this.§_-1v§ = "";
+                     this.fallingDestination = this.§with const static§[this.cRoot.§_-b§[this.§false include§][1][_loc1_][2]];
+                     this.gotoAndPlay("climbing");
+                     this.cRoot.entities.removeChild(this);
+                     this.cRoot.enemyDecals.addChild(this);
+                  }
+                  else if(this.§package for var§ == this.cRoot.§_-b§[this.§false include§][1][_loc1_][1])
+                  {
+                     this.§import for dynamic§ = false;
+                     this.§extends each§ = this.§override while§;
+                  }
+                  else if(this.§package for var§ == this.cRoot.§_-b§[this.§false include§][1][_loc1_][3])
+                  {
+                     this.cRoot.enemyDecals.removeChild(this);
+                     this.cRoot.entities.addChild(this);
+                  }
+                  _loc1_++;
+               }
+            }
+         }
+         if(this.§package for var§ + 7 < this.§with const static§.length)
+         {
+            return false;
+         }
+         this.isActive = false;
+         this.cRoot.§with for super§(this);
+         this.cRoot.§function for const§(this.cost);
+         this.cRoot.updateCash(this.gold);
+         this.destroyThis();
+         return true;
+      }
+      
+      protected function enterTunnel() : void
+      {
+         this.onTunnel = true;
+         ++this.cRoot.§_-W8§[this.§false include§][5];
+         if(this.cRoot.§_-W8§[this.§false include§][5] == 1)
+         {
+            this.cRoot.§_-Hp§(this.§false include§ + 1,true);
+         }
+      }
+      
+      protected function §_-bG§() : void
+      {
+         this.onTunnel = false;
+         --this.cRoot.§_-W8§[this.§false include§][5];
+         if(this.cRoot.§_-W8§[this.§false include§][5] == 0)
+         {
+            this.cRoot.§_-Hp§(this.§false include§ + 1,false);
+         }
+      }
+      
+      protected function §_-GV§() : void
+      {
+         this.cRoot.§with for super§(this);
+      }
+      
+      public function getRandom(param1:*, param2:*) : Number
+      {
+         var _loc3_:Number = NaN;
+         return Math.round(Math.random() * (param2 - param1)) + param1;
+      }
+      
+      protected function §_-SU§() : void
+      {
+         this.fallingDestination = new Point(this.x,this.fallingDestination.y);
+         this.gotoAndPlay("fallingLoop");
+         if(this.cRoot.entities.contains(this))
+         {
+            this.cRoot.entities.removeChild(this);
+            this.cRoot.enemyDecals.addChild(this);
+         }
+         this.cRoot.game.§const for set§.§_-9Q§(this.cRoot);
+         this.canSkeleton = false;
+         this.cRoot.game.gameSounds.§_-39§();
+         this.canSkeleton = false;
+      }
+      
+      protected function §_-1L§() : void
+      {
+         var _loc1_:Number = this.fallingDestination.y - this.y;
+         var _loc2_:Number = this.fallingDestination.x - this.x;
+         var _loc3_:Number = Math.atan2(_loc1_,_loc2_);
+         this.ySpeed = Math.sin(_loc3_) * this.fallingSpeed;
+         this.xSpeed = Math.cos(_loc3_) * this.fallingSpeed;
+         this.x += this.xSpeed;
+         this.y += this.ySpeed;
+         if(Math.sqrt(Math.pow(this.fallingDestination.y - this.y,2) + Math.pow(this.fallingDestination.x - this.x,2)) < this.fallingSpeed + 0.1)
+         {
+            this.endFalling();
+         }
+         this.fallingSpeed += this.fallingSpeedAceleration;
+      }
+      
+      protected function endFalling() : void
+      {
+         this.§import for dynamic§ = false;
+         this.isOnCliffFallingDown = false;
+         this.deadTimeCounter = 1;
+         this.gotoAndPlay("fallingEnd");
+      }
+      
+      protected function §false for super§(param1:int) : void
+      {
+         this.scaleX = param1;
+         this.lifeBar.§dynamic for const§(param1);
+      }
+      
+      public function destroyThis() : void
+      {
+         this.§_-GH§(false);
+         this.removeEventListener(Event.ADDED_TO_STAGE,this.init);
+         this.removeEventListener(MouseEvent.ROLL_OVER,this.rollOver);
+         this.removeEventListener(MouseEvent.ROLL_OUT,this.rollOut);
+         this.removeEventListener(MouseEvent.CLICK,this.clickEvents);
+         this.§_-GV§();
+         if(this.lifeBar != null && this.contains(this.lifeBar))
+         {
+            this.removeChild(this.lifeBar);
+         }
+         this.lifeBar = null;
+         this.soldier = null;
+         this.§with const static§ = null;
+         this.§_-3m§ = null;
+         this.cRoot = null;
+         this.parent.removeChild(this);
+      }
+   }
+}
+
+
+=== Level.as relevant symbols ===
+19:      public static var qolSpeed:int = 1;
+21:      public static var qolHeroCount:int = 1;
+23:      public static var qolHeroEnabled:Object = null;
+39:      private var qolSpeedButton:Sprite;
+41:      private var qolSpeedLabel:TextField;
+43:      private var qolSettings:Sprite;
+45:      private var qolGoldInput:TextField;
+47:      private var qolLivesInput:TextField;
+49:      private var qolSendAllPending:Boolean = false;
+51:      private var qolSendAllCooldown:int = 0;
+53:      private var qolPerfFrame:int = 0;
+55:      private var qolEntityScratch:Array = [];
+57:      private var qolEnemyDecalScratch:Array = [];
+59:      private var qolBulletScratch:Array = [];
+61:      private var qolSettingsPage:int = 0;
+63:      private var qolEnemyIndex:int = 0;
+65:      private var qolEnemyCount:int = 10;
+67:      private var qolEnemyPath:int = 0;
+69:      private var qolExtraHeroes:Array = [];
+71:      private var qolEnemies:Array = ["EnemyDesertRaider","EnemyDesertArcher","EnemyDesertWolf","EnemyDesertWolfSmall","EnemyImmortal","EnemyFallen","EnemyScorpion","EnemyWasp","EnemyWaspQueen","EnemyExecutioner","EnemyTremor","EnemyBouncer","EnemyCanibal","EnemyCanibalHunter","EnemyCanibalHunterUnderwater","EnemyCanibalShamanMagic","EnemyCanibalShamanPriest","EnemyCanibalShamanShield","EnemyCanibalNecromancer","EnemyCanibalBeast","EnemyCanibalUnderwater","EnemyCanibalWingRider","EnemyCanibalZombie","EnemySavageBird","EnemyJungleSpiderSmall","EnemyJungleSpiderBig","EnemyJungleSpiderTiny","EnemyGorilla","EnemyGorillaBoss","EnemyGorillaOffspring","EnemyMunra","EnemyAlienBreeder","EnemyAlienReaper","EnemyEfreeti","EnemyEfreetiSmall","EnemyFinalBoss","EnemyFinalBossMinion","EnemyFinalBossPiece","EnemySaurianBroodguard","EnemySaurianMyrmidon","EnemySaurianDarter","EnemySaurianNightscale","EnemySaurianBlazefang","EnemySaurianRazorwing","EnemySaurianQuetzal","EnemySaurianSavant","EnemySaurianBrute"];
+73:      private var qolUnlimitedMode:Boolean = false;
+131:      public var indexWaves:int = 0;
+157:      public var waves:Array;
+617:            this.qolShowSettings();
+627:            this.qolHideSettings();
+900:      private function qolInstallSpeedButton() : void
+902:         if(this.qolSpeedButton != null)
+906:         this.qolSpeedButton = new Sprite();
+907:         this.qolSpeedButton.graphics.beginFill(1118481,0.88);
+908:         this.qolSpeedButton.graphics.lineStyle(1,16777215,0.45);
+909:         this.qolSpeedButton.graphics.drawRoundRect(0,0,58,30,10,10);
+910:         this.qolSpeedButton.graphics.endFill();
+911:         this.qolSpeedButton.x = 734;
+912:         this.qolSpeedButton.y = 552;
+913:         this.qolSpeedButton.buttonMode = true;
+914:         this.qolSpeedButton.mouseChildren = false;
+915:         this.qolSpeedButton.addEventListener(MouseEvent.CLICK,this.qolToggleSpeed,false,0,true);
+916:         this.qolSpeedLabel = new TextField();
+917:         this.qolSpeedLabel.width = 46;
+918:         this.qolSpeedLabel.height = 22;
+919:         this.qolSpeedLabel.x = 12;
+920:         this.qolSpeedLabel.y = 5;
+921:         this.qolSpeedLabel.textColor = 16777215;
+922:         this.qolSpeedLabel.selectable = false;
+923:         this.qolSpeedLabel.mouseEnabled = false;
+924:         this.qolSpeedButton.addChild(this.qolSpeedLabel);
+925:         this.qolUpdateSpeedLabel();
+926:         this.addChild(this.qolSpeedButton);
+929:      private function qolToggleSpeed(param1:MouseEvent) : void
+931:         Level.qolSpeed = Level.qolSpeed == 1 ? 3 : 1;
+932:         this.qolUpdateSpeedLabel();
+935:      private function qolUpdateSpeedLabel() : void
+937:         if(this.qolSpeedLabel != null)
+939:            this.qolSpeedLabel.text = Level.qolSpeed == 3 ? "3x" : "1x";
+943:      private function qolGameTick() : void
+945:         ++this.qolPerfFrame;
+956:            if(!heavy || !extreme && (this.qolPerfFrame & 1) == 0 || extreme && this.qolPerfFrame % 6 == 0)
+965:            this.§include return§.update();
+970:      private function qolButton(param1:String, param2:Number, param3:Number, param4:Number, param5:String) : Sprite
+993:         b.addEventListener(MouseEvent.MOUSE_DOWN,this.qolSettingsClick,false,0,true);
+997:      private function qolInput(param1:String, param2:Number, param3:Number, param4:Number) : TextField
+1017:      private function qolLabel(param1:String, param2:Number, param3:Number, param4:int = 18) : TextField
+1031:      private function qolShowSettings() : void
+1033:         if(this.qolSettings == null)
+1035:            this.qolSettings = new Sprite();
+1036:            this.qolSettings.x = 110;
+1037:            this.qolSettings.y = 70;
+1039:         if(this.qolSettings.parent == null)
+1041:            this.§else const native§.addChild(this.qolSettings);
+1043:         this.qolRenderSettings();
+1046:      private function qolHideSettings() : void
+1048:         if(this.qolSettings != null && this.qolSettings.parent != null)
+1050:            this.qolSettings.parent.removeChild(this.qolSettings);
+1054:      private function qolRenderSettings() : void
+1056:         if(this.qolSettings == null)
+1060:         while(this.qolSettings.numChildren > 0)
+1062:            this.qolSettings.removeChildAt(0);
+1064:         this.qolSettings.graphics.clear();
+1065:         this.qolSettings.graphics.beginFill(1118481,0.97);
+1066:         this.qolSettings.graphics.lineStyle(2,13983051,0.8);
+1067:         this.qolSettings.graphics.drawRoundRect(0,0,580,515,18,18);
+1068:         this.qolSettings.graphics.endFill();
+1069:         if(this.qolSettingsPage == 0)
+1071:            this.qolSettings.addChild(this.qolLabel("V6 LEVEL SETTINGS",28,20,24));
+1072:            this.qolSettings.addChild(this.qolButton("Speed: " + (Level.qolSpeed == 3 ? "3x" : "1x"),28,72,250,"speed"));
+1073:            this.qolSettings.addChild(this.qolButton(this.game.qolTreesMaxed ? "RESET FOR CUSTOM" : "MAX ALL",302,72,250,"trees_toggle"));
+1074:            this.qolSettings.addChild(this.qolLabel("Add gold:",28,142,18));
+1075:            this.qolGoldInput = this.qolInput("0",130,130,215);
+1076:            this.qolSettings.addChild(this.qolGoldInput);
+1077:            this.qolSettings.addChild(this.qolButton("ADD",360,130,192,"gold_add"));
+1078:            this.qolSettings.addChild(this.qolLabel("Add lives:",28,202,18));
+1079:            this.qolLivesInput = this.qolInput("0",130,190,215);
+1080:            this.qolSettings.addChild(this.qolLivesInput);
+1081:            this.qolSettings.addChild(this.qolButton("ADD",360,190,192,"lives_add"));
+1082:            this.qolSettings.addChild(this.qolButton("Hero selection  →",28,262,250,"page_heroes"));
+1083:            this.qolSettings.addChild(this.qolButton(this.qolSendAllPending ? "Sending all waves…" : "Send all waves",302,262,250,"all_waves"));
+1084:            this.qolSettings.addChild(this.qolButton("Enemy tools  →",28,322,250,"page_enemy"));
+1085:            this.qolSettings.addChild(this.qolButton("Hide V6 tools",302,322,250,"hide"));
+1086:            this.qolSettings.addChild(this.qolButton("Unlimited: " + (this.qolUnlimitedMode ? "ON" : "OFF"),28,382,250,"unlimited"));
+1087:            this.qolSettings.addChild(this.qolButton("INSTANT WIN",302,382,250,"instant_win"));
+1088:            this.qolSettings.addChild(this.qolLabel("Send-all pauses new waves while the board is overloaded.",28,442,14));
+1090:         else if(this.qolSettingsPage == 1)
+1092:            this.qolSettings.addChild(this.qolLabel("CUSTOM ENEMY ROUND",28,20,24));
+1093:            var shortName:String = String(this.qolEnemies[this.qolEnemyIndex]).replace("Enemy","");
+1094:            this.qolSettings.addChild(this.qolButton("<",28,72,58,"enemy_prev"));
+1095:            this.qolSettings.addChild(this.qolButton(shortName,98,72,384,"noop"));
+1096:            this.qolSettings.addChild(this.qolButton(">",494,72,58,"enemy_next"));
+1097:            this.qolSettings.addChild(this.qolLabel("Count: " + this.qolEnemyCount,28,142,18));
+1098:            this.qolSettings.addChild(this.qolButton("-5",220,130,78,"count_minus"));
+1099:            this.qolSettings.addChild(this.qolButton("+5",310,130,78,"count_plus"));
+1100:            this.qolSettings.addChild(this.qolLabel("Path: " + (this.qolEnemyPath + 1),28,204,18));
+1101:            this.qolSettings.addChild(this.qolButton("Prev path",220,192,110,"path_prev"));
+1102:            this.qolSettings.addChild(this.qolButton("Next path",342,192,110,"path_next"));
+1103:            this.qolSettings.addChild(this.qolButton("SEND CUSTOM ROUND",28,270,524,"send_custom"));
+1104:            this.qolSettings.addChild(this.qolButton("←  Main settings",165,350,250,"page_main"));
+1108:            this.qolEnsureHeroSelection();
+1109:            this.qolSettings.addChild(this.qolLabel("HEROES FOR THIS GAME",28,20,24));
+1110:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("alric","Alric"),28,72,250,"hero_alric"));
+1111:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("mirage","Mirage"),302,72,250,"hero_mirage"));
+1112:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("captain","Blackthorne"),28,120,250,"hero_captain"));
+1113:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("cronan","Cronan"),302,120,250,"hero_cronan"));
+1114:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("shatra","Sha\'tra"),28,168,250,"hero_shatra"));
+1115:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("grawl","Grawl"),302,168,250,"hero_grawl"));
+1116:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("nivus","Nivus"),28,216,250,"hero_nivus"));
+1117:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("dierdre","Dierdre"),302,216,250,"hero_dierdre"));
+1118:            this.qolSettings.addChild(this.qolButton(this.qolHeroLabel("ashbite","Ashbite"),28,264,250,"hero_ashbite"));
+1119:            this.qolSettings.addChild(this.qolLabel("All 9 start ON. Tap any hero to toggle it for this level.",28,326,14));
+1120:            this.qolSettings.addChild(this.qolButton("←  Main settings",165,374,250,"page_main"));
+1124:      private function qolSettingsClick(param1:MouseEvent) : void
+1129:            Level.qolSpeed = Level.qolSpeed == 1 ? 3 : 1;
+1133:            var amount:Number = this.qolGoldInput == null ? 0 : Number(this.qolGoldInput.text);
+1142:            var livesAmount:Number = this.qolLivesInput == null ? 0 : Number(this.qolLivesInput.text);
+1155:            this.game.qolSetTreesMaxed(!this.game.qolTreesMaxed);
+1159:            this.qolSettingsPage = 2;
+1163:            this.qolToggleHero(action.substr(5));
+1167:            this.qolUnlimitedMode = !this.qolUnlimitedMode;
+1175:               this.qolInstantWin();
+1178:            if(action == "all_waves")
+1180:               this.qolSendAllWaves();
+1184:               this.qolSettingsPage = 1;
+1188:               this.qolSettingsPage = 0;
+1192:               this.qolEnemyIndex = (this.qolEnemyIndex + this.qolEnemies.length - 1) % this.qolEnemies.length;
+1196:               this.qolEnemyIndex = (this.qolEnemyIndex + 1) % this.qolEnemies.length;
+1200:               this.qolEnemyCount = Math.max(1,this.qolEnemyCount - 5);
+1204:               this.qolEnemyCount = Math.min(200,this.qolEnemyCount + 5);
+1208:               this.qolEnemyPath = Math.max(0,this.qolEnemyPath - 1);
+1212:               this.qolEnemyPath = Math.min(Math.max(0,this.§_-V8§.length - 1),this.qolEnemyPath + 1);
+1216:               this.qolSendCustomRound();
+1220:               this.qolHideSettings();
+1224:         this.qolRenderSettings();
+1227:      private function qolEnemySpawnCount() : int
+1229:         var name:String = String(this.qolEnemies[this.qolEnemyIndex]);
+1236:            return Math.min(3,this.qolEnemyCount);
+1238:         return this.qolEnemyCount;
+1241:      private function qolSendCustomRound() : void
+1243:         var spawn:§_-VY§ = new §_-VY§(String(this.qolEnemies[this.qolEnemyIndex]),"",0,this.qolEnemySpawnCount(),18,0,false,0);
+1244:         var wave:Wave = new Wave([spawn],0,this.qolEnemyPath,"","",false);
+1248:      private function qolForceBossIfNeeded() : void
+1256:            Level6(this).qolForceBossFromSendAll();
+1260:            Level11(this).qolForceBossFromSendAll();
+1264:            Level15(this).qolForceBossFromSendAll();
+1268:      private function qolInstantWin() : void
+1270:         this.qolUnlimitedMode = false;
+1271:         this.qolSendAllPending = false;
+1274:         this.qolHideSettings();
+1276:         this.onPreWin();
+1280:      private function qolSendAllWaves() : void
+1282:         this.qolSendAllPending = this.indexWaves < this.waves.length;
+1283:         this.qolSendAllCooldown = 0;
+1284:         this.qolSendQueuedWave();
+1287:      private function qolSendQueuedWave() : void
+1289:         if(!this.qolSendAllPending)
+1293:         if(this.indexWaves >= this.waves.length)
+1295:            this.qolSendAllPending = false;
+1296:            this.qolForceBossIfNeeded();
+1301:         this.activeWaves[this.waves[this.indexWaves]] = this.waves[this.indexWaves];
+1303:         ++this.indexWaves;
+1306:         if(this.indexWaves >= this.waves.length)
+1308:            this.qolSendAllPending = false;
+1309:            this.qolForceBossIfNeeded();
+1314:      private function qolMakeHero(param1:String, param2:int) : §dynamic const class§
+1342:      private function qolSpawnExtraHeroes() : void
+1344:         this.qolEnsureHeroSelection();
+1350:            if(heroName != primary && Boolean(Level.qolHeroEnabled[heroName]))
+1352:               var h:§dynamic const class§ = this.qolMakeHero(heroName,i + 1);
+1356:                  this.qolExtraHeroes.push(h);
+1363:      private function qolApplyHeroCount() : void
+1365:         this.qolApplyHeroSelection();
+1368:      private function qolEnsureHeroSelection() : void
+1370:         if(Level.qolHeroEnabled != null)
+1374:         Level.qolHeroEnabled = {};
+1378:            Level.qolHeroEnabled[heroName] = true;
+1382:      private function qolHeroLabel(param1:String, param2:String) : String
+1384:         this.qolEnsureHeroSelection();
+1385:         return param2 + ": " + (Boolean(Level.qolHeroEnabled[param1]) ? "ON" : "off");
+1388:      private function qolToggleHero(param1:String) : void
+1390:         this.qolEnsureHeroSelection();
+1391:         Level.qolHeroEnabled[param1] = !Boolean(Level.qolHeroEnabled[param1]);
+1392:         this.qolApplyHeroSelection();
+1395:      private function qolApplyHeroSelection() : void
+1397:         this.qolEnsureHeroSelection();
+1398:         while(this.qolExtraHeroes.length > 0)
+1400:            var oldHero:§dynamic const class§ = this.qolExtraHeroes.pop();
+1407:         if(Boolean(Level.qolHeroEnabled[primary]))
+1422:         this.qolSpawnExtraHeroes();
+1427:         if(this.qolSendAllPending)
+1431:               this.qolSendAllCooldown = Math.max(this.qolSendAllCooldown,6);
+1433:            else if(this.qolSendAllCooldown <= 0)
+1435:               this.qolSendQueuedWave();
+1436:               this.qolSendAllCooldown = this.entities.numChildren > 240 || this.bullets.numChildren > 300 ? 5 : 2;
+1440:               --this.qolSendAllCooldown;
+1443:         var qolTick:int = 0;
+1446:            this.comicEnd.update();
+1455:            if(this.data.levelIndex == 0 && this.mode == §_-Mm§.MODE_CAMPAIGN)
+1476:            qolTick = 0;
+1477:            while(qolTick < Level.qolSpeed && (this.§_-BF§ == LEVEL_NORMAL || this.§_-BF§ == LEVEL_PRE_WIN))
+1479:               this.qolGameTick();
+1480:               qolTick++;
+1486:                  this.§_-WR§ += Level.qolSpeed;
+1489:               if(this.data.levelIndex < 14 || this.data.levelIndex == 14 && this.mode != §_-Mm§.MODE_CAMPAIGN)
+1510:            this.§finally for if§.update();
+1525:      public function onPreWin() : void
+1557:      private function qolUpdateContainer(param1:DisplayObjectContainer, param2:Array) : void
+1582:         this.qolUpdateContainer(this.entities,this.qolEntityScratch);
+1587:         this.qolUpdateContainer(this.enemyDecals,this.qolEnemyDecalScratch);
+1614:         this.qolUpdateContainer(this.bullets,this.qolBulletScratch);
+1899:      public function §function for const§(param1:int) : void
+1930:         while(_loc2_ < this.waves.length)
+1933:            while(_loc2_ + 1 < this.waves.length && this.waves[_loc2_ + 1].interval == 0)
+1963:            if(this.indexWaves < this.waves.length)
+1965:               if(this.waves[this.indexWaves].interval == this.intervalWaveCounter)
+1967:                  if(this.indexWaves != 0 && this.waves[this.indexWaves].notification != "")
+1970:                     this.sendPauseNotification(this.waves[this.indexWaves].notification);
+1977:                  this.activeWaves[this.waves[this.indexWaves]] = this.waves[this.indexWaves];
+1979:                  ++this.indexWaves;
+1982:                  while(this.indexWaves < this.waves.length && this.waves[this.indexWaves].interval == 0)
+1984:                     this.activeWaves[this.waves[this.indexWaves]] = this.waves[this.indexWaves];
+1985:                     ++this.indexWaves;
+1991:                  if(this.indexWaves == 0 && this.waves[this.indexWaves].notification != "")
+1994:                     this.sendPauseNotification(this.waves[this.indexWaves].notification);
+1996:                  if(this.intervalWaveCounter == 0 && this.waves[this.indexWaves].interval != 0 || this.indexWaves == 0)
+1998:                     this.waves[this.indexWaves].showWaveFlag(this,this.waves[this.indexWaves].interval,this.indexWaves);
+2003:                     _loc4_ = this.indexWaves + 1;
+2004:                     while(_loc4_ < this.waves.length && this.waves[_loc4_].interval == 0)
+2006:                        this.waves[_loc4_].showWaveFlag(this,this.waves[this.indexWaves].interval - 50,this.indexWaves);
+2011:                  if(this.indexWaves == 0)
+2021:            else if(!this.qolUnlimitedMode && !this.hasEnemies())
+2024:               this.onPreWin();
+2036:         this.qolEnsureHeroSelection();
+2038:         if(Boolean(Level.qolHeroEnabled[primary]))
+2047:         this.qolSpawnExtraHeroes();
+2161:                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD)
+2194:                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+2215:                  if(this.data.levelIndex != _loc4_ || this.data.levelIndex == _loc4_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+2236:                  if(this.data.levelIndex != _loc5_ || this.data.levelIndex == _loc5_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+2337:         if(this.indexWaves != 0)
+2339:            this.menu.§else const final§(this.waves[this.indexWaves].interval - this.intervalWaveCounter);
+2340:            _loc2_ = Math.round((this.waves[this.indexWaves].interval - this.intervalWaveCounter) / this.gameSettings.framesRate);
+2348:         this.intervalWaveCounter = this.waves[this.indexWaves].interval;
+2349:         this.§default const try§();
+2402:      public function §default const try§() : void
+2464:      protected function hasEnemies() : Boolean
+2743:         _loc4_ = "this.waves = [ \n ";
+2775:         this.waves = _loc3_;
+2788:         while(_loc2_ < this.waves.length)
+2792:            while(_loc3_ < Wave(this.waves[_loc2_]).spawns.length)
+2794:               _loc1_ += "\n\t\t\t\t\t\t\t\t\t\t\t\t" + "[[[WaveSpawn alloc] initWithCreep:@\"" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).creepType + "\" creepAux:@\"" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).creepTypeAux + "\" maxSame:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).maxSameCreep + " cant:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).cant + " interval:" + Math.round(§_-VY§(this.waves[_loc2_].spawns[_loc3_]).interval * 1.28) + " invervalNextSpawn:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).intervalNextSpawn + " useFixedPath:" + (§_-VY§(this.waves[_loc2_].spawns[_loc3_]).useFixedPath ? "YES" : "NO") + " path:" + §_-VY§(this.waves[_loc2_].spawns[_loc3_]).path + "] autorelease],\n";
+2797:            _loc1_ += "\t\t\t\t\t\t\t\t\t\t\t\t" + " nil] interval:" + Wave(this.waves[_loc2_]).interval + " pathIndex:" + Wave(this.waves[_loc2_]).pathIndex + " notification:@\"\" notificationSecondLevel:@\"\" isFly:NO] autorelease],\n\n";
+2940:         this.waves = null;
+
+=== SharedObject/save references ===
+/tmp/krf-export/scripts/§_-sK§_2.as:130:         var _loc4_:SharedObject = null;
+/tmp/krf-export/scripts/§_-sK§_2.as:135:            _loc4_ = SharedObject.getLocal(param1);
+/tmp/krf-export/scripts/§_-2i§.as:478:         var §function for var§:SharedObject = null;
+/tmp/krf-export/scripts/§_-2i§.as:483:               §function for var§ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§_-2i§.as:548:               §function for var§.flush();
+/tmp/krf-export/scripts/§_-2i§.as:560:         var my_so:SharedObject = null;
+/tmp/krf-export/scripts/§_-2i§.as:563:            my_so = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§_-2i§.as:657:            my_so.flush();
+/tmp/krf-export/scripts/GameAchievements.as:1209:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/GameAchievements.as:1214:               _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/GameAchievements.as:1337:               _loc1_.flush();
+/tmp/krf-export/scripts/GameAchievements.as:1349:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/GameAchievements.as:1352:            _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/GameAchievements.as:1476:            _loc1_.flush();
+/tmp/krf-export/scripts/§_-pA§.as:108:         if(this.level.data.levelIndex == 0 && Level1(this.level).notificationSign != null)
+/tmp/krf-export/scripts/MainMenu.as:521:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/MainMenu.as:522:         var _loc2_:SharedObject = null;
+/tmp/krf-export/scripts/MainMenu.as:523:         var _loc3_:SharedObject = null;
+/tmp/krf-export/scripts/MainMenu.as:526:            _loc1_ = SharedObject.getLocal("krslot1");
+/tmp/krf-export/scripts/MainMenu.as:539:            _loc2_ = SharedObject.getLocal("krslot2");
+/tmp/krf-export/scripts/MainMenu.as:552:            _loc3_ = SharedObject.getLocal("krslot3");
+/tmp/krf-export/scripts/Level.as:1455:            if(this.data.levelIndex == 0 && this.mode == §_-Mm§.MODE_CAMPAIGN)
+/tmp/krf-export/scripts/Level.as:1489:               if(this.data.levelIndex < 14 || this.data.levelIndex == 14 && this.mode != §_-Mm§.MODE_CAMPAIGN)
+/tmp/krf-export/scripts/Level.as:2161:                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD)
+/tmp/krf-export/scripts/Level.as:2194:                  if(this.data.levelIndex != _loc3_ || this.data.levelIndex == _loc3_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+/tmp/krf-export/scripts/Level.as:2215:                  if(this.data.levelIndex != _loc4_ || this.data.levelIndex == _loc4_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+/tmp/krf-export/scripts/Level.as:2236:                  if(this.data.levelIndex != _loc5_ || this.data.levelIndex == _loc5_ && (this.game.difficulty != §_-Mm§.DIFFICULTY_NORMAL && this.game.difficulty != §_-Mm§.DIFFICULTY_HARD))
+/tmp/krf-export/scripts/§try throw§.as:67:         var §function for var§:SharedObject = null;
+/tmp/krf-export/scripts/§try throw§.as:73:            §function for var§ = SharedObject.getLocal(this.§_-NG§);
+/tmp/krf-export/scripts/§try throw§.as:244:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§try throw§.as:255:            _loc1_ = SharedObject.getLocal(this.§_-NG§);
+/tmp/krf-export/scripts/Power.as:170:            if(this.cRoot.data.levelIndex == 0 && Level1(this.cRoot).powerSign != null)
+/tmp/krf-export/scripts/§_-BQ§.as:135:         var so:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:142:            so = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:158:         var so:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:163:               so = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:167:               so.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:389:         var §function for var§:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:396:            §function for var§ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:485:            §function for var§.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:619:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:624:               _loc1_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:627:               _loc1_.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:638:         var _loc2_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:648:               _loc2_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:650:               _loc2_.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:661:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:673:               _loc1_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:677:               _loc1_.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:689:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:701:               _loc1_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:705:               _loc1_.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:717:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:722:               _loc1_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:724:               _loc1_.flush();
+/tmp/krf-export/scripts/§_-BQ§.as:735:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§_-BQ§.as:741:            _loc1_ = SharedObject.getLocal(this.§use const get§);
+/tmp/krf-export/scripts/§_-BQ§.as:791:            _loc1_.flush();
+/tmp/krf-export/scripts/§class const for§.as:753:               if(§true final§(this.game.§native import§[this.flagNew - 1]).levelIndex == 0 || §true final§(this.game.§native import§[this.flagNew - 1]).levelIndex > 0 && this.game.stars == this.game.starsWon)
+/tmp/krf-export/scripts/§_-bz§.as:32:         if(this.data.levelIndex == 0)
+/tmp/krf-export/scripts/§true final§.as:22:      public var levelIndex:int;
+/tmp/krf-export/scripts/§true final§.as:78:         this.levelIndex = param2;
+/tmp/krf-export/scripts/§true final§.as:96:         var _loc2_:SharedObject = null;
+/tmp/krf-export/scripts/§true final§.as:102:               _loc2_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§true final§.as:103:               _loc2_.data.levels[this.levelIndex].status = this.levelStatus;
+/tmp/krf-export/scripts/§true final§.as:104:               _loc2_.flush();
+/tmp/krf-export/scripts/§true final§.as:115:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§true final§.as:136:               _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§true final§.as:149:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§true final§.as:156:               _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§true final§.as:157:               _loc1_.data.levels[this.levelIndex].heroicView = true;
+/tmp/krf-export/scripts/§true final§.as:158:               _loc1_.data.levels[this.levelIndex].ironView = true;
+/tmp/krf-export/scripts/§true final§.as:159:               _loc1_.flush();
+/tmp/krf-export/scripts/§false const dynamic§.as:63:         if(this.level.data.levelIndex == 0 && this.level.mode == §_-Mm§.MODE_CAMPAIGN && param1 == "NotificationEnemyBouncer")
+/tmp/krf-export/scripts/§null throw§.as:132:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§null throw§.as:137:               _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§null throw§.as:199:               _loc1_.flush();
+/tmp/krf-export/scripts/§null throw§.as:210:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/§null throw§.as:213:            _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/§null throw§.as:275:            _loc1_.flush();
+/tmp/krf-export/scripts/TowerHolder.as:421:         if(this.cRoot.data.levelIndex == 0 && Level1(this.cRoot).buildSign != null)
+/tmp/krf-export/scripts/GameUpgrades.as:481:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/GameUpgrades.as:486:               _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/GameUpgrades.as:493:               _loc1_.flush();
+/tmp/krf-export/scripts/GameUpgrades.as:504:         var _loc1_:SharedObject = null;
+/tmp/krf-export/scripts/GameUpgrades.as:507:            _loc1_ = SharedObject.getLocal(this.game.§use const get§);
+/tmp/krf-export/scripts/GameUpgrades.as:514:            _loc1_.flush();
+/tmp/krf-export/scripts/§_-rJ§_2.as:130:               this.stageDescription.text = Locale.loadStringEx("LEVEL_" + (this.§return if§.data.levelIndex + 1) + "_HISTORY",Locale.getDefaultLang());
+/tmp/krf-export/scripts/§_-rJ§_2.as:135:               this.ironRules.gotoAndStop(this.§return if§.data.levelIndex + 1);
+/tmp/krf-export/scripts/§_-rJ§_2.as:136:               this.heroicRules.gotoAndStop(this.§return if§.data.levelIndex + 1);
+/tmp/krf-export/scripts/§_-rJ§_2.as:230:         this.§in for switch§.gotoAndStop(this.§return if§.data.levelIndex + 1);
+/tmp/krf-export/scripts/§_-rJ§_2.as:231:         this.§_-tR§.gotoAndStop(this.§return if§.data.levelIndex + 1);
+/tmp/krf-export/scripts/§_-rJ§_2.as:381:         this.§_-6X§.§while const switch§(this.§return if§.data.levelIndex + 1,this.§_-Qw§);
+/tmp/krf-export/scripts/§set native§/Base64Encoder.as:117:      public function flush() : String
+/tmp/krf-export/scripts/§set native§/Base64Encoder.as:141:         return this.flush();
+/tmp/krf-export/scripts/§set native§/Base64Decoder.as:79:      public function flush() : ByteArray
+/tmp/krf-export/scripts/§set native§/Base64Decoder.as:99:         var _loc1_:ByteArray = this.flush();
+/tmp/krf-export/scripts/§set native§/MochiServices.as:244:            flush(true);
+/tmp/krf-export/scripts/§set native§/MochiServices.as:547:      private static function flush(param1:Boolean) : void
+/tmp/krf-export/scripts/§set native§/MochiServices.as:630:               flush(true);
+/tmp/krf-export/scripts/§_-H3§.as:21:               if(this.data.levelIndex != 0)
