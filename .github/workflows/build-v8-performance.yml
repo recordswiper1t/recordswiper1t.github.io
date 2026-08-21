@@ -1,0 +1,132 @@
+name: Build V8 performance + tower clipboard
+
+on:
+  push:
+    branches:
+      - agent/native-desktop-performance
+    paths:
+      - 'tools/build-v8.py'
+      - '.github/workflows/build-v8-performance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+
+      - name: Export current V7 ActionScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v8-scripts /tmp/import /tmp/verify /tmp/out
+          mkdir -p /tmp/v8-scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/v8-scripts assets/kingdom-rush-frontiers-v5.swf \
+            > /tmp/export-v8.log 2>&1 || true
+          test -f /tmp/v8-scripts/scripts/Level.as
+
+      - name: Apply V8 patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/build-v8.py /tmp/v8-scripts/scripts
+          cp /tmp/v8-scripts/scripts/Level.as /tmp/import/scripts/Level.as
+          if [ -d /tmp/v8-scripts/_assets ]; then
+            cp -a /tmp/v8-scripts/_assets /tmp/import/_assets
+          fi
+
+      - name: Import patched Level.as
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort \
+            -importScript assets/kingdom-rush-frontiers-v5.swf /tmp/out/kingdom-rush-frontiers-v8.swf /tmp/import \
+            > /tmp/import-v8.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v8.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v8.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify V8
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -selectclass 'Level' \
+            -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v8.swf \
+            > /tmp/verify-v8.log 2>&1 || true
+          test -f /tmp/verify/scripts/Level.as
+          grep -F 'qolTimeAttackDirty' /tmp/verify/scripts/Level.as
+          grep -F 'qolTowerClipboardKey' /tmp/verify/scripts/Level.as
+          grep -F 'var ultra:Boolean' /tmp/verify/scripts/Level.as
+          grep -F 'TowerHolder(selected).upgradeTower(this.qolTowerClipboardAction)' /tmp/verify/scripts/Level.as
+
+      - name: Publish verified V8
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v8.swf assets/kingdom-rush-frontiers-v8.swf
+          sha256sum assets/kingdom-rush-frontiers-v8.swf > assets/V8-SHA256SUMS.txt
+          cat > assets/V8-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V8 Performance + Tower Clipboard
+          - Native-desktop-ready build based on the current V7 Time Attack SWF.
+          - Removes per-kill full-enemy completion scans; time-attack completion is amortized.
+          - Timer HUD redraw is throttled to 10 Hz.
+          - Adds an ultra-swarm cosmetic cadence while gameplay updates remain full-rate.
+          - Ctrl+C copies the selected normal tower family/tier-4 branch.
+          - Ctrl+V pastes onto a selected empty build spot only when current cash covers the normal direct build cost.
+          - Special ability ranks are intentionally not cloned because their private subclass state owns live soldiers/projectiles/effects.
+          Built, re-exported, and structurally verified with FFDec 26.2.1.
+          TXT
+
+      - name: Point native launcher at V8 when present
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('desktop/run_native.py')
+          s = p.read_text(encoding='utf-8')
+          old = "SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v5.swf'"
+          new = "SWF = (ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf') if (ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf').exists() else (ROOT / 'assets' / 'kingdom-rush-frontiers-v5.swf')"
+          if old in s:
+              s = s.replace(old, new, 1)
+              p.write_text(s, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Commit verified V8 build
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v8.swf assets/V8-BUILD.txt assets/V8-SHA256SUMS.txt desktop/run_native.py
+          if git diff --cached --quiet; then
+            echo 'Verified V8 already matches repository.'
+          else
+            git commit -m 'Build verified V8 performance mod [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
