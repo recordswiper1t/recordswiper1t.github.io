@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import re
 import sys
 
 if len(sys.argv) != 2:
@@ -161,6 +160,28 @@ helpers = r'''      private function qolInstallTimerHud() : void
          this.qolTimerLabel.text = "TIME  " + currentText + "\nBEST  " + this.qolBestTimeText();
       }
       
+      private function qolTimeAttackDone() : Boolean
+      {
+         if(this.waves == null || this.indexWaves < this.waves.length)
+         {
+            return false;
+         }
+         var wave:Wave = null;
+         for each(wave in this.activeWaves)
+         {
+            return false;
+         }
+         var enemy:Enemy = null;
+         for each(enemy in this.enemies)
+         {
+            if(!enemy.isDead)
+            {
+               return false;
+            }
+         }
+         return true;
+      }
+      
       private function qolStartTimeAttack() : void
       {
          if(this.qolTimeAttackLaunched || this.waves == null || this.waves.length == 0)
@@ -201,7 +222,7 @@ helpers = r'''      private function qolInstallTimerHud() : void
       
       public function qolTimeAttackEnemyKilled() : void
       {
-         if(this.qolTimerRunning && this.indexWaves >= this.waves.length && !this.hasEnemies())
+         if(this.qolTimerRunning && this.qolTimeAttackDone())
          {
             this.qolFinishTimeAttack();
          }
@@ -215,7 +236,7 @@ helpers = r'''      private function qolInstallTimerHud() : void
          }
          if(this.qolTimerRunning)
          {
-            if(this.indexWaves >= this.waves.length && !this.hasEnemies())
+            if(this.qolTimeAttackDone())
             {
                this.qolFinishTimeAttack();
             }
@@ -380,7 +401,7 @@ write("Enemy.as", enemy)
 checks = {
     "Level.as": [
         "qolTimeAttackEnabled", "qolRecycleEnemies", "qolStartTimeAttack",
-        "qolTimeAttackEnemyKilled", "SharedObject.getLocal(\"krf_qol_time_attack\")",
+        "qolTimeAttackDone", "qolTimeAttackEnemyKilled", "SharedObject.getLocal(\"krf_qol_time_attack\")",
         "Timer + all waves:", "Recycle exits:", "qolFinishTimeAttack();",
     ],
     "Enemy.as": [
