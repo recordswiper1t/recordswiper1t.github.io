@@ -33,19 +33,7 @@ jobs:
         run: |
           set -euxo pipefail
           mkdir -p /tmp/ew5 /tmp/ffdec assets
-          urls=(
-            'https://cache.armorgames.com/files/games/epic-war-5-12518.swf'
-            'https://locker.phinugamma.org/swf/armorgames/epic-war-5-12518.swf'
-            'https://www.walshmedicalmedia.com/games/swf/epic-war-5.swf'
-          )
-          ok=0
-          for u in "${urls[@]}"; do
-            if curl -fL --retry 3 --connect-timeout 20 "$u" -o /tmp/ew5/original.swf; then
-              sz=$(stat -c%s /tmp/ew5/original.swf)
-              if [ "$sz" -gt 15000000 ]; then ok=1; echo "$u" > /tmp/ew5/source-url.txt; break; fi
-            fi
-          done
-          test "$ok" = 1
+          curl -fL --retry 3 --connect-timeout 20 'https://cache.armorgames.com/files/games/epic-war-5-12518.swf' -o /tmp/ew5/original.swf
           test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
           curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
@@ -60,67 +48,70 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           test -f /tmp/ew5/export/scripts/Game/Manager/DataManager.as
           test -f /tmp/ew5/export/scripts/Game/System/Battle/BattleSystem.as
-          python3 tools/epicwar5/build_source_mod.py /tmp/ew5/export
+          python3 tools/epicwar5/build_source_mod_v2.py /tmp/ew5/export
 
       - name: Import patched scripts
         shell: bash
         run: |
           set -euxo pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-sandbox-v1.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
-          test -s /tmp/ew5/out/epic-war-5-sandbox-v1.swf
-          head -c 3 /tmp/ew5/out/epic-war-5-sandbox-v1.swf | grep -Eq 'FWS|CWS|ZWS'
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-sandbox-v2.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
+          test -s /tmp/ew5/out/epic-war-5-sandbox-v2.swf
+          head -c 3 /tmp/ew5/out/epic-war-5-sandbox-v2.swf | grep -Eq 'FWS|CWS|ZWS'
 
-      - name: Verify patched output by re-decompiling
+      - name: Verify V2 output by re-decompiling
         shell: bash
         run: |
           set -euxo pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/verify /tmp/ew5/out/epic-war-5-sandbox-v1.swf > /tmp/ew5/verify.log 2>&1 || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/verify /tmp/ew5/out/epic-war-5-sandbox-v2.swf > /tmp/ew5/verify.log 2>&1 || true
           grep -F 'sandboxMaxAll' /tmp/ew5/verify/scripts/Game/Manager/DataManager.as
-          grep -F 'stat_money = 99999999' /tmp/ew5/verify/scripts/Game/Manager/DataManager.as
-          grep -F 'manaMax:int = 9999' /tmp/ew5/verify/scripts/Game/System/Battle/BattleControlPlayer.as
-          grep -F 'this.mana_cost = 0;' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerSpell.as
-          grep -F 'Math.max(stat.pop,12)' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
-          grep -F 'EPIC WAR 5 SANDBOX' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
-          grep -F 'sandboxSpawn' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
+          grep -F 'sandboxAddMana' /tmp/ew5/verify/scripts/Game/System/Battle/BattleControlPlayer.as
+          grep -F 'sandboxFreeSpells ? 0 : stat.spell_manacost' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerSpell.as
+          grep -F 'sandboxUnlimitedBuildings ? 999 : 4' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerSpell.as
+          grep -F 'sandboxPopBoost ? Math.max' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
+          grep -F 'sandboxFastUnits ? BattleSystem.sandboxSpawnDelay' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
+          grep -F 'sandboxFreeSpells:Boolean = false' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
+          grep -F 'vanilla defaults' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
 
-      - name: Stage build files
+      - name: Stage V2 build files
         shell: bash
         run: |
           set -euxo pipefail
-          cp /tmp/ew5/out/epic-war-5-sandbox-v1.swf assets/epic-war-5-sandbox-v1.swf
-          cat > assets/EPIC-WAR-5-SANDBOX-V1-BUILD.txt <<'EOF'
-          Epic War 5 — Extensive Sandbox V1
+          cp /tmp/ew5/out/epic-war-5-sandbox-v2.swf assets/epic-war-5-sandbox-v2.swf
+          cat > assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt <<'EOF'
+          Epic War 5 — Optional Sandbox V2
           Source: Armor Games Epic War 5 v1.05, SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
           Built and re-decompile verified with FFDec 26.2.1.
-          Progression: 99,999,999 gold, all 33 player character entries unlocked, 999,999 EXP each, full 9-slot skill trees, 99 copies of all 30 accessories, all 25 stages accessible, hero completion flags enabled.
-          Battle: 9,999 mana, high regen, all spells free, building cap raised to 999, equipped units auto-produce rapidly with at least 12 population each.
-          Sandbox HUD hotkeys: F1 fill mana; F2/F3 previous/next unit; F4 spawn ally; F5 spawn enemy; F6 batch 1/5/20/50; F7 speed 1x/4x/8x; F8 wipe enemies; F9 instant win; F10 heal allies.
-          Spawn selector includes regular units, titans, and all three heroes and can place the selected class on either side.
-          Existing saves are upgraded into sandbox progression on load and re-saved; use a separate browser profile/site-data backup if you want to preserve a vanilla progression save.
+          Vanilla-by-default: loading the mod no longer maxes or rewrites progression and battle cheats start disabled.
+          F1 adds the selected mana amount instead of filling to a hard-coded maximum. [ and ] halve/double the amount from 10 to 5000.
+          F11 toggles free spells. F12 toggles rapid unit production for newly initialized unit spawners.
+          B toggles the building cap between vanilla 4 and 999. P toggles population boost for newly initialized unit spawners.
+          F2/F3 select unit; F4/F5 spawn selected ally/enemy; F6 cycles batch 1/5/20/50; F7 cycles 1x/4x/8x; F8 wipes enemies; F9 instant win; F10 heals allies.
+          The backtick key hides/shows the sandbox HUD. All optional battle toggles reset to OFF when the SWF starts.
+          The legacy max-all helper remains in the binary as an explicit developer action, but is not called on new-save or load paths.
           EOF
-          sed -i 's/^          //' assets/EPIC-WAR-5-SANDBOX-V1-BUILD.txt
-          sha256sum assets/epic-war-5-sandbox-v1.swf > assets/EPIC-WAR-5-SHA256SUMS.txt
+          sed -i 's/^          //' assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt
+          sha256sum assets/epic-war-5-sandbox-v2.swf > assets/EPIC-WAR-5-V2-SHA256SUMS.txt
 
-      - name: Upload verified build artifact
+      - name: Upload verified V2 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: epicwar5-sandbox-v1
+          name: epicwar5-sandbox-v2
           retention-days: 7
           path: |
-            assets/epic-war-5-sandbox-v1.swf
-            assets/EPIC-WAR-5-SANDBOX-V1-BUILD.txt
-            assets/EPIC-WAR-5-SHA256SUMS.txt
+            assets/epic-war-5-sandbox-v2.swf
+            assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt
+            assets/EPIC-WAR-5-V2-SHA256SUMS.txt
             /tmp/ew5/import.log
             /tmp/ew5/verify.log
 
-      - name: Commit verified build
+      - name: Commit verified V2 build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -euxo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/epic-war-5-sandbox-v1.swf assets/EPIC-WAR-5-SANDBOX-V1-BUILD.txt assets/EPIC-WAR-5-SHA256SUMS.txt
+          git add assets/epic-war-5-sandbox-v2.swf assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt assets/EPIC-WAR-5-V2-SHA256SUMS.txt
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Publish Epic War 5 extensive sandbox v1 [skip ci]'
+          git commit -m 'Publish Epic War 5 optional sandbox v2 [skip ci]'
           git push origin HEAD:main
