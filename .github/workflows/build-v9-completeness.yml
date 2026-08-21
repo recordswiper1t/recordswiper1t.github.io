@@ -1,0 +1,108 @@
+name: Build V9 menu completeness
+
+on:
+  push:
+    branches:
+      - main
+      - agent/v9-menu-completeness
+    paths:
+      - 'tools/build-v9.py'
+      - '.github/workflows/build-v9-completeness.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/build-v9.py'
+      - '.github/workflows/build-v9-completeness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export current V8 sources
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v9-scripts /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v9-scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 -export script /tmp/v9-scripts assets/kingdom-rush-frontiers-v8.swf > /tmp/export-v9.log 2>&1 || true
+          test -f /tmp/v9-scripts/scripts/Level.as
+          test -f /tmp/v9-scripts/scripts/TowerHolder.as
+      - name: Apply V9 patches
+        run: |
+          set -euo pipefail
+          python3 tools/build-v9.py /tmp/v9-scripts/scripts
+          cp /tmp/v9-scripts/scripts/Level.as /tmp/import/scripts/Level.as
+          cp /tmp/v9-scripts/scripts/TowerHolder.as /tmp/import/scripts/TowerHolder.as
+          if [ -d /tmp/v9-scripts/_assets ]; then cp -a /tmp/v9-scripts/_assets /tmp/import/_assets; fi
+      - name: Import patched scripts
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v8.swf /tmp/out/kingdom-rush-frontiers-v9.swf /tmp/import > /tmp/import-v9.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v9.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v9.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-export and verify V9
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder' -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v9.swf > /tmp/verify-v9.log 2>&1 || true
+          grep -F 'qolSettingsOwnsPause' /tmp/verify/scripts/Level.as
+          grep -F 'TURN ALL 9 HEROES' /tmp/verify/scripts/Level.as
+          grep -F 'CUSTOM ENEMIES — PAGE' /tmp/verify/scripts/Level.as
+          grep -F 'qolTimeAttackPending' /tmp/verify/scripts/Level.as
+          grep -F 'this.§else const native§.addChild(this.qolTimerLabel)' /tmp/verify/scripts/Level.as
+          grep -F 'qol_assassin' /tmp/verify/scripts/TowerHolder.as
+          grep -F 'qol_templar' /tmp/verify/scripts/TowerHolder.as
+      - name: Publish V9 and update launchers
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v9.swf assets/kingdom-rush-frontiers-v9.swf
+          sha256sum assets/kingdom-rush-frontiers-v9.swf > assets/V9-SHA256SUMS.txt
+          cat > assets/V9-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V9 Menu Completeness + Pause Fixes
+          - Mod menu fully pauses gameplay; queued Send All work does not advance while it is open.
+          - Time Attack arms inside the menu and launches waves only after the menu closes.
+          - Timer moved to the top UI overlay so it remains visible.
+          - One-click all-heroes ON/OFF plus all 9 hero implementation classes present in this SWF.
+          - Enemy menu exposes all 47 enemy classes in a six-page direct-selection grid.
+          - Special tower menu exposes Assassin and Templar in addition to all previously exposed normal specialization/map-special classes.
+          - Retains V8 native desktop, swarm performance, Time Attack, recycling and tower clipboard optimizations.
+          Built, re-exported, and structurally verified with FFDec 26.2.1.
+          TXT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('desktop/run_native.py'); s=p.read_text(encoding='utf-8')
+          if "V9_SWF" not in s:
+              s=s.replace("V8_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf'", "V9_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v9.swf'\nV8_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v8.swf'")
+              s=s.replace('SWF = V8_SWF if V8_SWF.exists() else V7_SWF', 'SWF = V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF)')
+              p.write_text(s,encoding='utf-8',newline='\n')
+          p=Path('desktop/run-native.ps1'); s=p.read_text(encoding='utf-8')
+          if '$V9 =' not in s:
+              s=s.replace("$V8 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v8.swf'", "$V9 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v9.swf'\n$V8 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v8.swf'")
+              s=s.replace('$Swf = if (Test-Path $V8) { $V8 } else { $V7 }', '$Swf = if (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }')
+              s=s.replace("$label = if ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }", "$label = if ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }")
+              p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+      - name: Commit verified V9
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v9.swf assets/V9-BUILD.txt assets/V9-SHA256SUMS.txt desktop/run_native.py desktop/run-native.ps1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build verified V9 completeness mod [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
