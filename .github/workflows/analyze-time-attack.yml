@@ -67,13 +67,21 @@ jobs:
             grep -Rni -E 'SharedObject|getLocal\(|flush\(|bestTime|levelIndex|levelId' /tmp/krf-export/scripts --include='*.as' | head -n 1200 || true
           } > analysis/time-attack-context.txt
           cat /tmp/krf-export/scripts/Level.as > analysis/time-attack-level.txt
+          {
+            for f in EnemyCanibalBeast.as EnemyCanibalHunterUnderwater.as EnemyCanibalUnderwater.as EnemyFinalBossPiece.as EnemySaurianNightscale.as EnemyTremor.as; do
+              echo "=== $f ==="
+              cat "/tmp/krf-export/scripts/$f"
+              echo
+            done
+          } > analysis/time-attack-overrides.txt
 
       - name: Commit analysis context
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
-          git config user.email '41898218+github-actions[bot]@users.noreply.github.com'
-          git add -- analysis/time-attack-context.txt analysis/time-attack-level.txt
-          git commit -m 'Capture full time attack Level source [skip ci]' || exit 0
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- analysis/time-attack-context.txt analysis/time-attack-level.txt analysis/time-attack-overrides.txt
+          git commit -m 'Capture enemy exit overrides for V7 [skip ci]' || exit 0
+          git pull --rebase origin agent/time-attack-mode
           git push origin HEAD:agent/time-attack-mode
