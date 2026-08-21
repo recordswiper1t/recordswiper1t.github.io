@@ -1,42 +1,62 @@
 # Native desktop performance mode
 
-The web player runs Ruffle's WebAssembly build inside a browser. This folder provides a native desktop path for the same V7 SWF so gameplay does not pay the browser/DOM/WebAssembly overhead.
+This is the recommended laptop build for the Kingdom Rush Frontiers mod. It runs the verified **V8 optimized SWF** through native Ruffle instead of the browser/WebAssembly player.
 
 ## Fastest way to play
 
-1. Clone or download this repository so the V7 SWF exists at `assets/kingdom-rush-frontiers-v5.swf`.
-2. Make sure Python 3 is installed.
-3. Windows: double-click `desktop/run-native.bat`.
-4. macOS/Linux: run `sh desktop/run-native.sh` from Terminal.
+### Windows
 
-The first launch downloads a recent official Ruffle desktop build from `ruffle-rs/ruffle` into `.native/ruffle/`. Later launches reuse that native executable and start immediately.
+1. Download or clone this repository.
+2. Double-click `desktop\run-native.bat`.
+3. The first launch downloads the correct native Ruffle desktop build automatically. No Python install is required.
+4. Later launches reuse the cached Ruffle executable from `.native\ruffle\`.
 
-By default the launcher uses a recent Ruffle nightly because the desktop emulator receives compatibility and performance improvements continuously. Use `--stable` if you prefer the latest stable release, or `--refresh` to force a fresh download.
+### macOS / Linux
 
-Examples:
+Run:
 
 ```text
-desktop\run-native.bat --refresh
+sh desktop/run-native.sh
+```
+
+The shell launcher uses Python 3 to select/download the correct Ruffle build for the machine.
+
+## Game build
+
+The launcher prefers `assets/kingdom-rush-frontiers-v8.swf`, which has been built, re-exported, and structurally verified with FFDec 26.2.1. If that file is missing, it falls back to the historical V7 asset.
+
+V8 includes:
+
+- native-desktop-ready runtime path;
+- amortized Time Attack completion checks instead of full enemy scans on every kill;
+- 10 Hz timer HUD redraw instead of every frame;
+- additional ultra-swarm cosmetic throttling while gameplay/combat remains full-rate;
+- the existing V5/V6/V7 swarm throttling and Send-All back-pressure;
+- Ctrl+C tower copy and Ctrl+V paste onto a selected empty build spot when you have enough cash.
+
+Tower copy/paste supports the base Archer, Barracks, Mage and Engineer families plus Crossbow, Totem, Archmage, Necromancer, DWAARP, Battle-Mecha, Assassin and Templar branches. Special ability ranks are not duplicated because those subclasses own live soldier/projectile/effect state.
+
+## Ruffle channel
+
+The default is a recent Ruffle nightly because compatibility and performance fixes land there first. You can use the latest stable build instead:
+
+```text
+desktop\run-native.bat --stable
 sh desktop/run-native.sh --stable
 ```
 
-## Why this should be faster
+Force a fresh Ruffle download with `--refresh`.
 
-The existing `mod/fast.html` still has to execute the emulator as WebAssembly and render through a browser tab. Native Ruffle runs the Rust desktop executable directly and removes JavaScript glue, page layout/compositing, browser throttling, extension interference, and most browser memory overhead from the hot path.
+## Best laptop performance
 
-The SWF itself already contains the V6/V7 swarm-performance safeguards, so native Ruffle stacks a lower-overhead runtime underneath those game-side patches.
+- Plug the laptop into power and turn off battery saver.
+- On dual-GPU laptops, assign `.native\ruffle\ruffle.exe` to the high-performance GPU in Windows Graphics settings.
+- Close the browser copy of the game while using native mode.
+- Use fullscreen if your desktop compositor behaves better that way.
+- If a nightly causes a regression, compare with `--stable`.
 
-## Performance expectations
+Native Ruffle removes the browser, JavaScript/DOM compositing and WebAssembly layer from the gameplay path. A fixed multiplier cannot be guaranteed across all laptops, but this is the lowest-overhead way this SWF can run without porting the entire game to another engine.
 
-This is the highest-impact runtime change available without rewriting the game in another engine. A specific multiplier such as 10x cannot be guaranteed across every laptop or every enemy count; measure it on the target machine. The important target is stable frame pacing during the largest V7 time-attack swarms.
+## Saves
 
-For best results:
-
-- Plug the laptop into power and disable battery-saver mode.
-- On dual-GPU laptops, assign the Ruffle executable to the high-performance GPU in the OS graphics settings.
-- Close the browser version while using native mode so it does not compete for CPU/GPU time.
-- If a new nightly regresses performance, run with `--stable` and compare.
-
-## Files and saves
-
-The launcher runs the exact repository SWF and does not alter the V7 build. Native Ruffle stores Flash local data separately from browser Ruffle, so browser saves may need to be migrated through Ruffle's save-management features if you need the same progress in both runtimes.
+Native Ruffle stores Flash local data separately from browser Ruffle. If you need the same progress in both, migrate the save using Ruffle's save-management features.
