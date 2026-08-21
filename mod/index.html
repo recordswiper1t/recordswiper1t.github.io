@@ -7,181 +7,48 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#10120f">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Kingdom Rush Frontiers — V5 Fast + Mod Lab</title>
+<title>Kingdom Rush Frontiers — V7 Time Attack</title>
 <style>
 :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;background:#10120f;color:#f5f0dc}
-body{overflow:hidden}
-body.playing{position:fixed;inset:0;overflow:hidden;overscroll-behavior:none}
-button,.button{appearance:none;border:0;border-radius:14px;min-height:48px;padding:13px 16px;font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#d3a64b;color:#1b160d;cursor:pointer;text-decoration:none;text-align:center}
-.primary{background:#d3a64b!important;color:#1b160d!important}
-.secondary{background:#2c312a!important;color:#f5f0dc!important;border:1px solid #4c5548!important}
-button:disabled{opacity:.48}
-#setup{height:100dvh;overflow:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 32px);background:radial-gradient(circle at 50% 10%,#37432e 0,#1b2018 42%,#10120f 100%)}
-.wrap{width:min(680px,100%);margin:0 auto}
-.card{padding:19px;border:1px solid #46503f;border-radius:20px;background:rgba(18,22,16,.96);margin-bottom:14px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
-h1{margin:7px 0 8px;font-size:clamp(30px,9vw,46px);line-height:.98;letter-spacing:-.03em}
-h2{margin:0 0 9px;font-size:20px}
-p{color:#cfd6c8;line-height:1.46;margin:9px 0}
-.muted{color:#9ea898;font-size:13px}
-.good{color:#bcd7a7}
-.warn{color:#f0ce83}
-.actions{display:grid;gap:10px;margin-top:16px}
-.status{margin-top:12px;color:#e4d5a8;font-size:14px;overflow-wrap:anywhere}
-.hash{margin-top:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#b9c5b4;overflow-wrap:anywhere}
-.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#293025;border:1px solid #46503f;color:#d9e7d3;font-size:12px;font-weight:700}
-.changes{margin:10px 0 0;padding-left:20px;color:#cfd6c8;line-height:1.55}
-.changes strong{color:#eef4e9}
-#fileInput{display:none}
-#playerShell{display:none;position:fixed;inset:0;width:100vw;height:100dvh;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-#player{position:absolute;inset:0;width:100%;height:100%;display:grid;place-items:center;background:#000;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-ruffle-player{display:block;width:100%!important;height:100%!important;touch-action:none!important;overscroll-behavior:none!important;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
-#menuToggle{position:fixed;z-index:80;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:48px;height:48px;min-height:48px;padding:0;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:#151515;color:#fff;font-size:25px;touch-action:manipulation;contain:layout paint style}
-#panel{position:fixed;z-index:79;top:calc(max(8px,env(safe-area-inset-top)) + 54px);right:max(8px,env(safe-area-inset-right));display:none;gap:9px;width:min(285px,calc(100vw - 16px));max-height:calc(100dvh - 80px);overflow:auto;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:#0f0f0f;contain:layout paint style}
-#panel.open{display:grid}
-#panel button,#panel .button{min-height:44px;padding:10px 11px;font-size:14px}
-#notice{position:fixed;z-index:90;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;width:min(92vw,560px);padding:12px 14px;border-radius:12px;background:rgba(20,20,20,.96);border:1px solid rgba(255,255,255,.18);font-size:14px;line-height:1.35;text-align:center}
-#notice.show{display:block}
-#loading{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:#000}
-#loading.show{display:grid}
-.spinner{width:42px;height:42px;margin:0 auto 14px;border:4px solid #333;border-top-color:#d7a94d;border-radius:50%;animation:s .8s linear infinite}
-@keyframes s{to{transform:rotate(360deg)}}
-.loadingBox{text-align:center;padding:24px}
-@media(min-width:760px){button,.button{min-height:44px;font-size:15px}.card{padding:24px}}
+html,body{margin:0;min-height:100%;background:#10120f;color:#f5f0dc}
+body{padding:24px 16px;background:radial-gradient(circle at 50% 10%,#37432e 0,#1b2018 42%,#10120f 100%)}
+.wrap{width:min(720px,100%);margin:0 auto}
+.card{padding:22px;border:1px solid #46503f;border-radius:20px;background:rgba(18,22,16,.96);margin-bottom:14px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
+h1{margin:8px 0 10px;font-size:clamp(34px,8vw,52px);line-height:.98;letter-spacing:-.03em}
+h2{margin:0 0 10px;font-size:21px}
+p,li{color:#cfd6c8;line-height:1.5}
+ul{padding-left:22px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#293025;border:1px solid #46503f;color:#d9e7d3;font-size:12px;font-weight:700}
+.actions{display:grid;gap:10px;margin-top:18px}
+a.button{display:block;border-radius:14px;min-height:48px;padding:13px 16px;font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-decoration:none;text-align:center;background:#d3a64b;color:#1b160d}
+a.secondary{background:#2c312a;color:#f5f0dc;border:1px solid #4c5548}
+.muted{font-size:13px;color:#9ea898}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 </style>
 </head>
 <body>
-<main id="setup"><div class="wrap">
+<main class="wrap">
 <section class="card">
-<span class="pill">V5 Fast • iPhone performance + sandbox fixes</span>
+<span class="pill">LATEST BUILD • V7 TIME ATTACK</span>
 <h1>Kingdom Rush Frontiers</h1>
-<p><strong>V5 Fast</strong> is the recommended iPhone path. It loads the new V5 SWF directly with lower iOS render quality, stronger swarm cosmetic throttling, a complete wave-backed enemy selector, Pirate Camp, and Send All boss triggers. The stored-build buttons below remain available for older versions.</p>
+<p><strong>V7 is the current mod build.</strong> The underlying SWF still uses the historical filename <code>kingdom-rush-frontiers-v5.swf</code>, but the contents are the V7 build verified by <code>V7-SHA256SUMS.txt</code>.</p>
 <div class="actions">
-<a class="button primary" href="/mod/fast.html">Play V5 Fast — recommended on iPhone</a>
-<button id="installV4Btn" class="secondary">Install V4 Sandbox + Stability</button>
-<button id="installV3Btn" class="secondary">Install V3 Mobile + Sandbox</button>
-<button id="resumeBtn" hidden>Play stored build</button>
-<button id="installV2Btn" class="secondary">Install QoL v2</button>
-<button id="installV1Btn" class="secondary">Install Unlock-All v1</button>
-<button id="installCleanBtn" class="secondary">Install / restore clean game</button>
-<button id="chooseBtn" class="secondary">Use another modified SWF</button>
-<a class="button secondary" href="/">Stable clean online player</a>
+<a class="button" href="/mod/fast.html">Play V7 Time Attack</a>
+<a class="button secondary" href="/play-v4.html">Play older V4 build</a>
+<a class="button secondary" href="/">Clean game player</a>
 </div>
-<input id="fileInput" type="file" accept=".swf,application/x-shockwave-flash">
-<div id="status" class="status">Checking the stored build and verified V4 asset…</div>
-<div id="hash" class="hash"></div>
 </section>
 <section class="card">
-<h2>V5 changes</h2>
-<ul class="changes">
-<li><strong>Heroes:</strong> the selector exposes all <strong>9 hero implementations actually present in this SWF</strong>: Alric, Mirage, Captain Blackthorne, Cronan, Sha'tra, Grawl, Nivus, Dierdre and Ashbite. The later bonus heroes Rurin, Black Corsair and Lucrezia do not have classes/assets in this source binary, so V5 does not add crash-prone fake buttons for them.</li>
-<li><strong>Maxed by default:</strong> new and existing saves default to all 65 star upgrades spent/maxed and every hero at level 10 with all hero skills maxed. Press <strong>RESET FOR CUSTOM</strong> to clear upgrade/skill spending while keeping the full 65-star pool and level-10 heroes; custom mode persists so your manual choices are not overwritten. Use <strong>MAX ALL</strong> to return to the default maxed mode.</li>
-<li><strong>Gold:</strong> the old +100 button is now a numeric field. Enter 0, 50, 9000 or another non-negative amount and press <strong>ADD</strong>.</li>
-<li><strong>Waves + bosses:</strong> <strong>Send all waves</strong> still releases waves across frames, now runs each level's normal wave hook, and triggers the native Efreeti, Gorilla and Umbra/final-boss entrance controllers when the last wave is queued.</li>
-<li><strong>Special buildings:</strong> the catalog now has <strong>10 buildable choices</strong>, adding the previously missing <strong>Pirate Camp</strong> to Dwarf Riflemen, Pirate Barracks, Dwarf Hall, Crossbow Fort, Tribal Axethrowers, Archmage, Necromancer, DWAARP and Battle-Mecha T200.</li>
-<li><strong>Tower placement:</strong> map-special towers use the corrected build-spot center instead of the old offset placement.</li>
-<li><strong>Enemy selector:</strong> V5 adds every enemy class used by normal wave data that V4 omitted, including Alien Breeder/Reaper, Bouncer, underwater cannibals, Desert Wolf Small, Munra and Wasp Queen. Boss/helper pieces with incompatible constructors stay out of the generic wave selector.</li>
-<li><strong>Touch + performance:</strong> iPhones default to low Flash quality, expensive CSS backdrop blur is removed, background execution is paused, and cosmetic/decal/background layers update less often as swarms become heavy or extreme. Entity and bullet gameplay updates remain full-rate.</li>
-<li><strong>Previous mods retained:</strong> unlock-all, fast boot, Heroic/Iron availability, custom enemy rounds and 1×/3× speed remain included.</li>
+<h2>V7 highlights</h2>
+<ul>
+<li><strong>Timer + all waves:</strong> activates every authored wave immediately when enabled before wave 1.</li>
+<li><strong>Time attack:</strong> measures wall-clock time from launch until spawning is finished and the final living enemy is killed.</li>
+<li><strong>Persistent best times:</strong> stored per level/mode in a separate SharedObject.</li>
+<li><strong>Recycle exits:</strong> enemies loop back to path node 0 instead of causing life loss, exit gold, or destruction.</li>
+<li><strong>V6 features retained:</strong> sandbox controls, heroes, boss-safe Send All behavior, Add Gold/Lives, unlimited mode, instant win, and swarm-performance patches.</li>
 </ul>
-<p class="muted">V5 is served directly by the Fast player; its verified SHA-256 is stored alongside the SWF in <code>assets/kingdom-rush-frontiers-v5.sha256</code>.</p>
+<p class="muted">The filename is intentionally left alone to avoid breaking saved links and the existing player. Version labels now reflect the actual build.</p>
 </section>
-<section class="card">
-<h2>Using V5</h2>
-<p>For iPhone, use <strong>Play V5 Fast</strong>. Inside a level, open the game's pause/settings screen for hero and enemy-round tools. On an empty build spot, use <strong>More…</strong> to reach the special-building pages.</p>
-<p class="good"><strong>Your campaign save and game build remain separate.</strong> V5 Fast uses the same Ruffle site storage as the older Mod Lab builds.</p>
-<p class="warn">Use <strong>⋯ → Saves / backup</strong> occasionally. Clearing Safari website data can remove local progress.</p>
-</section>
-</div></main>
-<section id="playerShell" aria-label="Kingdom Rush Frontiers mod player">
-<div id="player"></div>
-<div id="loading"><div class="loadingBox"><div class="spinner"></div><div id="loadingText">Starting…</div></div></div>
-<button id="menuToggle" aria-label="Open controls">⋯</button>
-<div id="panel">
-<button id="savesBtn">Saves / backup</button>
-<button id="fullBtn" class="secondary">Full screen</button>
-<button id="reloadBtn" class="secondary">Reload stored build</button>
-<a class="button primary" href="/mod/fast.html">Play V5 Fast</a>
-<button id="v4Btn" class="secondary">Install V4 Sandbox + Stability</button>
-<button id="v3Btn" class="secondary">Install V3 Mobile + Sandbox</button>
-<button id="v2Btn" class="secondary">Install QoL v2</button>
-<button id="v1Btn" class="secondary">Install Unlock-All v1</button>
-<button id="cleanBtn" class="secondary">Restore clean build</button>
-<button id="replaceBtn" class="secondary">Use another SWF</button>
-<button id="infoBtn" class="secondary">Build info</button>
-<a class="button secondary" href="/">Clean online player</a>
-</div>
-<div id="notice"></div>
-</section>
-<script src="https://unpkg.com/@ruffle-rs/ruffle@0.5.0"></script>
-<script>
-(()=>{
-'use strict';
-const CLEAN_SWF_URL='/assets/kingdom-rush-frontie-15717.swf';
-const V1_SWF_URL='/assets/kingdom-rush-frontiers-unlock-all.swf';
-const V2_SWF_URL='/assets/kingdom-rush-frontiers-qol-v2.swf';
-const V3_SWF_URL='/assets/kingdom-rush-frontiers-v3.swf';
-const V4_SWF_URL='/assets/kingdom-rush-frontiers-v4.swf';
-const CLEAN_SHA='8f025551af01cef1650c0ad500156f73270bc710caa5052a11462506377e6959';
-const V1_SHA='fdcfc4c1bd8728c74d3b45a502a57b352492a194084e494b08a4050ddaa9cfa3';
-const V2_SHA='bcc30c72d14b3b12225f669bce0cb1a3e12fbb00ba84b0d44903b795e0c0a698';
-const V3_SHA='0ac03b3832bbc79bdeadb5fe980b63aad3d5690dd114e294180c720ec55909c2';
-const V4_SHA='9744706b367e5b2fb36947614cd92f4957a87db1832a10b058477cf313930bdb';
-const DB_NAME='kr-frontiers-mod-lab',DB_VERSION=1,STORE='files',GAME_KEY='active-build';
-const CANONICAL_SWF_NAME='kingdom-rush-frontiers.swf';
-const setup=document.getElementById('setup'),playerShell=document.getElementById('playerShell'),playerHost=document.getElementById('player');
-const fileInput=document.getElementById('fileInput'),statusEl=document.getElementById('status'),hashEl=document.getElementById('hash');
-const installV4Btn=document.getElementById('installV4Btn'),installV3Btn=document.getElementById('installV3Btn'),installV2Btn=document.getElementById('installV2Btn'),installV1Btn=document.getElementById('installV1Btn'),installCleanBtn=document.getElementById('installCleanBtn'),resumeBtn=document.getElementById('resumeBtn');
-const panel=document.getElementById('panel'),notice=document.getElementById('notice'),loading=document.getElementById('loading'),loadingText=document.getElementById('loadingText');
-let player=null,lastRecord=null,toastTimer=null;
-const TOUCH_DEVICE=('ontouchstart' in window)||(navigator.maxTouchPoints||0)>0||(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches);
-const IOS_DEVICE=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&(navigator.maxTouchPoints||0)>1);
-function toast(m,ms=4500){clearTimeout(toastTimer);notice.textContent=m;notice.classList.add('show');toastTimer=setTimeout(()=>notice.classList.remove('show'),ms)}
-function showLoading(m){loadingText.textContent=m||'Loading…';loading.classList.add('show')}
-function hideLoading(){loading.classList.remove('show')}
-function setRemoteDisabled(v){installV4Btn.disabled=v;installV3Btn.disabled=v;installV2Btn.disabled=v;installV1Btn.disabled=v;installCleanBtn.disabled=v;document.getElementById('v4Btn').disabled=v;document.getElementById('v3Btn').disabled=v;document.getElementById('v2Btn').disabled=v;document.getElementById('v1Btn').disabled=v;document.getElementById('cleanBtn').disabled=v}
-function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-async function readGame(){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(GAME_KEY);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);tx.oncomplete=()=>db.close()})}
-async function writeGame(blob,name,hash,source){const db=await openDb();await new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({id:GAME_KEY,blob,name,hash,source,savedAt:Date.now()});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error)});db.close()}
-function looksLikeSwf(buf){if(!buf||buf.byteLength<8)return false;const b=new Uint8Array(buf,0,3),s=String.fromCharCode(...b);return ['FWS','CWS','ZWS'].includes(s)}
-async function sha256(buf){if(!window.crypto||!window.crypto.subtle)return'unavailable';const d=await window.crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function persist(){try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(_){}}
-function makePlayer(){const r=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!r)throw new Error('Ruffle failed to load.');player=r.createPlayer();player.id='krf-mod-player';player.tabIndex=0;player.style.touchAction='none';player.style.webkitUserSelect='none';player.style.userSelect='none';playerHost.replaceChildren(player);return player}
-function opts(extra={}){return Object.assign({autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:IOS_DEVICE?'low':TOUCH_DEVICE?'medium':'high',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,backgroundExecutionMode:'none',preloader:false,splashScreen:false,polyfills:false,swfFileName:CANONICAL_SWF_NAME,base:location.origin+'/mod/'},extra)}
-async function launchBuffer(buf){if(!looksLikeSwf(buf))throw new Error('Stored file is not a valid SWF.');showLoading('Starting Kingdom Rush Frontiers…');setup.style.display='none';playerShell.style.display='block';document.body.classList.add('playing');panel.classList.remove('open');await persist();try{const p=player||makePlayer();await p.ruffle().load(opts({data:buf}));try{p.focus()}catch(_){}}finally{hideLoading()}}
-async function launchStored(){const r=await readGame();if(!r||!r.blob)throw new Error('No stored build found.');lastRecord=r;await launchBuffer(await r.blob.arrayBuffer())}
-async function remoteAvailable(url){try{const r=await fetch(url,{method:'HEAD',cache:'no-store'});return r.ok}catch(_){return false}}
-async function installRemote({url,name,expectedHash,source,label}){setRemoteDisabled(true);statusEl.textContent='Downloading '+label+'…';try{const resp=await fetch(url,{cache:'no-store'});if(!resp.ok)throw new Error(label+' is not available yet (HTTP '+resp.status+').');const buf=await resp.arrayBuffer();if(!looksLikeSwf(buf))throw new Error('Downloaded file was not a valid SWF.');const h=await sha256(buf);if(expectedHash&&h!=='unavailable'&&h!==expectedHash)throw new Error('Safety check failed: '+label+' hash did not match the verified build.');const blob=new Blob([buf],{type:'application/x-shockwave-flash'});await writeGame(blob,name,h,source);await persist();lastRecord={blob,name,hash:h,source};resumeBtn.hidden=false;statusEl.textContent=label+' installed on this device.';hashEl.textContent='SHA-256: '+h;await launchBuffer(buf)}finally{setRemoteDisabled(false)}}
-function installV4(){return installRemote({url:V4_SWF_URL,name:'kingdom-rush-frontiers-v4.swf',expectedHash:V4_SHA,source:'verified V4 Sandbox + Stability',label:'V4 Sandbox + Stability'})}
-function installV3(){return installRemote({url:V3_SWF_URL,name:'kingdom-rush-frontiers-v3.swf',expectedHash:V3_SHA,source:'verified V3 Mobile + Sandbox',label:'V3 Mobile + Sandbox'})}
-function installV2(){return installRemote({url:V2_SWF_URL,name:'kingdom-rush-frontiers-qol-v2.swf',expectedHash:V2_SHA,source:'verified QoL v2',label:'QoL v2'})}
-function installV1(){return installRemote({url:V1_SWF_URL,name:'kingdom-rush-frontiers-unlock-all.swf',expectedHash:V1_SHA,source:'verified Unlock-All v1',label:'Unlock-All v1'})}
-function installClean(){return installRemote({url:CLEAN_SWF_URL,name:'kingdom-rush-frontie-15717.swf',expectedHash:CLEAN_SHA,source:'clean Archive mirror',label:'clean build'})}
-async function acceptLocal(file){statusEl.textContent='Checking local SWF…';const buf=await file.arrayBuffer();if(!looksLikeSwf(buf))throw new Error('Choose a valid SWF.');const h=await sha256(buf),blob=new Blob([buf],{type:'application/x-shockwave-flash'});await writeGame(blob,file.name||CANONICAL_SWF_NAME,h,'local/modified');await persist();lastRecord={blob,name:file.name||CANONICAL_SWF_NAME,hash:h,source:'local/modified'};resumeBtn.hidden=false;hashEl.textContent='SHA-256: '+h;statusEl.textContent='Local build stored.';await launchBuffer(buf)}
-async function inspect(){try{const r=await readGame();lastRecord=r;const v4Ready=await remoteAvailable(V4_SWF_URL);if(r&&r.blob){resumeBtn.hidden=false;const storedHash=r.hash||'';const latest=storedHash===V4_SHA;if(!latest&&v4Ready){installV4Btn.textContent='Update to latest V4';document.getElementById('v4Btn').textContent='Update to latest V4';statusEl.textContent='Update available: your stored build is older than the latest verified V4. Tap Update to latest V4.';}else if(latest){installV4Btn.textContent='Reinstall latest V4';document.getElementById('v4Btn').textContent='Reinstall latest V4';statusEl.textContent='Latest V4 is already stored on this device.';}else{statusEl.textContent='Stored build ready: '+(r.name||CANONICAL_SWF_NAME)+(r.source?' ('+r.source+')':'')+'. Latest V4 is still publishing.';}hashEl.textContent=(storedHash?'Stored SHA-256: '+storedHash+' • ':'')+'Latest V4: '+V4_SHA;return}const [v3Ready,v2Ready,cleanReady]=await Promise.all([remoteAvailable(V3_SWF_URL),remoteAvailable(V2_SWF_URL),remoteAvailable(CLEAN_SWF_URL)]);if(v4Ready)statusEl.textContent='V4 is verified and ready. Tap Install V4 Sandbox + Stability.';else if(v3Ready)statusEl.textContent='V3 is ready; V4 is still publishing.';else if(v2Ready)statusEl.textContent='QoL v2 is ready; newer builds are still publishing.';else if(cleanReady)statusEl.textContent='Clean build is ready; mod assets are still publishing.';else statusEl.textContent='Game assets are still publishing. Reload and try again.'}catch(e){statusEl.textContent='Storage unavailable: '+(e.message||e)}}
-function choose(){panel.classList.remove('open');fileInput.click()}
-function showSetup(){panel.classList.remove('open');playerShell.style.display='none';setup.style.display='block';document.body.classList.remove('playing');inspect()}
-function installHandler(fn){return()=>fn().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})}
-installV4Btn.onclick=installHandler(installV4);installV3Btn.onclick=installHandler(installV3);installV2Btn.onclick=installHandler(installV2);installV1Btn.onclick=installHandler(installV1);installCleanBtn.onclick=installHandler(installClean);
-resumeBtn.onclick=()=>launchStored().catch(e=>{showSetup();statusEl.textContent=e.message||String(e)});
-document.getElementById('chooseBtn').onclick=choose;document.getElementById('replaceBtn').onclick=choose;
-document.getElementById('v4Btn').onclick=()=>{panel.classList.remove('open');installV4().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})};
-document.getElementById('v3Btn').onclick=()=>{panel.classList.remove('open');installV3().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})};
-document.getElementById('v2Btn').onclick=()=>{panel.classList.remove('open');installV2().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})};
-document.getElementById('v1Btn').onclick=()=>{panel.classList.remove('open');installV1().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})};
-document.getElementById('cleanBtn').onclick=()=>{panel.classList.remove('open');installClean().catch(e=>{showSetup();statusEl.textContent=e.message||String(e);toast(e.message||String(e))})};
-fileInput.onchange=async()=>{const f=fileInput.files&&fileInput.files[0];fileInput.value='';if(!f)return;try{await acceptLocal(f)}catch(e){showSetup();statusEl.textContent=e.message||String(e)}};
-document.getElementById('menuToggle').onclick=()=>panel.classList.toggle('open');
-document.getElementById('reloadBtn').onclick=()=>{panel.classList.remove('open');launchStored().catch(e=>toast(e.message||String(e)))};
-document.getElementById('infoBtn').onclick=showSetup;
-document.getElementById('fullBtn').onclick=()=>{panel.classList.remove('open');try{if(player&&player.ruffle().fullscreenEnabled)player.ruffle().requestFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen()}catch(_){}};
-document.getElementById('savesBtn').onclick=()=>{panel.classList.remove('open');if(!player){toast('Start the stored build first.');return}try{const r=player.getBoundingClientRect();player.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+Math.min(100,r.width/2),clientY:r.top+Math.min(100,r.height/2),button:2,buttons:2,view:window}));toast('If the menu did not open, press and hold inside the game, then choose Ruffle Save Manager.')}catch(_){toast('Press and hold inside the game, then choose Ruffle Save Manager.')}};
-playerHost.addEventListener('pointerdown',()=>{if(player){try{player.focus({preventScroll:true})}catch(_){try{player.focus()}catch(__){}}}},{capture:true,passive:true});
-playerHost.addEventListener('touchmove',e=>{if(document.body.classList.contains('playing'))e.preventDefault()},{passive:false});
-for(const name of ['gesturestart','gesturechange','gestureend'])document.addEventListener(name,e=>{if(document.body.classList.contains('playing'))e.preventDefault()},{passive:false});
-window.addEventListener('load',inspect);
-})();
-</script>
+</main>
 </body>
 </html>
