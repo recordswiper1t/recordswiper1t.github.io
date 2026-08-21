@@ -1,0 +1,9 @@
+Kingdom Rush Frontiers — V8 Performance + Tower Clipboard
+- Native-desktop-ready build based on the current V7 Time Attack SWF.
+- Removes per-kill full-enemy completion scans; time-attack completion is amortized.
+- Timer HUD redraw is throttled to 10 Hz.
+- Adds an ultra-swarm cosmetic cadence while gameplay updates remain full-rate.
+- Ctrl+C copies the selected normal tower family/tier-4 branch.
+- Ctrl+V pastes onto a selected empty build spot only when current cash covers the normal direct build cost.
+- Special ability ranks are intentionally not cloned because their private subclass state owns live soldiers/projectiles/effects.
+Built, re-exported, and structurally verified with FFDec 26.2.1.
