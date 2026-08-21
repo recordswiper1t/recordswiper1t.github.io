@@ -1,0 +1,145 @@
+name: Build Frontiers V7 time attack
+
+on:
+  push:
+    branches:
+      - agent/time-attack-mode
+    paths:
+      - '.github/workflows/build-v7-pr.yml'
+      - 'tools/build-v7.py'
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.event_name == 'push' || github.head_ref == 'agent/time-attack-mode'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/time-attack-mode
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            tools
+            assets/kingdom-rush-frontiers-v5.swf
+            assets/V7-BUILD.txt
+            assets/V7-SHA256SUMS.txt
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1 and current V6 base
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          test -f /tmp/ffdec/ffdec.jar
+          curl -fL --retry 4 'https://raw.githubusercontent.com/recordswiper1t/recordswiper1t.github.io/main/assets/kingdom-rush-frontiers-v5.swf' -o /tmp/krf-v6.swf
+          test -s /tmp/krf-v6.swf
+          test "$(stat -c '%s' /tmp/krf-v6.swf)" -gt 50000000
+
+      - name: Export V6 scripts and apply V7 patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-v7 /tmp/v7-patches
+          mkdir -p /tmp/krf-v7 /tmp/v7-patches
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/krf-v7 /tmp/krf-v6.swf \
+            > /tmp/v7-export.log 2>&1 || true
+          count=$(find /tmp/krf-v7/scripts -type f | wc -l | tr -d ' ')
+          echo "Exported scripts: $count"
+          test "$count" -gt 1200
+          test -s /tmp/krf-v7/scripts/Level.as
+          test -s /tmp/krf-v7/scripts/Enemy.as
+          echo 'Enemy subclasses overriding the common path-end hook:'
+          overrides=$(grep -RFl 'override protected function §with catch§' /tmp/krf-v7/scripts/Enemy*.as || true)
+          if [ -n "$overrides" ]; then
+            echo "$overrides"
+            echo 'An enemy subclass overrides the base exit hook; refusing to claim universal recycling.' >&2
+            exit 1
+          fi
+          python3 tools/build-v7.py /tmp/krf-v7/scripts
+          cp /tmp/krf-v7/scripts/Level.as /tmp/v7-patches/Level.as
+          cp /tmp/krf-v7/scripts/Enemy.as /tmp/v7-patches/Enemy.as
+
+      - name: Import patched scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/kingdom-rush-frontiers-v7.swf
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror abort -timeout 180 \
+            -importScript /tmp/krf-v6.swf /tmp/kingdom-rush-frontiers-v7.swf /tmp/v7-patches \
+            > /tmp/v7-import.log 2>&1 || {
+              cat /tmp/v7-import.log
+              exit 1
+            }
+          test -s /tmp/kingdom-rush-frontiers-v7.swf
+          test "$(stat -c '%s' /tmp/kingdom-rush-frontiers-v7.swf)" -gt 50000000
+
+      - name: Re-export and verify compiled V7
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/verify-v7
+          mkdir -p /tmp/verify-v7
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 60 -exportFileTimeout 120 \
+            -export script /tmp/verify-v7 /tmp/kingdom-rush-frontiers-v7.swf \
+            > /tmp/v7-verify-export.log 2>&1 || true
+          level=/tmp/verify-v7/scripts/Level.as
+          enemy=/tmp/verify-v7/scripts/Enemy.as
+          test -s "$level"
+          test -s "$enemy"
+          grep -Fq 'qolTimeAttackEnabled' "$level"
+          grep -Fq 'qolRecycleEnemies' "$level"
+          grep -Fq 'qolStartTimeAttack' "$level"
+          grep -Fq 'qolTimeAttackEnemyKilled' "$level"
+          grep -Fq 'krf_qol_time_attack' "$level"
+          grep -Fq 'Timer + all waves:' "$level"
+          grep -Fq 'Recycle exits:' "$level"
+          grep -Fq 'if(Level.qolRecycleEnemies)' "$enemy"
+          grep -Fq 'this.cRoot.qolTimeAttackEnemyKilled();' "$enemy"
+          grep -Fq 'this.§package for var§ = 0;' "$enemy"
+          echo 'Compiled V7 verification passed.'
+
+      - name: Publish rebuilt asset and metadata to feature branch
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/kingdom-rush-frontiers-v7.swf assets/kingdom-rush-frontiers-v5.swf
+          sha256sum assets/kingdom-rush-frontiers-v5.swf > assets/V7-SHA256SUMS.txt
+          cat > assets/V7-BUILD.txt <<'EOF'
+          Frontiers V7 time-attack build
+          - Settings page adds separate Timer + all waves and Recycle exits toggles
+          - Timer mode activates every authored wave immediately when enabled before wave 1
+          - Timer measures wall-clock seconds from launch until no living enemies remain
+          - Best time is persisted per level/mode in a separate SharedObject named krf_qol_time_attack
+          - Recycle exits intercepts the common Enemy path-end handler before life loss, exit gold, or destruction
+          - Recycled enemies keep the same object, health, and boss state and restart at path node 0
+          - Existing V6 sandbox, hero, boss Send All, and performance patches remain intact
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v5.swf assets/V7-BUILD.txt assets/V7-SHA256SUMS.txt
+          if git diff --cached --quiet; then
+            echo 'Compiled V7 asset already matches branch.'
+            exit 0
+          fi
+          git commit -m 'Build verified V7 time attack [skip ci]'
+          git pull --rebase origin agent/time-attack-mode
+          git push origin HEAD:agent/time-attack-mode
