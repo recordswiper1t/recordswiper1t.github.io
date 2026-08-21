@@ -6,12 +6,15 @@ on:
       - agent/time-attack-mode
     paths:
       - '.github/workflows/analyze-time-attack.yml'
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   analyze:
+    if: github.event_name == 'push' || github.head_ref == 'agent/time-attack-mode'
     runs-on: ubuntu-latest
     steps:
       - name: Check out analysis branch
