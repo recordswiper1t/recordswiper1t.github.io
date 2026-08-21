@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/build-v7-pr.yml'
       - 'tools/build-v7.py'
+      - 'tools/build-v7-special-enemies.py'
   pull_request:
     types: [opened, reopened, synchronize]
 
@@ -65,17 +66,19 @@ jobs:
           test "$count" -gt 1200
           test -s /tmp/krf-v7/scripts/Level.as
           test -s /tmp/krf-v7/scripts/Enemy.as
-          echo 'Enemy subclasses overriding the common path-end hook:'
           overrides=$(grep -RFl 'override protected function §with catch§' /tmp/krf-v7/scripts/Enemy*.as || true)
           printf '%s\n' "$overrides" > /tmp/v7-overrides.txt
-          if [ -n "$overrides" ]; then
-            echo "$overrides"
-            echo 'An enemy subclass overrides the base exit hook; refusing to claim universal recycling.' >&2
+          unexpected=$(printf '%s\n' "$overrides" | grep -Ev '/(EnemyCanibalBeast|EnemyCanibalHunterUnderwater|EnemyCanibalUnderwater|EnemyFinalBossPiece|EnemySaurianNightscale|EnemyTremor)\.as$' || true)
+          if [ -n "$unexpected" ]; then
+            echo 'Unexpected enemy subclasses override the common path-end hook:' >&2
+            echo "$unexpected" >&2
             exit 1
           fi
           python3 tools/build-v7.py /tmp/krf-v7/scripts
-          cp /tmp/krf-v7/scripts/Level.as /tmp/v7-patches/Level.as
-          cp /tmp/krf-v7/scripts/Enemy.as /tmp/v7-patches/Enemy.as
+          python3 tools/build-v7-special-enemies.py /tmp/krf-v7/scripts
+          for f in Level.as Enemy.as EnemyCanibalBeast.as EnemyTremor.as; do
+            cp "/tmp/krf-v7/scripts/$f" "/tmp/v7-patches/$f"
+          done
 
       - name: Import patched scripts
         shell: bash
@@ -104,8 +107,10 @@ jobs:
             > /tmp/v7-verify-export.log 2>&1 || true
           level=/tmp/verify-v7/scripts/Level.as
           enemy=/tmp/verify-v7/scripts/Enemy.as
-          test -s "$level"
-          test -s "$enemy"
+          beast=/tmp/verify-v7/scripts/EnemyCanibalBeast.as
+          tremor=/tmp/verify-v7/scripts/EnemyTremor.as
+          nightscale=/tmp/verify-v7/scripts/EnemySaurianNightscale.as
+          test -s "$level" && test -s "$enemy" && test -s "$beast" && test -s "$tremor"
           grep -Fq 'qolTimeAttackEnabled' "$level"
           grep -Fq 'qolRecycleEnemies' "$level"
           grep -Fq 'qolStartTimeAttack' "$level"
@@ -117,6 +122,11 @@ jobs:
           grep -Fq 'if(Level.qolRecycleEnemies)' "$enemy"
           grep -Fq 'this.cRoot.qolTimeAttackEnemyKilled();' "$enemy"
           grep -Fq 'this.§package for var§ = 0;' "$enemy"
+          grep -Fq 'if(Level.qolRecycleEnemies)' "$beast"
+          grep -Fq 'this.§package for var§ = 0;' "$beast"
+          grep -Fq 'if(Level.qolRecycleEnemies)' "$tremor"
+          grep -Fq 'this.cRoot.qolTimeAttackEnemyKilled();' "$tremor"
+          grep -Fq 'return super.§with catch§();' "$nightscale"
           echo 'Compiled V7 verification passed.'
 
       - name: Publish rebuilt asset and metadata to feature branch
@@ -132,7 +142,9 @@ jobs:
           - Timer mode activates every authored wave immediately when enabled before wave 1
           - Timer measures wall-clock seconds from launch until every active wave has finished spawning and the final living enemy is killed
           - Best time is persisted per level/mode in a separate SharedObject named krf_qol_time_attack
-          - Recycle exits intercepts the common Enemy path-end handler before life loss, exit gold, or destruction
+          - Base enemy exits recycle before life loss, exit gold, or destruction
+          - Tremor's copied exit handler and the Cannibal Beast boss's scripted endpoint are explicitly recycled too
+          - Underwater transformation enemies and the final-boss fusion piece keep their intended internal transformations; their resulting normal enemies still recycle at the map exit
           - Recycled enemies keep the same object, health, and boss state and restart at path node 0
           - Existing V6 sandbox, hero, boss Send All, and performance patches remain intact
           EOF
@@ -164,7 +176,7 @@ jobs:
             if [ -f /tmp/v7-export.log ]; then tail -n 80 /tmp/v7-export.log; else echo '(no export log)'; fi
             echo
             echo '=== import tail ==='
-            if [ -f /tmp/v7-import.log ]; then tail -n 140 /tmp/v7-import.log; else echo '(no import log)'; fi
+            if [ -f /tmp/v7-import.log ]; then tail -n 160 /tmp/v7-import.log; else echo '(no import log)'; fi
             echo
             echo '=== verify export tail ==='
             if [ -f /tmp/v7-verify-export.log ]; then tail -n 80 /tmp/v7-verify-export.log; else echo '(no verify log)'; fi
