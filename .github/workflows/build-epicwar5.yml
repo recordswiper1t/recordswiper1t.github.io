@@ -78,7 +78,7 @@ jobs:
           grep -F 'sandboxMaxAll' /tmp/ew5/verify/scripts/Game/Manager/DataManager.as
           grep -F 'stat_money = 99999999' /tmp/ew5/verify/scripts/Game/Manager/DataManager.as
           grep -F 'manaMax:int = 9999' /tmp/ew5/verify/scripts/Game/System/Battle/BattleControlPlayer.as
-          grep -F 'String("FREE")' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerSpell.as
+          grep -F 'this.mana_cost = 0;' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerSpell.as
           grep -F 'Math.max(stat.pop,12)' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
           grep -F 'EPIC WAR 5 SANDBOX' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
           grep -F 'sandboxSpawn' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
