@@ -42,13 +42,7 @@ jobs:
           test "$ok" = 1
           sig=$(head -c 3 .build/epicwar5/original.swf)
           case "$sig" in FWS|CWS|ZWS) ;; *) exit 1;; esac
-          sha256sum .build/epicwar5/original.swf
-
-      - name: Build sandbox and chaos variants
-        run: |
-          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-sandbox-v1.swf --report assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
-          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-chaos-v1.swf --chaos --report assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
-          sha256sum assets/epic-war-5-*-v1.swf > assets/EPIC-WAR-5-SHA256SUMS.txt
+          sha256sum .build/epicwar5/original.swf | tee .build/epicwar5/original.sha256
 
       - name: Decompile ActionScript for analysis
         shell: bash
@@ -59,15 +53,26 @@ jobs:
           mkdir -p .build/epicwar5/scripts
           java -jar .build/ffdec/ffdec.jar -export script .build/epicwar5/scripts .build/epicwar5/original.swf || true
           find .build/epicwar5/scripts -type f | sort > .build/epicwar5/script-files.txt
-          grep -RniE 'DataManager|dat_unit_|mana|spawn|summon|hero|stage|skill|accessor|accessory|experience|gold|reward|population|unit' .build/epicwar5/scripts > .build/epicwar5/hotspots.txt || true
+          grep -RniE 'DataManager|dat_unit_|mana|spawn|summon|hero|stage|skill|accessor|accessory|experience|gold|reward|population|unit|cooldown|wave|enemy' .build/epicwar5/scripts > .build/epicwar5/hotspots.txt || true
+
+      - name: Build sandbox and chaos variants
+        id: patch
+        continue-on-error: true
+        run: |
+          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-sandbox-v1.swf --report assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
+          python3 tools/epicwar5/build_mod.py .build/epicwar5/original.swf assets/epic-war-5-chaos-v1.swf --chaos --report assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
+          sha256sum assets/epic-war-5-*-v1.swf > assets/EPIC-WAR-5-SHA256SUMS.txt
 
       - name: Upload analysis artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: epicwar5-analysis
           retention-days: 7
+          if-no-files-found: warn
           path: |
             .build/epicwar5/source-url.txt
+            .build/epicwar5/original.sha256
             .build/epicwar5/script-files.txt
             .build/epicwar5/hotspots.txt
             .build/epicwar5/scripts/**
@@ -78,7 +83,7 @@ jobs:
             assets/EPIC-WAR-5-SHA256SUMS.txt
 
       - name: Publish generated builds on main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.patch.outcome == 'success'
         shell: bash
         run: |
           set -eux
