@@ -1,0 +1,10 @@
+Frontiers V7 time-attack build
+- Settings page adds separate Timer + all waves and Recycle exits toggles
+- Timer mode activates every authored wave immediately when enabled before wave 1
+- Timer measures wall-clock seconds from launch until every active wave has finished spawning and the final living enemy is killed
+- Best time is persisted per level/mode in a separate SharedObject named krf_qol_time_attack
+- Base enemy exits recycle before life loss, exit gold, or destruction
+- Tremor's copied exit handler and the Cannibal Beast boss's scripted endpoint are explicitly recycled too
+- Underwater transformation enemies and the final-boss fusion piece keep their intended internal transformations; their resulting normal enemies still recycle at the map exit
+- Recycled enemies keep the same object, health, and boss state and restart at path node 0
+- Existing V6 sandbox, hero, boss Send All, and performance patches remain intact
