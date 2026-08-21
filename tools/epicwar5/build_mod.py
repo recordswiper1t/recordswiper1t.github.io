@@ -60,6 +60,7 @@ def repack_swf(data: bytearray, original_sig: str):
 
 def build(src: pathlib.Path, dst: pathlib.Path, report: pathlib.Path, chaos=False):
     raw=src.read_bytes(); data,original_sig=unpack_swf(raw); changes={}
+
     changes['no_mana_cost']=patch_wild(data,'no mana cost','d0 24 ?? 68 92 01',lambda b:b.__setitem__(2,0),required=True)
     changes['no_build_limit']=patch_exact(data,'no build limit','d0 46 ea 04 00 24 04 0c 28 00 00','d0 46 ea 04 00 24 00 0f 28 00 00',required=True,max_hits=4)
     changes['instant_unit_spawn']=patch_exact(data,'instant unit spawn','24 00 0d 43 00 00','24 00 0d 00 00 00',required=True)
@@ -67,6 +68,7 @@ def build(src: pathlib.Path, dst: pathlib.Path, report: pathlib.Path, chaos=Fals
     changes['strong_regen']=patch_exact(data,'strong regeneration','d0 66 ad 0e 2f 17 a2 4f fe 0e 01','d0 66 ad 0e 2f 14 a2 4f fe 0e 01',required=False)
     if chaos:
         changes['hero_death_wins']=patch_exact(data,'hero death wins','68 dc 01 f0 91 03 d0 66 ce 01 2c 8b 11 61 9f 16','68 dc 01 f0 91 03 d0 66 ce 01 2c a1 26 61 9f 16',required=False)
+
     out=repack_swf(data,original_sig)
     dst.parent.mkdir(parents=True,exist_ok=True); dst.write_bytes(out)
     result={'source':str(src),'output':str(dst),'chaos':chaos,'compression':original_sig,'input_size':len(raw),'uncompressed_size':len(data),'output_size':len(out),'input_sha256':hashlib.sha256(raw).hexdigest(),'output_sha256':hashlib.sha256(out).hexdigest(),'patches':{k:{'count':len(v),'offsets':[hex(x) for x in v[:30]]} for k,v in changes.items()}}
