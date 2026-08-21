@@ -30,38 +30,44 @@ jobs:
           test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
           curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-      - name: Export and patch storage layer
+      - name: Export and patch expansion foundation
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p /tmp/ew5/export /tmp/ew5/out /tmp/ew5/verify
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           python3 tools/epicwar5/expansion/build_expansion_storage_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
       - name: Rebuild prototype
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
           test -s /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
-      - name: Re-decompile and verify storage APIs
+      - name: Re-decompile and verify expansion APIs and formation paging
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/verify /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf > /tmp/ew5/verify.log 2>&1 || true
-          f=/tmp/ew5/verify/scripts/Game/Manager/DataManager.as
-          grep -F 'unit_equip12_id' "$f"
-          grep -F 'stage_expansion_stat' "$f"
-          grep -F 'case "item2"' "$f"
-          grep -F 'case "ability18"' "$f"
-          grep -F 'expansionArmySlotsUnlocked' "$f"
-          grep -F 'expansionEquipmentSlotsUnlocked' "$f"
-          grep -F 'expansionGetUnitEquip' "$f"
-          grep -F 'so.data.unit_equip12_id' "$f"
-          grep -F 'so.data.stage_expansion_stat' "$f"
+          d=/tmp/ew5/verify/scripts/Game/Manager/DataManager.as
+          f=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormation.as
+          grep -F 'unit_equip12_id' "$d"
+          grep -F 'stage_expansion_stat' "$d"
+          grep -F 'case "item2"' "$d"
+          grep -F 'case "ability18"' "$d"
+          grep -F 'expansionArmySlotsUnlocked' "$d"
+          grep -F 'expansionEquipmentSlotsUnlocked' "$d"
+          grep -F 'expansionGetUnitEquip' "$d"
+          grep -F 'so.data.unit_equip12_id' "$d"
+          grep -F 'so.data.stage_expansion_stat' "$d"
+          grep -F 'equipPage:int = 1' "$f"
+          grep -F 'expansionInstallArmyPageButton' "$f"
+          grep -F 'expansionGetUnitEquip(armyStart + 6)' "$f"
+          grep -F 'no unlocked army slot available' "$f"
       - name: Upload prototype verification artifact
         uses: actions/upload-artifact@v4
         with:
-          name: epicwar5-expansion-v3-storage-prototype
+          name: epicwar5-expansion-v3-formation-prototype
           retention-days: 7
           path: |
             /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
