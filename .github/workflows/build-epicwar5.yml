@@ -48,6 +48,15 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           test -f /tmp/ew5/export/scripts/Game/Manager/DataManager.as
           test -f /tmp/ew5/export/scripts/Game/System/Battle/BattleSystem.as
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/epicwar5/build_source_mod_v2.py')
+          s=p.read_text()
+          old="p=once(p,'      public function setMana(VAL:int) : *\\n',insert+'      public function setMana(VAL:int) : *\\n','mana helper')"
+          new="m=__import__('re').search(r'(?m)^      public function setMana\\([^\\n]+\\) : \\*$',p)\nif not m: raise SystemExit('mana helper: setMana signature not found')\np=p[:m.start()]+insert+p[m.start():]"
+          if old not in s: raise SystemExit('V2 builder hotfix anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
           python3 tools/epicwar5/build_source_mod_v2.py /tmp/ew5/export
 
       - name: Import patched scripts
