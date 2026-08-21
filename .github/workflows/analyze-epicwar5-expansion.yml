@@ -1,0 +1,67 @@
+name: Analyze Epic War 5 Expansion Systems
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/analyze-epicwar5-expansion.yml'
+      - 'tools/epicwar5/EXPANSION-V3-DESIGN.md'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download exact game and FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5 /tmp/ffdec
+          curl -fL --retry 3 --connect-timeout 20 'https://cache.armorgames.com/files/games/epic-war-5-12518.swf' -o /tmp/ew5/original.swf
+          test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export ActionScript
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5/export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
+          test -f /tmp/ew5/export/scripts/Game/Manager/DataManager.as
+      - name: Build expansion class map
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd /tmp/ew5/export/scripts
+          {
+            echo '=== unit equip / army slots ==='
+            grep -RniE 'unit_equip|equip[0-9]_id|unit slot|unit_slot' Game | head -n 500 || true
+            echo '=== equipment / item equip ==='
+            grep -RniE 'item.*equip|equip.*item|accessor|equipment|itemSetValue|itemGetValue' Game | head -n 700 || true
+            echo '=== abilities / upgrades ==='
+            grep -RniE 'ability[0-9]|unlockAbility|skill|upgrade' Game | head -n 900 || true
+            echo '=== stages / campaign ==='
+            grep -RniE 'mission_stage|stageSetValue|stageGetValue|stage_id|stageSelect|stage_select|trial|extra' Game | head -n 900 || true
+            echo '=== stat definitions ==='
+            grep -RniE 'CharTotalStat|ItemTotalStat|Stage.*Stat|Enemy.*Stat|unit_ability' Game | head -n 900 || true
+          } > /tmp/ew5/class-map.txt
+          grep -RlE 'unit_equip|item.*equip|equip.*item|ability[0-9]|unlockAbility|mission_stage|stageSetValue|stageGetValue|CharTotalStat|ItemTotalStat' Game | sort -u > /tmp/ew5/candidate-files.txt || true
+          mkdir -p /tmp/ew5/candidates
+          while IFS= read -r f; do mkdir -p "/tmp/ew5/candidates/$(dirname "$f")"; cp "$f" "/tmp/ew5/candidates/$f"; done < /tmp/ew5/candidate-files.txt
+      - name: Upload expansion analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-analysis
+          retention-days: 7
+          path: |
+            /tmp/ew5/class-map.txt
+            /tmp/ew5/candidate-files.txt
+            /tmp/ew5/candidates
+            /tmp/ew5/export.log
