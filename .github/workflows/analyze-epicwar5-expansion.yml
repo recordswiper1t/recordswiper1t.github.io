@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/analyze-epicwar5-expansion.yml'
       - 'tools/epicwar5/EXPANSION-V3-DESIGN.md'
+  pull_request:
+    paths:
+      - 'tools/epicwar5/expansion/**'
+      - 'tools/epicwar5/EXPANSION-V3-DESIGN.md'
+      - '.github/workflows/analyze-epicwar5-expansion.yml'
 
 permissions:
   contents: read
@@ -15,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
