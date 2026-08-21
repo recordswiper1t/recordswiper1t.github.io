@@ -18,9 +18,12 @@ jobs:
       - name: Export live V8 classes
         run: |
           rm -rf /tmp/out /tmp/live && mkdir -p /tmp/out /tmp/live
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder' -export script /tmp/out assets/kingdom-rush-frontiers-v8.swf || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder,§_-oH§,TowerSoldierAssassin,TowerSoldierTemplar' -export script /tmp/out assets/kingdom-rush-frontiers-v8.swf || true
           cp /tmp/out/scripts/Level.as /tmp/live/Level.as
           cp /tmp/out/scripts/TowerHolder.as /tmp/live/TowerHolder.as
+          cp /tmp/out/scripts/§_-oH§.as /tmp/live/TowerSoldier.as
+          cp /tmp/out/scripts/TowerSoldierAssassin.as /tmp/live/TowerSoldierAssassin.as
+          cp /tmp/out/scripts/TowerSoldierTemplar.as /tmp/live/TowerSoldierTemplar.as
       - uses: actions/upload-artifact@v4
         with:
           name: v8-live-source
