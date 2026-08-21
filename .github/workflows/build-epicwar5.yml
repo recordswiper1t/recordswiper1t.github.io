@@ -1,0 +1,76 @@
+name: Build Epic War 5 Sandbox
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/epicwar5/**'
+      - '.github/workflows/build-epicwar5.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download original Epic War 5 SWF
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p .build/epicwar5 assets
+          urls=(
+            'https://cache.armorgames.com/files/games/epic-war-5-12518.swf'
+            'https://locker.phinugamma.org/swf/armorgames/epic-war-5-12518.swf'
+            'https://www.walshmedicalmedia.com/games/swf/epic-war-5.swf'
+          )
+          ok=0
+          for u in "${urls[@]}"; do
+            if curl -fL --retry 2 --connect-timeout 20 "$u" -o .build/epicwar5/original.swf; then
+              sz=$(stat -c%s .build/epicwar5/original.swf)
+              if [ "$sz" -gt 15000000 ]; then ok=1; echo "$u" > .build/epicwar5/source-url.txt; break; fi
+            fi
+          done
+          test "$ok" = 1
+          head -c 3 .build/epicwar5/original.swf
+          sha256sum .build/epicwar5/original.swf
+
+      - name: Build sandbox and chaos variants
+        run: |
+          python3 tools/epicwar5/build_mod.py \
+            .build/epicwar5/original.swf \
+            assets/epic-war-5-sandbox-v1.swf \
+            --report assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json
+          python3 tools/epicwar5/build_mod.py \
+            .build/epicwar5/original.swf \
+            assets/epic-war-5-chaos-v1.swf \
+            --chaos --report assets/EPIC-WAR-5-CHAOS-V1-BUILD.json
+
+      - name: Verify SWFs and checksums
+        shell: bash
+        run: |
+          set -eux
+          python3 - <<'PY'
+          from pathlib import Path
+          for p in [Path('assets/epic-war-5-sandbox-v1.swf'),Path('assets/epic-war-5-chaos-v1.swf')]:
+              b=p.read_bytes()
+              assert b[:3] in (b'FWS',b'CWS',b'ZWS')
+              assert len(b)>15_000_000
+              print(p,len(b),b[:3])
+          PY
+          sha256sum assets/epic-war-5-*-v1.swf > assets/EPIC-WAR-5-SHA256SUMS.txt
+
+      - name: Publish generated builds
+        shell: bash
+        run: |
+          set -eux
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/epic-war-5-sandbox-v1.swf assets/epic-war-5-chaos-v1.swf \
+                  assets/EPIC-WAR-5-SANDBOX-V1-BUILD.json assets/EPIC-WAR-5-CHAOS-V1-BUILD.json \
+                  assets/EPIC-WAR-5-SHA256SUMS.txt
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Build Epic War 5 sandbox v1'
+          git push
