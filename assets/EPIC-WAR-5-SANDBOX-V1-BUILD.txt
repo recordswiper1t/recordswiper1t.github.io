@@ -1,0 +1,8 @@
+Epic War 5 — Extensive Sandbox V1
+Source: Armor Games Epic War 5 v1.05, SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Built and re-decompile verified with FFDec 26.2.1.
+Progression: 99,999,999 gold, all 33 player character entries unlocked, 999,999 EXP each, full 9-slot skill trees, 99 copies of all 30 accessories, all 25 stages accessible, hero completion flags enabled.
+Battle: 9,999 mana, high regen, all spells free, building cap raised to 999, equipped units auto-produce rapidly with at least 12 population each.
+Sandbox HUD hotkeys: F1 fill mana; F2/F3 previous/next unit; F4 spawn ally; F5 spawn enemy; F6 batch 1/5/20/50; F7 speed 1x/4x/8x; F8 wipe enemies; F9 instant win; F10 heal allies.
+Spawn selector includes regular units, titans, and all three heroes and can place the selected class on either side.
+Existing saves are upgraded into sandbox progression on load and re-saved; use a separate browser profile/site-data backup if you want to preserve a vanilla progression save.
