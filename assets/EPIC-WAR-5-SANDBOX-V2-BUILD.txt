@@ -1,0 +1,10 @@
+Epic War 5 — Optional Sandbox V2
+Source: Armor Games Epic War 5 v1.05, SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Built and re-decompile verified with FFDec 26.2.1.
+Vanilla-by-default: loading the mod no longer maxes or rewrites progression and battle cheats start disabled.
+F1 adds the selected mana amount instead of filling to a hard-coded maximum. [ and ] halve/double the amount from 10 to 5000.
+F11 toggles free spells. F12 toggles rapid unit production for newly initialized unit spawners.
+B toggles the building cap between vanilla 4 and 999. P toggles population boost for newly initialized unit spawners.
+F2/F3 select unit; F4/F5 spawn selected ally/enemy; F6 cycles batch 1/5/20/50; F7 cycles 1x/4x/8x; F8 wipes enemies; F9 instant win; F10 heals allies.
+The backtick key hides/shows the sandbox HUD. All optional battle toggles reset to OFF when the SWF starts.
+The legacy max-all helper remains in the binary as an explicit developer action, but is not called on new-save or load paths.
