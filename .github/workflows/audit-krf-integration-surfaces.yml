@@ -5,12 +5,10 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/audit-krf-integration-surfaces.yml'
-      - 'tools/ultimate/**'
   push:
     branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - '.github/workflows/audit-krf-integration-surfaces.yml'
-      - 'tools/ultimate/**'
   workflow_dispatch:
 
 permissions:
