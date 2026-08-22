@@ -37,18 +37,20 @@ def stage_contract(stage_text: str, kr1_members: dict, krf_members: dict) -> dic
     kr1_names = set(kr1_members)
     krf_names = set(krf_members)
     own = set(stage_members)
+    inherited_this = set(refs["this_refs_not_declared_locally"]) & kr1_names
+    inherited_super = set(refs["super_refs"]) & kr1_names
     inherited_unqualified = set(refs["unqualified_calls_not_declared_locally"]) & kr1_names
-    direct = (
-        set(refs["this_refs_not_declared_locally"])
-        | set(refs["super_refs"])
-        | inherited_unqualified
+    direct = inherited_this | inherited_super | inherited_unqualified
+    framework_or_ancestor = sorted(
+        (set(refs["this_refs_not_declared_locally"]) | set(refs["super_refs"])) - kr1_names
     )
     missing = sorted(x for x in direct if x not in krf_names and x not in own)
     shared = sorted(x for x in direct if x in krf_names)
     return {
         "class": class_info(stage_text),
         "declared_member_count": len(own),
-        "direct_inherited_refs": sorted(direct),
+        "direct_kr1_level_refs": sorted(direct),
+        "framework_or_ancestor_refs_not_in_kr1_level": framework_or_ancestor,
         "shared_frontiers_refs": shared,
         "missing_frontiers_refs": missing,
         "confirmed_inherited_unqualified_calls": sorted(inherited_unqualified),
@@ -74,6 +76,7 @@ def main() -> int:
 
     stages = {}
     frequency = Counter()
+    framework_frequency = Counter()
     missing_levels = []
     for n in range(args.first, args.last + 1):
         name = f"Level{n}.as"
@@ -85,6 +88,7 @@ def main() -> int:
         contract = stage_contract(read(path), kr1m, krfm)
         stages[f"Level{n}"] = contract
         frequency.update(contract["missing_frontiers_refs"])
+        framework_frequency.update(contract["framework_or_ancestor_refs_not_in_kr1_level"])
 
     union_missing = sorted(frequency)
     union_candidates = {
@@ -110,11 +114,13 @@ def main() -> int:
         "union_missing_frontiers_ref_count": len(union_missing),
         "union_missing_frontiers_refs": union_missing,
         "missing_ref_frequency": dict(sorted(frequency.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "framework_or_ancestor_ref_frequency": dict(sorted(framework_frequency.items(), key=lambda kv: (-kv[1], kv[0]))),
         "stages": stages,
         "adapter_candidates": union_candidates,
         "policy": {
             "single_kr1_level_adapter_target": True,
             "frontiers_level_is_authoritative": True,
+            "framework_inherited_members_are_not_adapter_stubs": True,
             "source_bodies_not_emitted": True,
         },
     }
@@ -137,6 +143,7 @@ def main() -> int:
         "missing_stage_numbers": missing_levels,
         "union_missing_frontiers_ref_count": len(union_missing),
         "most_common_missing_refs": frequency.most_common(20),
+        "most_common_framework_or_ancestor_refs": framework_frequency.most_common(20),
     }, indent=2))
 
     if missing_levels:
