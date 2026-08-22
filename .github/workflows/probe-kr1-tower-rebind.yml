@@ -7,6 +7,15 @@ on:
       - 'tools/ultimate/tower_registry.py'
       - 'tools/ultimate/rebind_namespaced_scripts.py'
       - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/port_plan.py'
+      - '.github/workflows/probe-kr1-tower-rebind.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/tower_registry.py'
+      - 'tools/ultimate/rebind_namespaced_scripts.py'
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/port_plan.py'
       - '.github/workflows/probe-kr1-tower-rebind.yml'
   workflow_dispatch:
 
