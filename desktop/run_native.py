@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Launch the optimized Kingdom Rush Frontiers V8 mod in native Ruffle.
+"""Launch the newest optimized Kingdom Rush Frontiers mod in native Ruffle.
 
-The launcher prefers the verified V8 SWF and falls back to the historical V7
-asset only if V8 is missing. Ruffle is downloaded once and cached locally.
+Windows avoids Vulkan by default because current Ruffle/wgpu builds can panic in
+the Vulkan command backend on some drivers. The launcher prefers DX12 and retries
+OpenGL when DX12 exits unsuccessfully. Use --vulkan only for explicit testing.
 """
 
 from __future__ import annotations
@@ -21,9 +22,13 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"
+V11_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v11.swf"
+V10_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v10.swf"
+V9_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v9.swf"
 V8_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v8.swf"
 V7_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"
-SWF = V11_SWF if V11_SWF.exists() else (V10_SWF if V10_SWF.exists() else (V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF)))
+SWF = next((p for p in (V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF) if p.exists()), V11_SWF)
 CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
@@ -40,13 +45,9 @@ def platform_patterns() -> tuple[list[str], list[str]]:
     if system == "windows":
         return ["windows"], ["x86_64", "x64", "64"]
     if system == "darwin":
-        if machine in {"arm64", "aarch64"}:
-            return ["macos", "darwin", "osx"], ["aarch64", "arm64", "universal"]
-        return ["macos", "darwin", "osx"], ["x86_64", "x64", "universal"]
+        return ["macos", "darwin", "osx"], ["aarch64", "arm64", "universal"] if machine in {"arm64", "aarch64"} else ["x86_64", "x64", "universal"]
     if system == "linux":
-        if machine in {"arm64", "aarch64"}:
-            return ["linux"], ["aarch64", "arm64"]
-        return ["linux"], ["x86_64", "x64", "64"]
+        return ["linux"], ["aarch64", "arm64"] if machine in {"arm64", "aarch64"} else ["x86_64", "x64", "64"]
     raise SystemExit(f"Unsupported operating system: {platform.system()}")
 
 
@@ -57,13 +58,9 @@ def score_asset(name: str) -> int:
         return -1
     if not (low.endswith(".zip") or low.endswith(".tar.gz") or low.endswith(".tgz")):
         return -1
-    score = 10
-    if "desktop" in low:
-        score += 5
+    score = 10 + (5 if "desktop" in low else 0) + (2 if any(x in low for x in ("x86_64", "aarch64", "arm64")) else 0)
     if "extension" in low or "web" in low:
         score -= 20
-    if "x86_64" in low or "aarch64" in low or "arm64" in low:
-        score += 2
     return score
 
 
@@ -86,8 +83,7 @@ def choose_release(channel: str):
 def choose_asset(release):
     ranked = sorted(((score_asset(a.get("name", "")), a) for a in release.get("assets", [])), key=lambda item: item[0], reverse=True)
     if not ranked or ranked[0][0] < 0:
-        names = ", ".join(a.get("name", "?") for a in release.get("assets", []))
-        raise SystemExit(f"Could not find a desktop Ruffle build for this laptop. Assets: {names}")
+        raise SystemExit("Could not find a native Ruffle archive for this system.")
     return ranked[0][1]
 
 
@@ -120,15 +116,12 @@ def install(channel: str) -> Path:
             shutil.copyfileobj(src, dst)
         staging = Path(tmp) / "unpacked"
         staging.mkdir()
-        low = archive.name.lower()
-        if low.endswith(".zip"):
+        if archive.name.lower().endswith(".zip"):
             with zipfile.ZipFile(archive) as zf:
                 zf.extractall(staging)
-        elif low.endswith((".tar.gz", ".tgz")):
+        else:
             with tarfile.open(archive, "r:gz") as tf:
                 tf.extractall(staging)
-        else:
-            raise SystemExit(f"Unsupported Ruffle archive: {archive.name}")
         if CACHE.exists():
             shutil.rmtree(CACHE)
         shutil.copytree(staging, CACHE)
@@ -136,24 +129,39 @@ def install(channel: str) -> Path:
     return find_executable(CACHE)
 
 
+def run_ruffle(exe: Path, backend: str | None, extra: list[str]) -> int:
+    env = os.environ.copy()
+    cmd = [str(exe)]
+    if backend:
+        env["WGPU_BACKEND"] = backend
+        cmd += ["--graphics", backend]
+    cmd += [str(SWF), *extra]
+    return subprocess.call(cmd, cwd=str(ROOT), env=env)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run optimized Kingdom Rush Frontiers V8 in native Ruffle")
-    parser.add_argument("--stable", action="store_true", help="Use the latest stable Ruffle instead of nightly")
-    parser.add_argument("--refresh", action="store_true", help="Redownload Ruffle")
-    parser.add_argument("ruffle_args", nargs=argparse.REMAINDER, help="Extra arguments forwarded to Ruffle after --")
+    parser = argparse.ArgumentParser(description="Run optimized Kingdom Rush Frontiers in native Ruffle")
+    parser.add_argument("--stable", action="store_true")
+    parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--vulkan", action="store_true", help="Explicitly test Vulkan on Windows")
+    parser.add_argument("--gl", action="store_true", help="Force OpenGL")
+    parser.add_argument("ruffle_args", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     if not SWF.exists():
         raise SystemExit(f"Missing game SWF: {SWF}")
     if args.refresh and CACHE.exists():
         shutil.rmtree(CACHE)
-    channel = "stable" if args.stable else "nightly"
-    exe = install(channel)
+    exe = install("stable" if args.stable else "nightly")
     extra = args.ruffle_args[1:] if args.ruffle_args and args.ruffle_args[0] == "--" else args.ruffle_args
-    version = "V8 optimized" if SWF == V8_SWF else "V7 fallback"
-    print(f"Launching Kingdom Rush Frontiers {version} with native Ruffle ({channel})")
-    print(f"Game: {SWF}")
-    print(f"Ruffle: {exe}")
-    return subprocess.call([str(exe), str(SWF), *extra], cwd=str(ROOT))
+    backend = None
+    if platform.system().lower() == "windows":
+        backend = "vulkan" if args.vulkan else ("gl" if args.gl else "dx12")
+    print(f"Launching {SWF.name} with native Ruffle" + (f" ({backend})" if backend else ""))
+    code = run_ruffle(exe, backend, extra)
+    if code != 0 and platform.system().lower() == "windows" and backend not in {"vulkan", "gl"}:
+        print(f"Ruffle exited with code {code}; retrying with OpenGL.")
+        code = run_ruffle(exe, "gl", extra)
+    return code
 
 
 if __name__ == "__main__":

@@ -7,47 +7,39 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#10120f">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Kingdom Rush Frontiers — V7 Time Attack</title>
+<title>Kingdom Rush Frontiers — V12 The Last Rift</title>
 <style>
-:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;background:#10120f;color:#f5f0dc}
-body{padding:24px 16px;background:radial-gradient(circle at 50% 10%,#37432e 0,#1b2018 42%,#10120f 100%)}
-.wrap{width:min(720px,100%);margin:0 auto}
-.card{padding:22px;border:1px solid #46503f;border-radius:20px;background:rgba(18,22,16,.96);margin-bottom:14px;box-shadow:0 18px 55px rgba(0,0,0,.25)}
-h1{margin:8px 0 10px;font-size:clamp(34px,8vw,52px);line-height:.98;letter-spacing:-.03em}
-h2{margin:0 0 10px;font-size:21px}
-p,li{color:#cfd6c8;line-height:1.5}
-ul{padding-left:22px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#293025;border:1px solid #46503f;color:#d9e7d3;font-size:12px;font-weight:700}
-.actions{display:grid;gap:10px;margin-top:18px}
-a.button{display:block;border-radius:14px;min-height:48px;padding:13px 16px;font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-decoration:none;text-align:center;background:#d3a64b;color:#1b160d}
-a.secondary{background:#2c312a;color:#f5f0dc;border:1px solid #4c5548}
-.muted{font-size:13px;color:#9ea898}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#10120f;color:#f5f0dc}body{padding:24px 16px;background:radial-gradient(circle at 50% 10%,#3c3150 0,#1b2018 44%,#10120f 100%)}.wrap{width:min(760px,100%);margin:0 auto}.card{padding:22px;border:1px solid #514660;border-radius:20px;background:rgba(18,22,16,.96);margin-bottom:14px;box-shadow:0 18px 55px rgba(0,0,0,.25)}h1{margin:8px 0 10px;font-size:clamp(34px,8vw,52px);line-height:.98;letter-spacing:-.03em}h2{margin:0 0 10px;font-size:21px}p,li{color:#cfd6c8;line-height:1.5}ul{padding-left:22px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#30283d;border:1px solid #5f5271;color:#eadcff;font-size:12px;font-weight:700}.actions{display:grid;gap:10px;margin-top:18px}a.button{display:block;border-radius:14px;min-height:48px;padding:13px 16px;font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-decoration:none;text-align:center;background:#d3a64b;color:#1b160d}a.secondary{background:#2c312a;color:#f5f0dc;border:1px solid #4c5548}.muted{font-size:13px;color:#9ea898}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em}
 </style>
 </head>
 <body>
 <main class="wrap">
 <section class="card">
-<span class="pill">LATEST BUILD • V7 TIME ATTACK</span>
+<span class="pill">LATEST BUILD • V12 THE LAST RIFT</span>
 <h1>Kingdom Rush Frontiers</h1>
-<p><strong>V7 is the current mod build.</strong> The underlying SWF still uses the historical filename <code>kingdom-rush-frontiers-v5.swf</code>, but the contents are the V7 build verified by <code>V7-SHA256SUMS.txt</code>.</p>
+<p><strong>V12 is the current full sandbox release.</strong> It layers the Last Rift post-boss act and full-run scoring on top of V11's exact tower blueprints, diagnostics and sandbox cleanup tools.</p>
 <div class="actions">
-<a class="button" href="/mod/fast.html">Play V7 Time Attack</a>
-<a class="button secondary" href="/play-v4.html">Play older V4 build</a>
-<a class="button secondary" href="/">Clean game player</a>
+<a class="button" href="/mod/fast.html?v=12-last-rift">Play V12 in browser</a>
+<a class="button secondary" href="https://github.com/recordswiper1t/recordswiper1t.github.io">Download native desktop version</a>
+<a class="button secondary" href="/play-v4.html">Older V4 compatibility build</a>
 </div>
+<p class="muted">For large swarms and the 30-wave post-boss act, native desktop Ruffle is recommended because it avoids browser/WebAssembly overhead.</p>
 </section>
 <section class="card">
-<h2>V7 highlights</h2>
+<h2>V12 highlights</h2>
 <ul>
-<li><strong>Timer + all waves:</strong> activates every authored wave immediately when enabled before wave 1.</li>
-<li><strong>Time attack:</strong> measures wall-clock time from launch until spawning is finished and the final living enemy is killed.</li>
-<li><strong>Persistent best times:</strong> stored per level/mode in a separate SharedObject.</li>
-<li><strong>Recycle exits:</strong> enemies loop back to path node 0 instead of causing life loss, exit gold, or destruction.</li>
-<li><strong>V6 features retained:</strong> sandbox controls, heroes, boss-safe Send All behavior, Add Gold/Lives, unlimited mode, instant win, and swarm-performance patches.</li>
+<li><strong>The Last Rift:</strong> after the original Level 15 campaign boss, the level continues into a new 30-wave second act with three runtime-built routes and 15 additional tower sites.</li>
+<li><strong>New post-boss combat roster:</strong> evolved Rift enemy archetypes, support healing, enraging stalkers and the wave-30 Rift Sovereign boss.</li>
+<li><strong>Map allies:</strong> Nyra the Riftwarden and the Rift Beacon provide map-only support roles using safe embedded animation assets.</li>
+<li><strong>Loop/recycle records:</strong> persistent fastest completion, fewest virtual lives lost and combined score. Official bests require a complete run started before wave 1.</li>
+<li><strong>Exact tower blueprints:</strong> Ctrl+C/Ctrl+V preserves standard tower tier and permanent purchased tier-4 ability ranks where exposed by the SWF.</li>
+<li><strong>Sandbox lifecycle:</strong> menu pause safety, hero summon cleanup, sellable map specials, complete enemy catalog, cleanup controls and presets.</li>
+<li><strong>Performance:</strong> native launcher renderer fallback, allocation-conscious swarm logic, adaptive visual quality and configurable load thresholds while combat remains full-rate.</li>
 </ul>
-<p class="muted">The filename is intentionally left alone to avoid breaking saved links and the existing player. Version labels now reflect the actual build.</p>
+</section>
+<section class="card">
+<h2>Windows crash protection</h2>
+<p>The native launcher defaults to DirectX 12 and retries OpenGL if the selected renderer exits unsuccessfully. Vulkan is opt-in only. This avoids the wgpu/Vulkan panic seen on some Windows driver combinations.</p>
 </section>
 </main>
 </body>

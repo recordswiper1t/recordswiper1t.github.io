@@ -1,0 +1,71 @@
+name: Audit V12 release surface
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/kingdom-rush-frontiers-v12.swf'
+      - 'assets/V12-BUILD.txt'
+      - 'assets/V12-SHA256SUMS.txt'
+      - 'desktop/**'
+      - 'index.html'
+      - 'mod/fast.html'
+      - 'mod/index.html'
+      - 'README.md'
+      - '.github/workflows/audit-v12-release.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'assets/kingdom-rush-frontiers-v12.swf'
+      - 'assets/V12-BUILD.txt'
+      - 'assets/V12-SHA256SUMS.txt'
+      - 'desktop/**'
+      - 'index.html'
+      - 'mod/fast.html'
+      - 'mod/index.html'
+      - 'README.md'
+      - '.github/workflows/audit-v12-release.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify release binary and checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s assets/kingdom-rush-frontiers-v12.swf
+          sha256sum -c assets/V12-SHA256SUMS.txt
+          head -c 3 assets/kingdom-rush-frontiers-v12.swf | grep -Eq 'FWS|CWS|ZWS'
+          grep -F 'Verified SHA-256: 6ef44a97f9b56fbed5a7af2c74f1b9fafdae7c7f3ef54c3d5627c588c56dc098' assets/V12-BUILD.txt
+      - name: Verify Python launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile desktop/run_native.py
+          python3 desktop/run_native.py --help >/dev/null
+          grep -F 'V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"' desktop/run_native.py
+          grep -F '"dx12"' desktop/run_native.py
+          grep -F '"gl"' desktop/run_native.py
+      - name: Verify PowerShell launcher syntax and renderer fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F '$V12 = Join-Path $Root' desktop/run-native.ps1
+          grep -F "'dx12'" desktop/run-native.ps1
+          grep -F "'gl'" desktop/run-native.ps1
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
+          fi
+      - name: Verify browser and documentation target V12
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F 'v12-last-rift' index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12.swf?v=12-last-rift' mod/fast.html
+          grep -F 'LATEST BUILD • V12 THE LAST RIFT' mod/index.html
+          grep -F 'V12' README.md
+          grep -F 'DX12' desktop/README.md
+          grep -F 'OpenGL' desktop/README.md

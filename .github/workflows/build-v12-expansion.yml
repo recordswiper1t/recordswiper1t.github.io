@@ -1,0 +1,121 @@
+name: Build V12 post-boss expansion
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/v12/**'
+      - '.github/workflows/build-v12-expansion.yml'
+      - 'desktop/run-native.ps1'
+      - 'desktop/run_native.py'
+  push:
+    branches: [main, agent/v12-postboss-expansion]
+    paths:
+      - 'tools/v12/**'
+      - '.github/workflows/build-v12-expansion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Verify exact V11 base
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum -c assets/V11-SHA256SUMS.txt
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export V11 ActionScript
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v12 /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v12 /tmp/import/scripts /tmp/out /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v12 assets/kingdom-rush-frontiers-v11.swf >/tmp/export-v12.log 2>&1 || true
+          test -f /tmp/v12/scripts/Level.as
+          test -f /tmp/v12/scripts/Level15.as
+          test -f /tmp/v12/scripts/Enemy.as
+      - name: Apply V12 expansion and scoring patches
+        run: |
+          set -euo pipefail
+          python3 tools/v12/run-build-v12.py /tmp/v12/scripts
+          for f in 'Level.as' 'Level15.as' 'Enemy.as' 'EnemyCanibalBeast.as' 'EnemyTremor.as'; do
+            cp "/tmp/v12/scripts/$f" "/tmp/import/scripts/$f"
+          done
+          [ -d /tmp/v12/_assets ] && cp -a /tmp/v12/_assets /tmp/import/_assets || true
+      - name: Import patched V12 ActionScript
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v11.swf /tmp/out/kingdom-rush-frontiers-v12.swf /tmp/import >/tmp/import-v12.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v12.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v12.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-export and verify V12
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v12.swf >/tmp/verify-v12.log 2>&1 || true
+          grep -F 'THE LAST RIFT' /tmp/verify/scripts/Level15.as
+          grep -F 'VORAK, THE RIFT SOVEREIGN' /tmp/verify/scripts/Level15.as
+          grep -F 'NYRA THE RIFTWARDEN' /tmp/verify/scripts/Level15.as
+          grep -F 'qolV12BuildPath' /tmp/verify/scripts/Level15.as
+          grep -F 'qolVirtualLivesLost' /tmp/verify/scripts/Level.as
+          grep -F 'qolRunStartedAtWave' /tmp/verify/scripts/Level.as
+          grep -F 'SoldierSandWarrior' /tmp/verify/scripts/Level.as
+          grep -F 'SoldierMirageIllusion' /tmp/verify/scripts/Level.as
+          grep -F 'BANK CURRENT LOOP RUN' /tmp/verify/scripts/Level.as
+          grep -F 'Adaptive render quality' /tmp/verify/scripts/Level.as
+          grep -F 'qolRecordVirtualLivesLost(this.cost)' /tmp/verify/scripts/Enemy.as
+          grep -F 'qolRecordVirtualLivesLost(this.cost)' /tmp/verify/scripts/EnemyCanibalBeast.as
+          grep -F 'qolRecordVirtualLivesLost(this.cost)' /tmp/verify/scripts/EnemyTremor.as
+          sha256sum /tmp/out/kingdom-rush-frontiers-v12.swf > /tmp/out/V12-SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-v12-expansion
+          path: /tmp/out
+      - name: Publish V12 on branch/main pushes
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v12.swf assets/kingdom-rush-frontiers-v12.swf
+          sha256sum assets/kingdom-rush-frontiers-v12.swf > assets/V12-SHA256SUMS.txt
+          cat > assets/V12-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V12: The Last Rift — Full Audit Release
+          - 30-wave post-final-boss act with three runtime-built routes and 15 extra tower sites.
+          - Evolved Rift enemy archetypes, Vorak the Rift Sovereign, Nyra the Riftwarden and the Rift Beacon.
+          - Full-run loop records for fastest time, fewest virtual lives lost and combined score (seconds + 15s per virtual life).
+          - Hero-owned summon cleanup for Cronan, Alric and Mirage.
+          - Adaptive visual quality and amortized Last Rift scans while combat remains full-rate.
+          - DX12-first Windows native launcher with OpenGL fallback; Vulkan is explicit opt-in only.
+          - Retains all V11 sandbox/blueprint/performance work and V10/V9/V8 fixes.
+          Built, imported, re-exported and structurally verified with FFDec 26.2.1.
+          TXT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('desktop/run-native.ps1'); s=p.read_text(encoding='utf-8')
+          if '$V12 =' not in s:
+              s=s.replace("$V11 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v11.swf'", "$V12 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v12.swf'\n$V11 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v11.swf'",1)
+              s=s.replace('$Swf = if (Test-Path $V11) { $V11 }', '$Swf = if (Test-Path $V12) { $V12 } elseif (Test-Path $V11) { $V11 }',1)
+              s=s.replace("$label = if ($Swf -eq $V11) { 'V11 sandbox' }", "$label = if ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V11 sandbox' }",1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          p=Path('desktop/run_native.py'); s=p.read_text(encoding='utf-8')
+          if 'V12_SWF' not in s:
+              s=s.replace('V11_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v11.swf"', 'V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"\nV11_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v11.swf"',1)
+              s=s.replace('(V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF)', '(V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF)',1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v12.swf assets/V12-BUILD.txt assets/V12-SHA256SUMS.txt desktop/run-native.ps1 desktop/run_native.py
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build verified V12 Last Rift expansion [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
