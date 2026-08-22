@@ -1,32 +1,24 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import sys
+import re, sys
 
 if len(sys.argv) != 2:
     raise SystemExit('usage: audio_popups.py <exported-v12-scripts-dir>')
-root = Path(sys.argv[1])
-
-def read(p):
-    return (root / p).read_text(encoding='utf-8-sig')
+root=Path(sys.argv[1])
+def read(p): return (root/p).read_text(encoding='utf-8-sig')
 def write(p,s):
-    path = root / p
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(s, encoding='utf-8', newline='\n')
-def rep(s, old, new, label):
-    c=s.count(old)
-    if c != 1:
-        raise SystemExit(f'{label}: expected 1 match, got {c}')
-    return s.replace(old,new,1)
+    q=root/p; q.parent.mkdir(parents=True,exist_ok=True); q.write_text(s,encoding='utf-8',newline='\n')
+def rep(s,a,b,label):
+    n=s.count(a)
+    if n!=1: raise SystemExit(f'{label}: expected 1 match, got {n}')
+    return s.replace(a,b,1)
+def sub1(s,pat,repl,label,flags=re.S):
+    out,n=re.subn(pat,repl,s,count=1,flags=flags)
+    if n!=1: raise SystemExit(f'{label}: expected 1 regex match, got {n}')
+    return out
 
-# ------------------------------------------------------------------
-# SoundManager: selective FX/music mutes become authoritative.
-# Preserve requested volume even when currently muted; mute/unmute
-# existing channels immediately; global pause mute respects category
-# preferences when restoring channels.
-# ------------------------------------------------------------------
-sm_path='§_-aQ§/§for for dynamic§.as'
-sm=read(sm_path)
-
+# ---------------- Sound manager ----------------
+sm_path='§_-aQ§/§for for dynamic§.as'; sm=read(sm_path)
 sm=rep(sm,
 '''      public function §_-In§() : void
       {
@@ -75,15 +67,15 @@ sm=rep(sm,
       private function qolApplyCategoryVolumes() : void
       {
          var item:§_-ac§ = null;
-         var name:String = null;
+         var soundName:String = null;
          var i:int = 0;
          while(i < this.§_-YH§.length)
          {
             item = this.§_-YH§[i] as §_-ac§;
             if(item != null)
             {
-               name = item.name;
-               if(this.§do for set§ || this.§_-8o§ && this.§_-eA§(name) || this.§_-3i§ && this.§_-Q5§(name))
+               soundName = item.name;
+               if(this.§do for set§ || this.§_-8o§ && this.§_-eA§(soundName) || this.§_-3i§ && this.§_-Q5§(soundName))
                {
                   item.setVolume(0);
                }
@@ -95,8 +87,7 @@ sm=rep(sm,
             i++;
          }
       }
-''','sound category methods')
-
+''','category mute methods')
 sm=rep(sm,
 '''      public function playSound(param1:String, param2:Number = 1, param3:Number = 0, param4:int = 0, param5:Boolean = true) : void
       {
@@ -106,8 +97,7 @@ sm=rep(sm,
       {
          var requestedVolume:Number = param2;
          var _loc6_:int = int(this.§_-YH§.length);
-''','requested sound volume')
-
+''','requested volume local')
 sm=rep(sm,
 '''         if(_loc9_.channel != null)
          {
@@ -119,55 +109,68 @@ sm=rep(sm,
             _loc9_.play(param3,param4,param2,param5);
             _loc9_.§_-Dh§ = requestedVolume;
             dispatchEvent(new SoundManagerEvent(SoundManagerEvent.§_-A7§,_loc9_));
-''','preserve desired sound volume')
+''','preserve requested volume')
 
-sm=rep(sm,
-'''             if(_loc3_ != null && _loc3_.channel != null && _loc3_.channel.soundTransform != null)
-             {
-                _loc3_.§_-Dh§ = _loc3_.channel.soundTransform.volume;
-                _loc3_.§_-Wa§ = true;
-             }
-''',
-'''             if(_loc3_ != null && _loc3_.channel != null && _loc3_.channel.soundTransform != null)
-             {
-                if(!(this.§_-8o§ && this.§_-eA§(_loc2_)) && !(this.§_-3i§ && this.§_-Q5§(_loc2_)))
-                {
-                   _loc3_.§_-Dh§ = _loc3_.channel.soundTransform.volume;
-                }
-                _loc3_.§_-Wa§ = true;
-             }
-''','global mute desired volume')
-
-sm=rep(sm,
-'''             _loc3_.§_-Wa§ = false;
-             this.§switch finally§(_loc2_,_loc3_.§_-Dh§);
-''',
-'''             _loc3_.§_-Wa§ = false;
-             if(this.§_-8o§ && this.§_-eA§(_loc2_) || this.§_-3i§ && this.§_-Q5§(_loc2_))
-             {
-                this.§switch finally§(_loc2_,0);
-             }
-             else
-             {
-                this.§switch finally§(_loc2_,_loc3_.§_-Dh§);
-             }
-''','global unmute respects categories')
+mute_fn='''      public function §_-u2§() : void
+      {
+         var item:§_-ac§ = null;
+         var soundName:String = null;
+         this.§do for set§ = true;
+         var i:int = 0;
+         while(i < this.§_-YH§.length)
+         {
+            item = this.§_-YH§[i] as §_-ac§;
+            if(item != null)
+            {
+               soundName = item.name;
+               if(!(this.§_-8o§ && this.§_-eA§(soundName)) && !(this.§_-3i§ && this.§_-Q5§(soundName)) && item.channel != null && item.channel.soundTransform != null)
+               {
+                  item.§_-Dh§ = item.channel.soundTransform.volume;
+               }
+               item.§_-Wa§ = true;
+               item.setVolume(0);
+            }
+            i++;
+         }
+         dispatchEvent(new SoundManagerEvent(SoundManagerEvent.§_-Fh§));
+      }
+      
+'''
+unmute_fn='''      public function §final const function§() : void
+      {
+         var item:§_-ac§ = null;
+         var soundName:String = null;
+         this.§do for set§ = false;
+         var i:int = 0;
+         while(i < this.§_-YH§.length)
+         {
+            item = this.§_-YH§[i] as §_-ac§;
+            if(item != null)
+            {
+               soundName = item.name;
+               item.§_-Wa§ = false;
+               if(this.§_-8o§ && this.§_-eA§(soundName) || this.§_-3i§ && this.§_-Q5§(soundName))
+               {
+                  item.setVolume(0);
+               }
+               else
+               {
+                  item.setVolume(item.§_-Dh§);
+               }
+            }
+            i++;
+         }
+         dispatchEvent(new SoundManagerEvent(SoundManagerEvent.§_-VG§));
+      }
+      
+'''
+sm=sub1(sm,r'      public function §_-u2§\(\) : void\n      \{.*?\n      \}\n      \n(?=      public function §final const function§)',mute_fn,'global mute function')
+sm=sub1(sm,r'      public function §final const function§\(\) : void\n      \{.*?\n      \}\n      \n(?=      public function §switch finally§)',unmute_fn,'global unmute function')
 write(sm_path,sm)
 
-# ------------------------------------------------------------------
-# Level: one master pop-up setting. It controls tooltip objects,
-# pause notifications, second-level notification cards and current
-# first-level tutorial signs. Add it to the sandbox settings too.
-# ------------------------------------------------------------------
+# ---------------- Popup master switch ----------------
 level=read('Level.as')
-level=rep(level,
-'''      public static var qolRecycleEnemies:Boolean = false;
-''',
-'''      public static var qolRecycleEnemies:Boolean = false;
-      
-      public static var qolPopupsEnabled:Boolean = true;
-''','popup static setting')
-
+level=rep(level,'      public static var qolRecycleEnemies:Boolean = false;\n','      public static var qolRecycleEnemies:Boolean = false;\n      \n      public static var qolPopupsEnabled:Boolean = true;\n','popup static')
 level=rep(level,
 '''            this.qolSettings.addChild(this.qolButton("SELL ALL MAP SPECIALS",28,330,524,"sell_specials"));
             this.qolSettings.addChild(this.qolButton("← Dashboard",165,410,250,"page_main"));
@@ -175,12 +178,8 @@ level=rep(level,
 '''            this.qolSettings.addChild(this.qolButton("SELL ALL MAP SPECIALS",28,330,524,"sell_specials"));
             this.qolSettings.addChild(this.qolButton("POP-UP HINTS: " + (Level.qolPopupsEnabled ? "ON" : "OFF"),28,386,524,"popup_hints"));
             this.qolSettings.addChild(this.qolButton("← Dashboard",165,442,250,"page_main"));
-''','popup settings button')
-
-level=rep(level,
-'''         else if(action == "unlimited")
-         {
-''',
+''','popup button')
+level=rep(level,'         else if(action == "unlimited")\n         {\n',
 '''         else if(action == "popup_hints")
          {
             Level.qolPopupsEnabled = !Level.qolPopupsEnabled;
@@ -200,12 +199,8 @@ level=rep(level,
          }
          else if(action == "unlimited")
          {
-''','popup settings action')
-
-level=rep(level,
-'''      public function sendPauseNotification(param1:String) : void
-      {
-''',
+''','popup action')
+level=rep(level,'      public function sendPauseNotification(param1:String) : void\n      {\n',
 '''      public function sendPauseNotification(param1:String) : void
       {
          if(!Level.qolPopupsEnabled)
@@ -213,7 +208,6 @@ level=rep(level,
             return;
          }
 ''','pause notification gate')
-
 level=rep(level,
 '''      public function sendSecondLevelNotification(param1:String) : void
       {
@@ -229,7 +223,6 @@ level=rep(level,
          this.§include return§.addNotification(param1);
       }
 ''','second notification gate')
-
 level=rep(level,
 '''      public function §_-gU§() : void
       {
@@ -245,12 +238,7 @@ level=rep(level,
          this.§include return§.addNotification(not);
       }
 ''','generic notification gate')
-
-level=rep(level,
-'''      public function addToopTip(param1:Tooltip) : void
-      {
-         this.removeToopTip();
-''',
+level=rep(level,'      public function addToopTip(param1:Tooltip) : void\n      {\n         this.removeToopTip();\n',
 '''      public function addToopTip(param1:Tooltip) : void
       {
          if(!Level.qolPopupsEnabled || !this.game.main.tooltipsStatus)
@@ -265,10 +253,9 @@ level=rep(level,
 ''','tooltip gate')
 write('Level.as',level)
 
-# First-level scripted BUILD HERE sign: skip the visual prompt when popups are off.
-tut_path='§dynamic const function§.as'
-tut=read(tut_path)
-tut=rep(tut,
+# Scripted level-1 BUILD HERE sign.
+tp='§dynamic const function§.as'; t=read(tp)
+t=rep(t,
 '''         Level1(this.level).buildSign = new §import const switch§(new Point(485,259),Level1(this.level));
          this.level.bullets.addChild(Level1(this.level).buildSign);
 ''',
@@ -277,24 +264,17 @@ tut=rep(tut,
             Level1(this.level).buildSign = new §import const switch§(new Point(485,259),Level1(this.level));
             this.level.bullets.addChild(Level1(this.level).buildSign);
          }
-''','build-here sign gate')
-write(tut_path,tut)
+''','build sign gate')
+write(tp,t)
 
-# Built-in pause/settings tooltip switch controls the same master preference.
-settings_path='§_-bK§.as'
-settings=read(settings_path)
-settings=rep(settings,
-'''                  this.cRoot.game.main.tooltipsStatus = true;
-                  this.§_-2O§();
-''',
+# Built-in Tooltips switch mirrors the same master setting.
+sp='§_-bK§.as'; st=read(sp)
+st=rep(st,'                  this.cRoot.game.main.tooltipsStatus = true;\n                  this.§_-2O§();\n',
 '''                  this.cRoot.game.main.tooltipsStatus = true;
                   Level.qolPopupsEnabled = true;
                   this.§_-2O§();
-''','built-in popup on')
-settings=rep(settings,
-'''                  this.cRoot.game.main.tooltipsStatus = false;
-                  this.§_-2O§();
-''',
+''','builtin popup on')
+st=rep(st,'                  this.cRoot.game.main.tooltipsStatus = false;\n                  this.§_-2O§();\n',
 '''                  this.cRoot.game.main.tooltipsStatus = false;
                   Level.qolPopupsEnabled = false;
                   this.cRoot.removeToopTip();
@@ -303,18 +283,15 @@ settings=rep(settings,
                      Level1(this.cRoot).buildSign.closeMe();
                   }
                   this.§_-2O§();
-''','built-in popup off')
-write(settings_path,settings)
+''','builtin popup off')
+write(sp,st)
 
-checks={
- 'Level.as':['qolPopupsEnabled','POP-UP HINTS:','if(!Level.qolPopupsEnabled)','popup_hints'],
- sm_path:['qolApplyCategoryVolumes','requestedVolume','global'],
- tut_path:['if(Level.qolPopupsEnabled)'],
- settings_path:['Level.qolPopupsEnabled = false','Level.qolPopupsEnabled = true']
-}
-for p,needles in checks.items():
-    txt=read(p)
+for p,needles in {
+ 'Level.as':['qolPopupsEnabled','POP-UP HINTS:','popup_hints'],
+ sm_path:['qolApplyCategoryVolumes','requestedVolume','public function §_-u2§','public function §final const function§'],
+ tp:['if(Level.qolPopupsEnabled)'],
+ sp:['Level.qolPopupsEnabled = false','Level.qolPopupsEnabled = true']}.items():
+    x=read(p)
     for needle in needles:
-        if needle not in txt:
-            raise SystemExit(f'{p}: missing {needle}')
+        if needle not in x: raise SystemExit(f'{p}: missing {needle}')
 print('V12.1 audio/popup patch applied')
