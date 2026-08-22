@@ -17,7 +17,7 @@ jobs:
       - name: Export V9 target classes and hero map
         run: |
           rm -rf /tmp/out /tmp/all /tmp/live && mkdir -p /tmp/out /tmp/all /tmp/live
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder,SoldierHeroCronan,SoldierFalcon,§_-Fu§,§_-5u§,SoldierDwarfWarrior,TowerDwarfRiflemen,TowerSoldierPirates,TowerSoldierAssassin,TowerSoldierTemplar' -export script /tmp/out assets/kingdom-rush-frontiers-v9.swf || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder,SoldierHeroCronan,SoldierFalcon,§_-Fu§,§_-5u§,SoldierDwarfWarrior,TowerDwarfRiflemen,TowerSoldierPirates,TowerSoldierAssassin,TowerSoldierTemplar,§_-Zs§,§_-MR§,§_-Xb§,§return const if§,§override import§' -export script /tmp/out assets/kingdom-rush-frontiers-v9.swf || true
           cp -a /tmp/out/scripts/. /tmp/live/
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -export script /tmp/all assets/kingdom-rush-frontiers-v9.swf >/tmp/all-export.log 2>&1 || true
           { grep -R -n -F 'extends §dynamic const class§' /tmp/all/scripts || true; echo '--- DWARF MATCHES ---'; grep -R -n -i -E 'dwarf|rurin|longbeard' /tmp/all/scripts | head -300 || true; } > /tmp/live/hero-map.txt
