@@ -1,0 +1,19 @@
+Epic War 5 — Expansion V3
+Source: canonical Armor Games SWF SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: be502012fb893aed7dcca620a40946e2957e5d76181c0878322b17e10db4cf17
+
+Progression expansion:
+- Army capacity grows from 3 to 12 slots across unique battle clears.
+- Equipment grows from 1 to 3 slots per unit/hero.
+- Each unit/hero supports 18 upgrade slots instead of 9.
+- Advanced upgrade page is progression-gated.
+- 25 additional expansion battles produce a 50-battle progression model.
+- 25 additional equipment rewards expand the catalog from 30 to 55 items.
+- Expansion encounters scale bosses, elites, portals, elements and multi-boss pressure into the endgame.
+- Locked army slots cannot deploy even when an older save contains units in them.
+
+Verification:
+- Full patch stack applied to the exact clean SWF.
+- FFDec import/rebuild succeeded.
+- Re-decompiled release contains all required expansion markers.
