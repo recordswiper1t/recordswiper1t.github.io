@@ -7,6 +7,12 @@ on:
     paths:
       - '.github/workflows/publish-epicwar5-v331-sitelock.yml'
       - 'tools/epicwar5/expansion/patch_sitelock_v331.py'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publish-epicwar5-v331-sitelock.yml'
+      - 'tools/epicwar5/expansion/patch_sitelock_v331.py'
   workflow_dispatch:
 
 permissions:
