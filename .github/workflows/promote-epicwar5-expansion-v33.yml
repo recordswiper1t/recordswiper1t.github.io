@@ -28,13 +28,17 @@ jobs:
           set -euxo pipefail
           mkdir -p /tmp/v33
           gh run download 32552291727 --repo "$GITHUB_REPOSITORY" --name epicwar5-expansion-v33-verified --dir /tmp/v33
-          test -s /tmp/v33/epic-war-5-expansion-v33.swf
+          SWF="$(find /tmp/v33 -type f -name 'epic-war-5-expansion-v33.swf' -print -quit)"
+          test -n "$SWF"
+          test -s "$SWF"
+          printf '%s\n' "$SWF" > /tmp/v33-swf-path
       - name: Stage exact verified release
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p assets
-          cp /tmp/v33/epic-war-5-expansion-v33.swf assets/epic-war-5-expansion-v33.swf
+          SWF="$(cat /tmp/v33-swf-path)"
+          cp "$SWF" assets/epic-war-5-expansion-v33.swf
           HASH="$(sha256sum assets/epic-war-5-expansion-v33.swf | cut -d' ' -f1)"
           printf '%s  assets/epic-war-5-expansion-v33.swf\n' "$HASH" > assets/EPICWAR5-EXPANSION-V33-SHA256SUMS.txt
           cat > assets/EPICWAR5-EXPANSION-V33-BUILD.txt <<EOF
