@@ -12,6 +12,12 @@ def one(old,new,label):
     if n!=1: raise SystemExit(f'{label}: expected 1 match, got {n}')
     t=t.replace(old,new,1)
 
+def two(old,new,label):
+    global t
+    n=t.count(old)
+    if n!=2: raise SystemExit(f'{label}: expected 2 matches, got {n}')
+    t=t.replace(old,new,2)
+
 def replace_method(name,next_name,new_body):
     global t
     start=t.index('      public function '+name+'(')
@@ -34,7 +40,6 @@ one('''         this.mUnit6 = new PlayerUnit(this.mGF,this.bSys,this.bSys.ui.uni
          this.mSpell1 =''','''         this.mUnit6 = new PlayerUnit(this.mGF,this.bSys,this.bSys.ui.unit6,"unit",this.mGF.datMgr.expansionGetUnitEquip(6),7);
          this.expansionInitUnits();
          this.mSpell1 =''','battle init extra units')
-# Also make first five use generic getters, so locked early-game slots don't spawn.
 for i,group in [(1,2),(2,3),(3,4),(4,5),(5,6)]:
     one(f'''         this.mUnit{i} = new PlayerUnit(this.mGF,this.bSys,this.bSys.ui.unit{i},"unit",this.mGF.datMgr.unit_equip{i}_id,{group});
 ''',f'''         this.mUnit{i} = new PlayerUnit(this.mGF,this.bSys,this.bSys.ui.unit{i},"unit",this.mGF.datMgr.expansionGetUnitEquip({i}),{group});
@@ -112,8 +117,6 @@ helpers='''      private function expansionInitUnits() : void
 one('''      public function setStateControl(VAL:String) : *
 ''',helpers+'''      public function setStateControl(VAL:String) : *
 ''','battle helper insert')
-
-# Destroy expansion controllers/clips after first six are destroyed and before spells.
 one('''         if(this.mUnit6)
          {
             this.mUnit6.destroy();
@@ -128,8 +131,6 @@ one('''         if(this.mUnit6)
          this.expansionDestroyUnits();
          if(this.mSpell1)
 ''','destroy extra units')
-
-# March/retreat helpers.
 one('''         this.mUnit6.cmdForceMove(3500);
          trace("all unit Marching ...!!");
 ''','''         this.mUnit6.cmdForceMove(3500);
@@ -155,34 +156,21 @@ one('''         this.mUnit6.cmdSelectedMove(100);
          this.cancelAllSelect();
 ''','selected retreat extras')
 
-# Select-all methods include second row.
-one('''         if(this.mUnit6)
+select_tail='''         if(this.mUnit6)
          {
             this.mUnit6.cmdSelect(true);
          }
          this.showCursor("unit");
-''','''         if(this.mUnit6)
-         {
-            this.mUnit6.cmdSelect(true);
-         }
-         this.expansionSelectAll(true);
-         this.showCursor("unit");
-''','select all extras')
-# Same tail occurs a second time in selectAllUnitHero.
-one('''         if(this.mUnit6)
-         {
-            this.mUnit6.cmdSelect(true);
-         }
-         this.showCursor("unit");
-''','''         if(this.mUnit6)
+'''
+select_tail_new='''         if(this.mUnit6)
          {
             this.mUnit6.cmdSelect(true);
          }
          this.expansionSelectAll(true);
          this.showCursor("unit");
-''','select all hero extras')
+'''
+two(select_tail,select_tail_new,'both select-all methods')
 
-# Extend selectGroupUnit after existing group 7.
 one('''         else if(NUM == 7)
          {
             if(this.mUnit6)
@@ -211,8 +199,6 @@ one('''         else if(NUM == 7)
          }
          this.showCursor("unit");
 ''','select expansion group')
-
-# Deselect second row.
 one('''         if(this.mUnit6)
          {
             this.mUnit6.cmdSelect(false);
@@ -227,8 +213,6 @@ one('''         if(this.mUnit6)
       }
       
       public function getLastSelected()''','deselect extras')
-
-# getLastSelected checks second row after first six.
 one('''         if(this.mUnit6.isSelected())
          {
             this.showCursor("unit");
@@ -251,8 +235,6 @@ one('''         if(this.mUnit6.isSelected())
          }
          return false;
 ''','last selected extras')
-
-# Cursor move executes selected controllers in second row as well.
 one('''               this.mUnit6.cmdExecute(this.cursorClip.x - this.mGF.contSCROLL.x);
                this.removeCursor();
 ''','''               this.mUnit6.cmdExecute(this.cursorClip.x - this.mGF.contSCROLL.x);
