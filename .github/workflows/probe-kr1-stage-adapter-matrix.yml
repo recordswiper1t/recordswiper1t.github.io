@@ -45,10 +45,15 @@ jobs:
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
 
       - name: Export source scripts and generate port plan
@@ -142,21 +147,26 @@ jobs:
             grep -F 'extends KR1__Level' "/tmp/u/verify/scripts/KR1__Level${n}.as"
           done
           grep -F 'qolTowerClipboard' /tmp/u/verify/scripts/Level.as
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ "$KRF_BASE" != 'assets/kingdom-rush-frontiers-v11.swf' ]; then
             grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
           fi
+          if [ "$HAS_V121" = '1' ]; then
+            grep -F 'qolPopupsEnabled' /tmp/u/verify/scripts/Level.as
+          fi
           python3 - <<'PY'
-          import json
+          import json, os
           from pathlib import Path
           m=json.load(open('/tmp/u/report/stage-api-matrix.json',encoding='utf-8'))
           b=json.load(open('/tmp/u/report/union-level-adapter-build.json',encoding='utf-8'))
           out={
               'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
               'source_ready_kr1_stage_classes_compiled': 19,
               'union_missing_frontiers_ref_count': m['union_missing_frontiers_ref_count'],
               'generated_compile_stub_count': b['generated_member_count'],
               'frontiers_constructor_forwarding': b.get('frontiers_constructor',{}),
               'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': os.environ.get('HAS_V121') == '1',
               'semantic_status': 'compile layer only; adapter stubs still require semantic implementation/runtime testing',
           }
           Path('/tmp/u/report/all-stage-adapter-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
