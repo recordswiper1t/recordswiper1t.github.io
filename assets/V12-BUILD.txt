@@ -1,10 +1,17 @@
-Kingdom Rush Frontiers — V12: The Last Rift
-- Adds a 30-wave post-final-boss second act to Level 15 with three new runtime-built routes and 15 extra tower sites.
+Kingdom Rush Frontiers — V12: The Last Rift — Full Audit Release
+- Adds a 30-wave post-final-boss second act to Level 15 with three runtime-built routes and 15 extra tower sites.
 - Adds seven post-boss enemy archetypes through new stats, colors and mechanics on safe embedded animations: Riftlings, Obsidian Guards, Void Stalkers, Ember Drakes, Shardwings, Rift Conductors and Titan Husks.
 - Adds Vorak, the Rift Sovereign: a wave-30 boss with massive durability, healing and fracture-pulse reinforcements.
 - Adds map-only allies Nyra the Riftwarden and the Rift Beacon, both with periodic area attacks.
-- Infinite/recycle mode now tracks virtual lives lost without ending the run. Records fastest time, fewest virtual lives lost and a combined score (seconds + 15s per virtual life).
-- Adds a Bank Current Loop Run control and separate post-boss score records.
-- Adds adaptive render quality under heavy/extreme/ultra loads while combat targeting, attacks and movement remain full-rate.
+- Infinite/recycle mode tracks virtual lives lost without ending the run. Records fastest time, fewest virtual lives lost and a combined score (seconds + 15s per virtual life).
+- Persistent bests are full-run records only: the run must start before wave 1 and finish every authored wave/enemy. The post-boss act has a separate record key.
+- Adds a Bank Current Loop Run control; incomplete/late-start runs cannot overwrite official bests.
+- Hero lifecycle cleanup now removes Cronan companions, Alric sand warriors and Mirage illusions immediately when their owning hero is disabled.
+- Adds adaptive render quality under heavy/extreme/ultra loads and amortizes Last Rift evolution scans; combat targeting, attacks and movement remain full-rate.
+- Removes temporary Point allocations from periodic Nyra/Rift Beacon area checks.
+- Windows native launcher defaults to DX12 and retries OpenGL, avoiding the known wgpu/Vulkan panic path unless Vulkan is explicitly requested.
+- Fixes the Python/macOS/Linux launcher and makes all native launchers prefer V12, then fall back through V11/V10/V9/V8/V7.
+- Browser entry points and player-facing documentation are aligned to the current V12 release; native Ruffle remains recommended for large swarms.
 - Retains all V11 sandbox/blueprint/performance features and the V10/V9/V8 fixes beneath them.
-Built, re-exported and structurally verified with FFDec 26.2.1.
+Built, imported, re-exported and structurally verified with FFDec 26.2.1.
+Verified SHA-256: 6ef44a97f9b56fbed5a7af2c74f1b9fafdae7c7f3ef54c3d5627c588c56dc098
