@@ -104,11 +104,12 @@ jobs:
             --output /tmp/u/rebind \
             --report /tmp/u/report/rebind-report.json
           python3 - <<'PY'
-          import json, pathlib, shutil
+          import json, pathlib, re, shutil
           d=json.load(open('/tmp/u/report/hero-registry.json',encoding='utf-8'))
           root=pathlib.Path('/tmp/u/rebind/scripts')
           out=pathlib.Path('/tmp/u/import/scripts')
           copied=[]
+          inheritance={}
           for row in d['routes']:
               if row['game']!='kr1' or row['role']!='selectable' or not row['source_ready']:
                   continue
@@ -116,15 +117,16 @@ jobs:
               hits=list(root.rglob(name))
               if len(hits)!=1:
                   raise SystemExit(f'{name}: expected one rebound source, got {len(hits)}')
+              text=hits[0].read_text(encoding='utf-8-sig',errors='replace')
+              m=re.search(r'\bclass\s+[^\s{]+(?:\s+extends\s+([^\s{]+))?',text)
+              inheritance[row['runtime_class']]=m.group(1) if m and m.group(1) else None
               shutil.copy2(hits[0],out/name)
               copied.append(row['runtime_class'])
           assert len(copied)==9
           pathlib.Path('/tmp/u/report/hero-compile-classes.json').write_text(json.dumps(copied,indent=2),encoding='utf-8')
-          print('\n'.join(copied))
+          pathlib.Path('/tmp/u/report/hero-inheritance.json').write_text(json.dumps(inheritance,indent=2),encoding='utf-8')
+          print(json.dumps(inheritance,indent=2))
           PY
-          for f in /tmp/u/import/scripts/KR1__SoldierHero*.as; do
-            grep -Eq 'extends[[:space:]]+SoldierHero|extends[[:space:]]+Soldier' "$f"
-          done
 
       - name: Compile nine publisher-source KR1 hero classes
         id: compile
@@ -175,10 +177,12 @@ jobs:
           python3 - <<'PY'
           import json, pathlib
           log=pathlib.Path('/tmp/u/import-heroes.log').read_text(encoding='utf-8',errors='replace')
+          inheritance=json.loads(pathlib.Path('/tmp/u/report/hero-inheritance.json').read_text())
           out={
               'compile_success': False,
               'exit_code': int(pathlib.Path('/tmp/u/import.exit').read_text().strip()),
-              'meaning': 'KR1 heroes require an explicit SoldierHero compatibility adapter before selector integration.',
+              'inheritance_after_rebind': inheritance,
+              'meaning': 'FFDec reached the real compile gate; use the compiler errors plus inheritance map to implement only the compatibility adapters actually required.',
               'log_tail': '\n'.join(log.splitlines()[-200:]),
           }
           pathlib.Path('/tmp/u/report/hero-rebind-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
@@ -192,6 +196,7 @@ jobs:
           path: |
             /tmp/u/report/hero-registry.json
             /tmp/u/report/hero-compile-classes.json
+            /tmp/u/report/hero-inheritance.json
             /tmp/u/report/rebind-report.json
             /tmp/u/report/hero-rebind-result.json
             /tmp/u/import-heroes.log
