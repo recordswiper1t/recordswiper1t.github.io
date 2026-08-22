@@ -36,8 +36,10 @@ jobs:
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
             -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          base='assets/kingdom-rush-frontiers-v12.swf'
+          base='assets/kingdom-rush-frontiers-v12-1.swf'
+          [ -s "$base" ] || base='assets/kingdom-rush-frontiers-v12.swf'
           [ -s "$base" ] || base='assets/kingdom-rush-frontiers-v11.swf'
+          echo "Auditing Frontiers base: $base"
           java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
             -export script /tmp/src "$base" >/tmp/report/export.log 2>&1 || true
           test -d /tmp/src/scripts
