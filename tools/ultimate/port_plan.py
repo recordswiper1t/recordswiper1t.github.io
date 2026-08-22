@@ -110,6 +110,24 @@ def main() -> None:
     print("stage logic classes:", len(plan["stage_logic"]))
     print("stage graphic classes:", len(plan["stage_graphics"]))
 
+    # Keep the shared-core assumptions visible in CI. These names are the
+    # immediate inheritance roots used by the tower/hero compatibility probes;
+    # printing their collision policy makes a false same-name assumption
+    # diagnosable before FFDec importScript is attempted.
+    by_name = {row["source"]: row for row in plan["classes"]}
+    for name in (
+        "TowerArcher", "TowerMage", "TowerEngineer", "TowerSoldier",
+        "SoldierHero", "Soldier", "Level", "Enemy", "Wave",
+    ):
+        row = by_name.get(name)
+        if row is None:
+            print(f"shared-core {name}: absent from KR1 export")
+            continue
+        print(
+            f"shared-core {name}: collides={row['collides']} "
+            f"policy={row['policy']} base={row.get('base')}"
+        )
+
 
 if __name__ == "__main__":
     main()
