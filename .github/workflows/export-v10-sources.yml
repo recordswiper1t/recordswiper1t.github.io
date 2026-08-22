@@ -1,0 +1,25 @@
+name: Export V10 source targets
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/export-v10-sources.yml']
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec
+        run: |
+          curl -fL 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export V9 target classes
+        run: |
+          rm -rf /tmp/out /tmp/live && mkdir -p /tmp/out /tmp/live
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,TowerHolder,SoldierHeroCronan,SoldierFalcon,SoldierDwarfWarrior,TowerDwarfRiflemen,TowerSoldierPirates,TowerSoldierAssassin,TowerSoldierTemplar' -export script /tmp/out assets/kingdom-rush-frontiers-v9.swf || true
+          cp -a /tmp/out/scripts/. /tmp/live/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v10-source-targets
+          path: /tmp/live
