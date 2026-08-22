@@ -6,7 +6,7 @@ Goal: one Frontiers-based runtime containing the original **Kingdom Rush** and *
 
 **Kingdom Rush Frontiers V12/V11 is the authoritative engine.**
 
-Do not stitch two SWFs together and do not replace Frontiers' global managers with KR1 versions. KR1 content is imported/namespaced into the Frontiers runtime. This keeps the existing mod infrastructure intact:
+Do not stitch two SWFs together as independent games and do not replace Frontiers' global managers with KR1 versions. KR1 content is imported into a collision-safe namespace and then selectively rebound to the Frontiers shared core. This keeps the existing mod infrastructure intact:
 
 - sandbox menu and direct enemy spawning
 - all current Frontiers hero toggles
@@ -54,7 +54,7 @@ The existing V11 blueprint/copy-paste layer should be extended to KR1 tier-4 cla
 
 ## Hero target
 
-Frontiers' hero lifecycle remains authoritative. KR1 heroes should be adapted behind a compatibility layer so both rosters can be selected/spawned on either campaign without changing Frontiers' existing hero implementation or sandbox toggles.
+Frontiers' hero lifecycle remains authoritative. The stable roster manifest targets **29 selectable heroes**: 13 from KR1 and 16 from Frontiers, plus the three Frontiers stage-secondary heroes as map content. KR1 heroes should be adapted behind a compatibility layer so both rosters can be selected/spawned on either campaign without changing Frontiers' existing hero implementation or sandbox toggles.
 
 Required compatibility work:
 
@@ -77,28 +77,82 @@ Suggested model:
 - unlock graph comes from the manifest
 - sandbox can bypass unlocks without mutating campaign completion
 
-The world-map UI can initially be a simple combined stage selector. A visually merged world map is a later polish item and must not block playable levels.
+The world-map UI can initially be a simple combined stage selector. A visually merged world map is later polish and must not block playable levels.
+
+## Verified KR1 publisher-source audit
+
+The V13 CI can fetch the historical Armor Games publisher build **ephemerally for structural/build work**. The source binary and decompiled scripts are not committed or uploaded as artifacts.
+
+Publisher endpoint used by the audit:
+
+`https://cache.armorgames.com/files/games/kingdom-rush-12141.swf`
+
+Verified SHA-256:
+
+`7b5467a3eccc17f6dd001ff2d41bdf1b03d79fd515a2a9586c42bfd982bb1e23`
+
+FFDec 26.2.1 structural inventory from that source versus the enhanced Frontiers runtime found:
+
+- KR1: 995 ActionScript classes
+- Frontiers: 1103 ActionScript classes in the audited base
+- 203 same-name class collisions
+- KR1 publisher build contains `Level1` through `Level19`
+- `Level1`-`Level12` are the main campaign
+- verified extra publisher-build levels cover Sarelgaz's Lair, Ruins of Acaroth, Rotten Forest, Hushwood, Bandit's Lair, Glacial Heights and Ha'Kraj Plateau
+- later KR1 additions not present in that publisher build remain reconstruction/source-port work
+
+The collision profile is favourable: most collisions are shared engine/UI/base classes (`Level`, `Enemy`, `Wave`, base tower/soldier/power classes, etc.), while most KR1-specific enemies, heroes and tier-4 towers have distinct identities.
+
+## Binary merge strategy
+
+FFDec's CLI `-importScript` can replace an existing AS3 script pack but cannot simply create all missing KR1 classes in the Frontiers SWF. V13 therefore uses a two-stage approach.
+
+### Stage 1 — collision-safe structural import
+
+1. Convert KR1 and the enhanced Frontiers base to FFDec SWF XML.
+2. Prefix every KR1 class/linkage as `KR1__*` for the initial structural proof.
+3. Offset KR1 character IDs into a non-overlapping range and fail if the combined UI16 character-ID space would exceed 65535.
+4. Import reusable `Define*` tags, ABC tags and linkage metadata before Frontiers' `EndTag`.
+5. Drop the KR1 document-class binding so Frontiers remains the executable document/runtime.
+6. Rebuild with `-xml2swf` and re-export with FFDec.
+7. Require both Frontiers mod classes/markers and namespaced KR1 levels/towers to be visible after the round trip.
+
+`tools/ultimate/merge_swf_xml.py` implements the streaming XML merge so the large XML files do not need to be held in memory at once.
+
+### Stage 2 — rebind playable KR1 content to Frontiers core
+
+A fully prefixed binary is safe but would otherwise carry a second KR1 engine. `tools/ultimate/port_plan.py` classifies collisions, and `tools/ultimate/rebind_namespaced_scripts.py` performs the bridge:
+
+- KR1 content identities such as `KR1__Level1` remain namespaced.
+- KR1 stage graphics such as `KR1__GLevel1` remain namespaced so their imported art/timelines are used.
+- references from KR1 content to shared colliding core types are rewritten from `KR1__Level`, `KR1__Enemy`, `KR1__Wave`, etc. back to the authoritative Frontiers `Level`, `Enemy`, `Wave`, etc.
+- the prefixed KR1 shadow-core definitions remain in the SWF but become dormant.
+- because the content classes already exist after Stage 1, FFDec `-importScript` can now replace/recompile them.
+
+The first compile probe deliberately targets only **Southport (`KR1__Level1`)**. Any compile errors at that point identify specific KR1-vs-Frontiers API differences that need adapters instead of hiding them behind a fake successful merge.
 
 ## Port order
 
-### Gate A — source inventory
+### Gate A — source inventory — substantially complete
 
-- Export Frontiers V12/V11 ActionScript with FFDec.
-- Export a user-supplied KR1 source SWF with FFDec.
-- Run `audit_exports.py` to find class collisions and build the KR1 namespace plan.
-- Inventory binary symbols/timelines needed by KR1 levels/towers/heroes/enemies.
+- Frontiers V12/V11 ActionScript export and source audit.
+- Ephemeral official-publisher KR1 fetch and FFDec audit.
+- Class-collision inventory and stable content manifest.
+- Binary/XML schema probes and class namespace policy.
 
-### Gate B — first real imported level
+### Gate B — first real imported level — active
 
 Port **Southport** into the Frontiers runtime with Frontiers towers/heroes first. It must pass:
 
+- structural SWF round-trip with both code sets present
+- Southport class recompilation against Frontiers `Level` shared core
 - paths and wave timing
 - enemy exits/lives
 - build spots
 - powers
 - campaign win/loss
 - Heroic/Iron modes
-- V11 sandbox and Time Attack controls
+- V11/V12 sandbox and Time Attack controls
 
 ### Gate C — combined towers
 
@@ -106,7 +160,7 @@ Implement four tier-4 choices per family and extend clipboard/ability-rank handl
 
 ### Gate D — KR1 roster and campaign
 
-Import KR1 enemies, bosses, map specials and heroes, then port all 12 main stages and 14 post-campaign stages.
+Import/rebind KR1 enemies, bosses, map specials and heroes, then port all 12 main stages and all available post-campaign content. Reconstruct/source-port the later KR1 stages absent from the publisher Flash build.
 
 ### Gate E — Frontiers later content
 
@@ -123,58 +177,34 @@ Do not mark Port Tortuga through Darklight Depths (or the two Frontiers endless 
 - endless maps accept both rosters/tower sets where mechanics permit
 - all V11/V12 enhancements work on imported stages
 - combined campaign selector and saves work
-- re-exported SWF structurally verified with the same FFDec version used by the existing pipeline
-- native desktop launcher prefers the verified Ultimate SWF only after these checks pass
+- re-exported SWF structurally verified with FFDec 26.2.1
+- native desktop/browser launchers prefer the verified Ultimate SWF only after these checks pass
 
 ## Current branch status
 
-`agent/v13-kingdom-rush-ultimate` is based on `agent/v12-postboss-expansion`, so the existing V12 work is preserved.
+`agent/v13-kingdom-rush-ultimate` preserves the V12 work, including The Last Rift.
 
-Implemented foundation:
+Implemented/under CI proof:
 
 - complete 51-stage original-game manifest plus V12 bonus stage metadata
+- complete 16-tier-4-tower / 29-selectable-hero target manifest
 - source/preflight validation with SHA-256 recording
-- ActionScript export inventory and collision reporting
-- deterministic KR1 namespace plan generation
-- reproducible FFDec source-audit preparation script
+- official-publisher KR1 structural audit
+- ActionScript collision reporting and import policy generation
+- FFDec XML schema/round-trip probes
+- streaming character-ID/linkage/ABC definition merger
+- fully namespaced KR1 binary-coexistence proof workflow
+- shared-core rebind tooling
+- Southport-to-Frontiers-core compile probe
 - ignored local binary inputs/work directories
 
 Not yet claimable as complete:
 
-- KR1 binary/source asset import (KR1 source is not currently present in this repository)
-- combined tier-4 upgrade UI/classes
-- KR1 heroes/enemies/stage classes in the Frontiers SWF
-- later Frontiers post-campaign/endless maps, because their source content is not embedded in the current Flash base
+- a gameplay-verified Southport inside the enhanced Frontiers runtime
+- combined tier-4 upgrade UI/behavior
+- KR1 hero compatibility adapters and combined hero selector
+- all KR1 campaign/post-campaign stages in the combined runtime
+- later Frontiers post-campaign/endless maps
+- final combined campaign/save UI and launcher promotion
 
-## Local preparation
-
-Keep source binaries outside version control (for example under `inputs/`, which is ignored):
-
-```text
-inputs/
-  kingdom-rush.swf
-  frontiers-extra/   # optional later-content export/source
-```
-
-Run a quick source check:
-
-```bash
-python3 tools/ultimate/preflight.py \
-  --frontiers assets/kingdom-rush-frontiers-v12.swf \
-  --kingdom-rush inputs/kingdom-rush.swf \
-  --frontiers-extra-export inputs/frontiers-extra
-```
-
-Then prepare deterministic exports/audit data:
-
-```bash
-python3 tools/ultimate/build_ultimate.py \
-  --ffdec /path/to/ffdec.jar \
-  --frontiers assets/kingdom-rush-frontiers-v12.swf \
-  --kingdom-rush inputs/kingdom-rush.swf \
-  --frontiers-extra-export inputs/frontiers-extra \
-  --work work/ultimate \
-  --keep-temp
-```
-
-The build must remain fail-closed: if required source/symbols are missing, report the missing dependency rather than silently substituting a different level or marking the merge verified.
+The build remains **fail-closed**: a generated SWF is not called V13/Ultimate merely because it can be serialized. Required class coexistence, Frontiers enhancement markers, stage recompilation and gameplay compatibility gates must pass first.
