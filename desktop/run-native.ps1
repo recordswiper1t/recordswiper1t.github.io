@@ -2,30 +2,73 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
 $Root = (Get-Location).Path
-$V121 = Join-Path $Root 'assets\kingdom-rush-frontiers-v12-1.swf'
-$V12 = Join-Path $Root 'assets\kingdom-rush-frontiers-v12.swf'
-$V11 = Join-Path $Root 'assets\kingdom-rush-frontiers-v11.swf'
-$V10 = Join-Path $Root 'assets\kingdom-rush-frontiers-v10.swf'
-$V9 = Join-Path $Root 'assets\kingdom-rush-frontiers-v9.swf'
-$V8 = Join-Path $Root 'assets\kingdom-rush-frontiers-v8.swf'
-$V7 = Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf'
-$Swf = if (Test-Path $V121) { $V121 } elseif (Test-Path $V12) { $V12 } elseif (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
-if (-not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
+$KrfCandidates = @(
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v12-1.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v12.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v11.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v10.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v9.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v8.swf'),
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf')
+)
+$StickWar = Join-Path $Root 'assets\stick-war-complete-v1.swf'
+$EpicWar5 = Join-Path $Root 'assets\epic-war-5-expansion-v331.swf'
+
+$Game = 'krf'
+$Refresh = $false
+$Stable = $false
+$ForceVulkan = $false
+$ForceGl = $false
+$ForceDx12 = $false
+$ForwardArgs = New-Object System.Collections.Generic.List[string]
+for ($i = 0; $i -lt $args.Count; $i++) {
+    $arg = [string]$args[$i]
+    switch ($arg) {
+        '--refresh' { $Refresh = $true; continue }
+        '--stable' { $Stable = $true; continue }
+        '--vulkan' { $ForceVulkan = $true; continue }
+        '--gl' { $ForceGl = $true; continue }
+        '--dx12' { $ForceDx12 = $true; continue }
+        '--game' {
+            if ($i + 1 -ge $args.Count) { throw '--game requires krf, stickwar, or epicwar5.' }
+            $i++
+            $Game = ([string]$args[$i]).ToLowerInvariant()
+            continue
+        }
+        '--stickwar' { $Game = 'stickwar'; continue }
+        '--epicwar5' { $Game = 'epicwar5'; continue }
+        '--krf' { $Game = 'krf'; continue }
+        default {
+            if ($arg -like '--game=*') { $Game = $arg.Substring(7).ToLowerInvariant(); continue }
+            $ForwardArgs.Add($arg)
+        }
+    }
+}
+
+switch ($Game) {
+    { $_ -in @('krf','kingdom-rush','frontiers') } {
+        $Game = 'krf'
+        $Swf = $KrfCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+        $GameLabel = 'Kingdom Rush Frontiers'
+        break
+    }
+    { $_ -in @('stickwar','stick-war','sw') } {
+        $Game = 'stickwar'; $Swf = $StickWar; $GameLabel = 'Super Stick War (SW1 + SW2)'; break
+    }
+    { $_ -in @('epicwar5','epic-war-5','ew5') } {
+        $Game = 'epicwar5'; $Swf = $EpicWar5; $GameLabel = 'Epic War 5 Expansion'; break
+    }
+    default { throw "Unknown game '$Game'. Choose krf, stickwar, or epicwar5." }
+}
+if (-not $Swf -or -not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
 
 $Cache = Join-Path $Root '.native\ruffle'
 $Exe = Join-Path $Cache 'ruffle.exe'
-$Refresh = $args -contains '--refresh'
-$Stable = $args -contains '--stable'
-$ForceVulkan = $args -contains '--vulkan'
-$ForceGl = $args -contains '--gl'
-$ForceDx12 = $args -contains '--dx12'
-$ForwardArgs = @($args | Where-Object { $_ -notin @('--refresh','--stable','--vulkan','--gl','--dx12') })
-
 if ($Refresh -and (Test-Path $Cache)) { Remove-Item $Cache -Recurse -Force }
 
 if (-not (Test-Path $Exe)) {
     New-Item -ItemType Directory -Force -Path $Cache | Out-Null
-    $headers = @{ 'User-Agent' = 'krf-native-launcher'; 'Accept' = 'application/vnd.github+json' }
+    $headers = @{ 'User-Agent' = 'strategy-mod-native-launcher'; 'Accept' = 'application/vnd.github+json' }
     $releases = Invoke-RestMethod -Headers $headers -Uri 'https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30'
     if ($Stable) {
         $release = $releases | Where-Object { -not $_.draft -and -not $_.prerelease } | Select-Object -First 1
@@ -40,11 +83,11 @@ if (-not (Test-Path $Exe)) {
     } | Sort-Object @{Expression={ if ($_.name.ToLowerInvariant() -match 'desktop') { 0 } else { 1 } }} | Select-Object -First 1
     if (-not $asset) { throw 'Could not find the Windows desktop Ruffle archive.' }
 
-    $tmp = Join-Path $env:TEMP ('krf-ruffle-' + [guid]::NewGuid().ToString('N'))
+    $tmp = Join-Path $env:TEMP ('strategy-mod-ruffle-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $tmp | Out-Null
     try {
         $zip = Join-Path $tmp 'ruffle.zip'
-        Invoke-WebRequest -Headers @{ 'User-Agent' = 'krf-native-launcher' } -Uri $asset.browser_download_url -OutFile $zip
+        Invoke-WebRequest -Headers @{ 'User-Agent' = 'strategy-mod-native-launcher' } -Uri $asset.browser_download_url -OutFile $zip
         Expand-Archive -Path $zip -DestinationPath $Cache -Force
         $found = Get-ChildItem -Path $Cache -Recurse -Filter 'ruffle.exe' | Select-Object -First 1
         if (-not $found) { throw 'Downloaded archive did not contain ruffle.exe.' }
@@ -56,18 +99,17 @@ if (-not (Test-Path $Exe)) {
     }
 }
 
-$label = if ($Swf -eq $V121) { 'V12.1 audio/pop-up polish' } elseif ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
 $backend = if ($ForceVulkan) { 'vulkan' } elseif ($ForceGl) { 'gl' } else { 'dx12' }
 if ($ForceDx12) { $backend = 'dx12' }
 
 function Invoke-Ruffle([string]$GraphicsBackend) {
     $env:WGPU_BACKEND = $GraphicsBackend
-    $ruffleArgs = @('--graphics', $GraphicsBackend, $Swf) + $ForwardArgs
+    $ruffleArgs = @('--graphics', $GraphicsBackend, $Swf) + @($ForwardArgs)
     $proc = Start-Process -FilePath $Exe -ArgumentList $ruffleArgs -Wait -PassThru -NoNewWindow
     return [int]$proc.ExitCode
 }
 
-Write-Host "Launching Kingdom Rush Frontiers $label with native Ruffle"
+Write-Host "Launching $GameLabel with native Ruffle"
 Write-Host "Game: $Swf"
 Write-Host "Graphics backend: $backend"
 $code = Invoke-Ruffle $backend
