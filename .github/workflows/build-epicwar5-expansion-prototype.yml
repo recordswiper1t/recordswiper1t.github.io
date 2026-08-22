@@ -30,24 +30,29 @@ jobs:
           test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
           curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-      - name: Export and patch expansion foundation
+      - name: Export and patch full expansion slice
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p /tmp/ew5/export /tmp/ew5/out /tmp/ew5/verify
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           python3 tools/epicwar5/expansion/build_expansion_storage_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_curve_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_equipment_catalog_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_advanced_upgrades_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_battle_12_units_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_enforcement_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_campaign_v3.py /tmp/ew5/export
       - name: Rebuild prototype
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
           test -s /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
-      - name: Re-decompile and verify expansion foundation
+      - name: Re-decompile and verify full expansion slice
         shell: bash
         run: |
           set -euxo pipefail
@@ -55,41 +60,54 @@ jobs:
           d=/tmp/ew5/verify/scripts/Game/Manager/DataManager.as
           f=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormation.as
           a=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationAcc.as
+          s=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationSkill.as
           c=/tmp/ew5/verify/scripts/Game/System/StatDef/CharTotalStat.as
+          ca=/tmp/ew5/verify/scripts/Game/System/StatDef/CharAbilityStat.as
+          ci=/tmp/ew5/verify/scripts/Game/System/StatDef/CharItemStat.as
           r=/tmp/ew5/verify/scripts/Game/Interface/BattleResult.as
           b=/tmp/ew5/verify/scripts/Game/System/Battle/BattleControlPlayer.as
+          e=/tmp/ew5/verify/scripts/Game/System/Battle/BattleControlEnemy.as
+          w=/tmp/ew5/verify/scripts/Game/Interface/WorldMap.as
           grep -F 'unit_equip12_id' "$d"
           grep -F 'stage_expansion_stat' "$d"
-          grep -F 'case "item2"' "$d"
-          grep -F 'case "ability18"' "$d"
-          grep -F 'expansionArmySlotsUnlocked' "$d"
-          grep -F 'expansionEquipmentSlotsUnlocked' "$d"
-          grep -F 'expansionGetUnitEquip' "$d"
-          grep -F 'so.data.unit_equip12_id' "$d"
-          grep -F 'so.data.stage_expansion_stat' "$d"
+          grep -F 'expansionProgressCount' "$d"
+          grep -F 'if(clears >= 48)' "$d"
+          grep -F 'expansionAdvancedUpgradesUnlocked' "$d"
+          grep -F 'return this.expansionProgressCount() * 100 / 50' "$d"
+          grep -F 'dat_item_inv.length < 55' "$d"
           grep -F 'equipPage:int = 1' "$f"
-          grep -F 'expansionInstallArmyPageButton' "$f"
           grep -F 'expansionGetUnitEquip(armyStart + 6)' "$f"
-          grep -F 'no unlocked army slot available' "$f"
           grep -F 'equipSlotPage:int = 1' "$a"
-          grep -F 'Equipment slot ' "$a"
           grep -F 'return "item2"' "$a"
           grep -F 'return "item3"' "$a"
+          grep -F 'Page " + this.pageNum + " / " + "5"' "$a"
+          grep -F 'expansionItemIconFrame' "$a"
+          grep -F 'skillPage:int = 1' "$s"
+          grep -F 'Advanced locked: 18 clears' "$s"
+          grep -F 'unit_ability18_id' "$c"
+          grep -F 'assignSpell(ability18.id)' "$c"
           grep -F 'unit_item2_ability_id' "$c"
-          grep -F 'unit_item3_ability_id' "$c"
-          grep -F 'itemAbility2.health' "$c"
           grep -F 'itemAbility3.attack' "$c"
+          grep -F 'case 105:' "$ca"
+          grep -F 'x_artlogicprime' "$ca"
+          grep -F 'case 55:' "$ci"
+          grep -F 'Artlogic Prime' "$ci"
           grep -F 'expansionGetUnitEquip(expansionSlot)' "$r"
+          grep -F 'battle_stage >= 26' "$r"
+          grep -F 'stageSetValue("expansion",expansionStage' "$r"
           grep -F 'expansionUnits:Array' "$b"
-          grep -F 'getQualifiedClassName' "$b"
+          grep -F '6 <= this.mGF.datMgr.expansionArmySlotsUnlocked()' "$b"
           grep -F 'slot = i + 7' "$b"
-          grep -F 'new PlayerUnit(this.mGF,this.bSys,clip' "$b"
-          grep -F 'NUM >= 8 && NUM <= 13' "$b"
-          grep -F 'expansionExecuteSelected' "$b"
-      - name: Upload prototype verification artifact
+          grep -F 'case 125:' "$e"
+          grep -F 'initExpansion(25)' "$e"
+          grep -F 'battle_stage = 25 + tier' "$e"
+          grep -F 'exp_artlogicprime' "$e"
+          grep -F 'EPIC WAR 5 — EXPANSION CAMPAIGN' "$w"
+          grep -F 'clip.init(this.mGF,100 + id)' "$w"
+      - name: Upload verified full prototype artifact
         uses: actions/upload-artifact@v4
         with:
-          name: epicwar5-expansion-v3-foundation-prototype
+          name: epicwar5-expansion-v3-full-prototype
           retention-days: 7
           path: |
             /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
