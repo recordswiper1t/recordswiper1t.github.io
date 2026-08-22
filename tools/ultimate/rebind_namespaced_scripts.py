@@ -132,9 +132,13 @@ def main() -> None:
             continue
 
         patched, count = pattern.subn(repl, text)
-        if count == 0:
+        retained_adapter_identity = any(name in text for name in exclusions)
+        if count == 0 and not retained_adapter_identity:
             stats["content_classes_without_shared_refs"] += 1
             continue
+        if count == 0 and retained_adapter_identity:
+            stats["content_classes_copied_for_adapter_identity"] += 1
+
         after_cls = declared_class(patched)
         if after_cls != cls:
             raise SystemExit(f"class identity changed unexpectedly: {cls} -> {after_cls}")
@@ -158,6 +162,7 @@ def main() -> None:
             "content_class_identity_stays_namespaced": True,
             "shared_core_references_rebound_to_frontiers": True,
             "explicit_adapter_identities_may_remain_namespaced": True,
+            "classes_relying_only_on_adapter_identity_are_preserved": True,
             "kr1_shadow_core_definitions_left_dormant": True,
         },
     }
@@ -166,12 +171,13 @@ def main() -> None:
         "shared_core_reference_map_count": len(mapping),
         "excluded_rebinds": sorted(exclusions),
         "content_classes_patched": stats["content_classes_patched"],
+        "content_classes_copied_for_adapter_identity": stats["content_classes_copied_for_adapter_identity"],
         "reference_tokens_rebound": stats["reference_tokens_rebound"],
         "shadow_definitions_skipped": stats["shadow_definitions_skipped"],
         "unresolved_plan_classes": len(unresolved_plan_classes),
     }, indent=2))
     if not changed_classes:
-        raise SystemExit("no KR1 content classes were patched")
+        raise SystemExit("no KR1 content classes were patched or preserved for an adapter identity")
 
 
 if __name__ == "__main__":
