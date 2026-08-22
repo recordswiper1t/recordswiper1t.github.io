@@ -59,6 +59,7 @@ jobs:
           python3 tools/epicwar5/expansion/patch_progression_enforcement_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_expansion_campaign_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_campaign_newline_compat_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_compat_v31.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_v31.py /tmp/ew5/export
       - name: Rebuild polished SWF
         shell: bash
