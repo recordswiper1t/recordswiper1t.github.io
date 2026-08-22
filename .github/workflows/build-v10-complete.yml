@@ -5,12 +5,14 @@ on:
     branches: [main, agent/v10-followups]
     paths:
       - 'tools/build-v10.py'
+      - 'tools/build-v10-run.py'
       - 'tools/build-v10-map-specials.py'
       - '.github/workflows/build-v10-complete.yml'
   pull_request:
     branches: [main]
     paths:
       - 'tools/build-v10.py'
+      - 'tools/build-v10-run.py'
       - 'tools/build-v10-map-specials.py'
       - '.github/workflows/build-v10-complete.yml'
   workflow_dispatch:
@@ -42,13 +44,9 @@ jobs:
       - name: Apply all V10 patches
         run: |
           set -euo pipefail
-          python3 tools/build-v10.py /tmp/v10-scripts/scripts
+          python3 tools/build-v10-run.py /tmp/v10-scripts/scripts
           python3 tools/build-v10-map-specials.py /tmp/v10-scripts/scripts
-          for f in \
-            'Level.as' 'Level14.as' 'SoldierHeroCronan.as' 'TowerHolder.as' \
-            'TowerDwarfRiflemen.as' 'TowerSoldierPirates.as' \
-            '§_-Zs§.as' '§_-MR§.as' '§_-Xb§.as' \
-            '§return const if§.as' '§override import§.as'; do
+          for f in 'Level.as' 'Level14.as' 'SoldierHeroCronan.as' 'TowerHolder.as' 'TowerDwarfRiflemen.as' 'TowerSoldierPirates.as' '§_-Zs§.as' '§_-MR§.as' '§_-Xb§.as' '§return const if§.as' '§override import§.as'; do
             cp "/tmp/v10-scripts/scripts/$f" "/tmp/import/scripts/$f"
           done
           if [ -d /tmp/v10-scripts/_assets ]; then cp -a /tmp/v10-scripts/_assets /tmp/import/_assets; fi
@@ -65,13 +63,19 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -selectclass 'Level,Level14,SoldierHeroCronan,TowerHolder,TowerDwarfRiflemen,TowerSoldierPirates,§_-Zs§,§_-MR§,§_-Xb§,§return const if§,§override import§' -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v10.swf > /tmp/verify-v10.log 2>&1 || true
           grep -F 'Rurin Longbeard' /tmp/verify/scripts/Level.as
           grep -F 'qolEnsureSendAllLevelStarted' /tmp/verify/scripts/Level.as
+          grep -F 'qolDetachHero' /tmp/verify/scripts/Level.as
+          ! grep -F 'new §switch for super§' /tmp/verify/scripts/Level14.as
           grep -F 'qolCleanupCompanions' /tmp/verify/scripts/SoldierHeroCronan.as
+          grep -F 'falcon.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
+          grep -F 'boar.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
           grep -F '"title":"Mercenary / Genie Camp"' /tmp/verify/scripts/TowerHolder.as
           grep -F '"title":"Spear Maiden Hut"' /tmp/verify/scripts/TowerHolder.as
           grep -F '"title":"Legion Archer"' /tmp/verify/scripts/TowerHolder.as
           grep -F 'case "sell"' /tmp/verify/scripts/TowerDwarfRiflemen.as
+          grep -F 'case "sell"' /tmp/verify/scripts/TowerSoldierPirates.as
+          grep -F 'case "sell"' '/tmp/verify/scripts/§_-Zs§.as'
           grep -F 'case "sell"' '/tmp/verify/scripts/§_-MR§.as'
-          grep -F 'case "sell"' '/tmp/verify/scripts/§_-Xb§.as'
+          grep -F 'if(param1 == "sell")' '/tmp/verify/scripts/§_-Xb§.as'
           grep -F 'case "sell"' '/tmp/verify/scripts/§return const if§.as'
           grep -F 'case "sell"' '/tmp/verify/scripts/§override import§.as'
       - name: Publish V10
@@ -81,13 +85,13 @@ jobs:
           cp /tmp/out/kingdom-rush-frontiers-v10.swf assets/kingdom-rush-frontiers-v10.swf
           sha256sum assets/kingdom-rush-frontiers-v10.swf > assets/V10-SHA256SUMS.txt
           cat > assets/V10-BUILD.txt <<'TXT'
-          Kingdom Rush Frontiers — V10 Follow-up Fixes
-          - Cronan toggle-off destroys his falcon and boar companions.
+          Kingdom Rush Frontiers — V10 Complete Follow-up Fixes
+          - Cronan toggle-off destroys both falcon and boar companions.
           - Adds Rurin Longbeard, the Dark Descent dwarf stage hero, as a tenth hero toggle.
           - Send All activates the normal first-wave/power state so Meteor and Reinforcements unlock.
-          - Map-special buildings can be sold, including player-placed and preplaced instances where supported by their tower class.
-          - Special Buildings menu now prioritizes the real map specials: Legion Archer, Mercenary/Genie Camp, Spear Maiden Hut, Pirate Cannon Camp, Dwarf Riflemen, Pirate Barracks, and Dwarf Hall.
-          - Assassin/Templar are no longer mislabeled as map-special buildings; advanced normal branches are separated onto later pages.
+          - Map-special buildings can be sold, including player-placed and preplaced instances handled by their tower classes.
+          - Special Buildings prioritizes the real map specials: Legion Archer, Mercenary/Genie Camp, Spear Maiden Hut, Pirate Cannon Camp, Dwarf Riflemen, Pirate Barracks, and Dwarf Hall.
+          - Normal advanced branches remain on separate pages.
           - Retains V9 menu/timer/enemy fixes and V8 native performance optimizations.
           Built, re-exported, and structurally verified with FFDec 26.2.1.
           TXT
