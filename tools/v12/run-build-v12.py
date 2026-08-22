@@ -11,10 +11,14 @@ scripts = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 if scripts is None:
     raise SystemExit('usage: run-build-v12.py <exported-v11-scripts-dir>')
 
-# Normalize two small source-shape differences between the final verified V11
-# decompile and the earlier V12 prototype anchors. These changes are only to
-# make the strict patcher match; the V12 replacement then writes the intended
-# final code.
+def replace_one(text: str, old: str, new: str, label: str) -> str:
+    count = text.count(old)
+    if count != 1:
+        raise SystemExit(f'{label}: expected 1 got {count}')
+    return text.replace(old, new, 1)
+
+# Normalize small V11 source-shape differences so the strict V12 patcher can
+# apply without weakening its one-match safety checks.
 level_path = scripts / 'Level.as'
 level_text = level_path.read_text(encoding='utf-8-sig')
 current_footer = '            this.qolSettings.addChild(this.qolButton("← Dashboard",165,414,250,"page_main"));'
@@ -33,9 +37,8 @@ elif legacy_action not in level_text:
     raise SystemExit('V12 runner could not locate the V11 aggressive-performance action')
 level_path.write_text(level_text, encoding='utf-8', newline='\n')
 
-# build-v12.py embeds exact ActionScript snippets in triple-quoted Python
-# strings. Preserve literal ActionScript escape sequences such as "\\n" by
-# turning only affected triple-quoted tokens into raw strings.
+# Preserve literal ActionScript escapes embedded in Python triple-quoted source
+# matchers/replacements. Ordinary Python strings are left untouched.
 out = []
 last = (1, 0)
 lines = src.splitlines(keepends=True)
@@ -81,21 +84,76 @@ normalized = ''.join(out)
 namespace = {'__name__': '__main__', '__file__': str(source_path)}
 exec(compile(normalized, str(source_path), 'exec'), namespace, namespace)
 
-# Final polish after the core transform: recycle-only runs show a real elapsed
-# timer, and the post-boss controller avoids a full enemy scan every frame and
-# temporary Point allocations in its periodic ally pulses.
+# ---------------------------------------------------------------------------
+# Release-audit polish after the core transform.
+# ---------------------------------------------------------------------------
 level_text = level_path.read_text(encoding='utf-8')
+
+# Recycle-only runs should show elapsed time instead of the Time Attack "ARMED"
+# state.
 old_timer = '         var currentText:String = this.qolTimeAttackLaunched ? this.qolTimeText(current) : "ARMED";'
 new_timer = ('         if(!Level.qolTimeAttackEnabled && Level.qolRecycleEnemies)\n'
              '         {\n'
              '            current = this.qolCurrentRunSeconds();\n'
              '         }\n'
              '         var currentText:String = Level.qolTimeAttackEnabled ? (this.qolTimeAttackLaunched ? this.qolTimeText(current) : "ARMED") : this.qolTimeText(current);')
-if old_timer not in level_text:
-    raise SystemExit('V12 polish could not locate timer text logic')
-level_text = level_text.replace(old_timer, new_timer, 1)
+level_text = replace_one(level_text, old_timer, new_timer, 'loop timer text')
+
+# Official records are only valid for runs that started before wave 1 and have
+# actually completed every authored wave/enemy. This prevents late recycle
+# toggles or immediate manual banking from creating fake bests.
+level_text = replace_one(
+    level_text,
+    '      private var qolRunStartMs:int = 0;\n',
+    '      private var qolRunStartMs:int = 0;\n      \n      private var qolRunStartedAtWave:int = 0;\n',
+    'run eligibility state',
+)
+level_text = replace_one(
+    level_text,
+    '         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolTimerLast = -1;\n         this.qolBestTimeLoaded = false;',
+    '         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolRunStartedAtWave = this.indexWaves;\n         this.qolTimerLast = -1;\n         this.qolBestTimeLoaded = false;',
+    'manual run eligibility start',
+)
+level_text = replace_one(
+    level_text,
+    '         this.qolTimeAttackLaunched = true;\n         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolTimerRunning = true;',
+    '         this.qolTimeAttackLaunched = true;\n         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolRunStartedAtWave = this.indexWaves;\n         this.qolTimerRunning = true;',
+    'time attack eligibility start',
+)
+level_text = replace_one(
+    level_text,
+    '      private function qolBankRun() : void\n      {\n         var elapsed:Number = this.qolCurrentRunSeconds();',
+    '      private function qolBankRun() : void\n      {\n         if(this.qolRunStartedAtWave != 0 || !this.qolTimeAttackDone())\n         {\n            this.qolUpdateTimerHud();\n            return;\n         }\n         var elapsed:Number = this.qolCurrentRunSeconds();',
+    'full-run bank guard',
+)
+level_text = replace_one(
+    level_text,
+    '      private function qolFinishTimeAttack() : void\n      {\n         if(!this.qolTimerRunning)\n         {\n            return;\n         }',
+    '      private function qolFinishTimeAttack() : void\n      {\n         if(!this.qolTimerRunning)\n         {\n            if(Level.qolRecycleEnemies)\n            {\n               this.qolBankRun();\n            }\n            return;\n         }',
+    'recycle-only completion bank',
+)
+
+# Send-All/Time-Attack needs a public bridge for the Level15 post-boss act,
+# because the original sandbox method is private in Level.
+level_text = replace_one(
+    level_text,
+    '      private function qolGameTick() : void\n',
+    '      public function qolV12StartAllWaves() : void\n      {\n         this.qolSendAllWaves();\n      }\n      \n      private function qolGameTick() : void\n',
+    'postboss send-all bridge',
+)
+
+# Hero lifecycle: Cronan already cleans companions. Alric sand warriors and
+# Mirage illusions are also hero-owned summons and should disappear immediately
+# when their owner is toggled off instead of lingering until their lifetime ends.
+level_text = replace_one(
+    level_text,
+    '         if(param1 is SoldierHeroCronan)\n         {\n            SoldierHeroCronan(param1).qolCleanupCompanions();\n         }\n         if(param1.parent != null)',
+    '         if(param1 is SoldierHeroCronan)\n         {\n            SoldierHeroCronan(param1).qolCleanupCompanions();\n         }\n         var ownedIndex:int = 0;\n         var ownedUnit:Object = null;\n         if(param1 is SoldierHeroAlric)\n         {\n            ownedIndex = this.entities.numChildren - 1;\n            while(ownedIndex >= 0)\n            {\n               ownedUnit = this.entities.getChildAt(ownedIndex);\n               if(ownedUnit is SoldierSandWarrior)\n               {\n                  SoldierSandWarrior(ownedUnit).destroyThis();\n               }\n               ownedIndex--;\n            }\n         }\n         else if(param1 is SoldierHeroMirage)\n         {\n            ownedIndex = this.entities.numChildren - 1;\n            while(ownedIndex >= 0)\n            {\n               ownedUnit = this.entities.getChildAt(ownedIndex);\n               if(ownedUnit is SoldierMirageIllusion)\n               {\n                  SoldierMirageIllusion(ownedUnit).destroyThis();\n               }\n               ownedIndex--;\n            }\n         }\n         if(param1.parent != null)',
+    'hero owned summon cleanup',
+)
 level_path.write_text(level_text, encoding='utf-8', newline='\n')
 
+# Post-boss performance and Time Attack behavior.
 l15_path = scripts / 'Level15.as'
 l15 = l15_path.read_text(encoding='utf-8')
 old_scan = '''         var e:Enemy = null;
@@ -125,16 +183,21 @@ new_scan = '''         var e:Enemy = null;
             }
          }
          this.qolV12Milestone();'''
-if old_scan not in l15:
-    raise SystemExit('V12 polish could not locate post-boss enemy scan')
-l15 = l15.replace(old_scan, new_scan, 1)
+l15 = replace_one(l15, old_scan, new_scan, 'postboss enemy scan amortization')
+
 old_tower_dist = 'Point.distance(new Point(e.x,e.y),new Point(this.qolV12Tower.x,this.qolV12Tower.y)) < 245'
 new_tower_dist = '(e.x - this.qolV12Tower.x) * (e.x - this.qolV12Tower.x) + (e.y - this.qolV12Tower.y) * (e.y - this.qolV12Tower.y) < 60025'
 old_hero_dist = 'Point.distance(new Point(e.x,e.y),new Point(this.qolV12Hero.x,this.qolV12Hero.y)) < 135'
 new_hero_dist = '(e.x - this.qolV12Hero.x) * (e.x - this.qolV12Hero.x) + (e.y - this.qolV12Hero.y) * (e.y - this.qolV12Hero.y) < 18225'
-if old_tower_dist not in l15 or old_hero_dist not in l15:
-    raise SystemExit('V12 polish could not locate ally pulse distance checks')
-l15 = l15.replace(old_tower_dist, new_tower_dist, 1).replace(old_hero_dist, new_hero_dist, 1)
+l15 = replace_one(l15, old_tower_dist, new_tower_dist, 'rift beacon distance allocation')
+l15 = replace_one(l15, old_hero_dist, new_hero_dist, 'nyra distance allocation')
+
+l15 = replace_one(
+    l15,
+    '         this.qolResetRunTracking(true);\n         this.qolV12Banner("THE LAST RIFT — 30 WAVES",300);',
+    '         this.qolResetRunTracking(true);\n         if(Level.qolTimeAttackEnabled)\n         {\n            this.qolV12StartAllWaves();\n         }\n         this.qolV12Banner("THE LAST RIFT — 30 WAVES",300);',
+    'postboss time attack send all',
+)
 l15_path.write_text(l15, encoding='utf-8', newline='\n')
 
-print('V12 compatibility and polish pass applied successfully')
+print('V12 compatibility and full audit polish pass applied successfully')
