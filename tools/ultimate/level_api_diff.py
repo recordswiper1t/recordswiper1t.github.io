@@ -94,13 +94,16 @@ def main() -> int:
     kf_names = set(kfm)
     stage_own = set(stm)
 
-    # Unqualified calls can be inherited calls too. Only treat them as Level API
-    # references when the original KR1 Level actually declares that member.
+    # A stage can also call inherited Flash framework methods such as
+    # addEventListener. Those are not KR1-Level compatibility requirements.
+    # Only treat a reference as part of the KR1 Level contract when KR1 Level
+    # itself actually declares that member.
+    inherited_this = set(refs["this_refs_not_declared_locally"]) & k1_names
+    inherited_super = set(refs["super_refs"]) & k1_names
     inherited_unqualified = set(refs["unqualified_calls_not_declared_locally"]) & k1_names
-    direct_stage_refs = (
-        set(refs["this_refs_not_declared_locally"])
-        | set(refs["super_refs"])
-        | inherited_unqualified
+    direct_stage_refs = inherited_this | inherited_super | inherited_unqualified
+    framework_or_ancestor_refs = sorted(
+        (set(refs["this_refs_not_declared_locally"]) | set(refs["super_refs"])) - k1_names
     )
     missing_for_stage = sorted(x for x in direct_stage_refs if x not in kf_names and x not in stage_own)
     already_shared_for_stage = sorted(x for x in direct_stage_refs if x in kf_names)
@@ -113,6 +116,7 @@ def main() -> int:
         "kr1_level_members_absent_from_krf_count": len(k1_names - kf_names),
         "krf_level_members_absent_from_kr1_count": len(kf_names - k1_names),
         "stage_inherited_references": refs,
+        "stage_framework_or_ancestor_refs_not_in_kr1_level": framework_or_ancestor_refs,
         "stage_inherited_unqualified_calls_confirmed_on_kr1_level": sorted(inherited_unqualified),
         "stage_refs_already_available_on_krf": already_shared_for_stage,
         "stage_refs_missing_on_krf": missing_for_stage,
@@ -150,9 +154,6 @@ def main() -> int:
         ]
         for name in missing_for_stage:
             sigs = k1m.get(name, [])
-            if not sigs:
-                lines.append(f"      // TODO unresolved inherited member: {name}")
-                continue
             for s in sigs:
                 if s.kind == "function":
                     ret = f" : {s.type}" if s.type else ""
@@ -166,7 +167,8 @@ def main() -> int:
     print(json.dumps({
         "kr1_level_members": len(k1_names),
         "krf_level_members": len(kf_names),
-        "stage_direct_inherited_refs": len(direct_stage_refs),
+        "stage_direct_kr1_level_refs": len(direct_stage_refs),
+        "stage_framework_or_ancestor_refs": framework_or_ancestor_refs,
         "stage_refs_already_on_krf": len(already_shared_for_stage),
         "stage_refs_missing_on_krf": len(missing_for_stage),
         "missing_names": missing_for_stage,
