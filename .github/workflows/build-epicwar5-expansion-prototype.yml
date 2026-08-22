@@ -51,7 +51,11 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1; then
+            echo '=== FFDec import failure ==='
+            cat /tmp/ew5/import.log || true
+            exit 1
+          fi
           test -s /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
       - name: Re-decompile and verify full expansion slice
         shell: bash
@@ -105,12 +109,15 @@ jobs:
           grep -F 'exp_artlogicprime' "$e"
           grep -F 'EPIC WAR 5 — EXPANSION CAMPAIGN' "$w"
           grep -F 'clip.init(this.mGF,100 + id)' "$w"
-      - name: Upload verified full prototype artifact
+      - name: Upload Expansion V3 diagnostics / verified artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: epicwar5-expansion-v3-full-prototype
           retention-days: 7
+          if-no-files-found: ignore
           path: |
             /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
+            /tmp/ew5/export.log
             /tmp/ew5/import.log
             /tmp/ew5/verify.log
