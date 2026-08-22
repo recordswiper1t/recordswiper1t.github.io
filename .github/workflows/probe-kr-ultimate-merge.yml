@@ -2,7 +2,7 @@ name: Probe Kingdom Rush Ultimate merge structure
 
 on:
   push:
-    branches: [agent/v13-kingdom-rush-ultimate]
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - 'tools/ultimate/level_signatures.py'
       - 'tools/ultimate/swf_xml_probe.py'
@@ -47,7 +47,9 @@ jobs:
       - name: Select Frontiers runtime
         run: |
           set -euo pipefail
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
@@ -81,7 +83,7 @@ jobs:
             --krf /tmp/ultimate/krf.xml \
             --output /tmp/ultimate/swf-xml-schema.json
 
-      - name: Round-trip Frontiers XML unchanged
+      - name: Round-trip current Frontiers XML unchanged
         run: |
           set -euo pipefail
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/ultimate/krf.xml /tmp/ultimate/krf-roundtrip.swf
