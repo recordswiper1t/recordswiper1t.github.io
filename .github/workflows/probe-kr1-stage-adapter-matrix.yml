@@ -92,6 +92,7 @@ jobs:
             --union-contract /tmp/u/report/union-level-adapter-contract.json
           python3 tools/ultimate/build_level_adapter.py \
             --contract /tmp/u/report/union-level-adapter-contract.json \
+            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
             --output /tmp/u/KR1__Level.as \
             --report /tmp/u/report/union-level-adapter-build.json
 
@@ -154,6 +155,7 @@ jobs:
               'source_ready_kr1_stage_classes_compiled': 19,
               'union_missing_frontiers_ref_count': m['union_missing_frontiers_ref_count'],
               'generated_compile_stub_count': b['generated_member_count'],
+              'frontiers_constructor_forwarding': b.get('frontiers_constructor',{}),
               'frontiers_mod_markers_preserved': True,
               'semantic_status': 'compile layer only; adapter stubs still require semantic implementation/runtime testing',
           }
