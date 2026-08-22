@@ -1,0 +1,7 @@
+Kingdom Rush Frontiers — V10 Follow-up Fixes
+- Cronan toggle-off immediately destroys both falcon and boar companions.
+- Adds Rurin Longbeard, the real Dark Descent dwarf hero, as a tenth hero toggle.
+- Send All enters the same first-wave state as normal play, unlocking Reinforcements/Meteor and other powers before waves queue.
+- Player-placed and map-preplaced special towers expose sell controls; paid preplaced specials get their base investment for normal sell-percentage refunds.
+- Retains V9 pause-safe menus, complete 47-enemy selector, visible timer, V8 performance/native desktop mode, recycling and tower clipboard.
+Built, re-exported, and structurally verified with FFDec 26.2.1.
