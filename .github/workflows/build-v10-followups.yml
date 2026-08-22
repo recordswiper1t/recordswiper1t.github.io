@@ -56,7 +56,7 @@ jobs:
           grep -F 'Rurin Longbeard' /tmp/verify/scripts/Level.as
           grep -F 'qolEnsureSendAllLevelStarted' /tmp/verify/scripts/Level.as
           grep -F 'qolDetachHero' /tmp/verify/scripts/Level.as
-          grep -F 'Rurin is managed by the V10 hero roster' /tmp/verify/scripts/Level14.as
+          ! grep -F 'new §switch for super§' /tmp/verify/scripts/Level14.as
           grep -F 'qolCleanupCompanions' /tmp/verify/scripts/SoldierHeroCronan.as
           grep -F 'falcon.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
           grep -F 'boar.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
