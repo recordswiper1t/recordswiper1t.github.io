@@ -35,12 +35,24 @@ def inspect_swf(path: Path) -> dict:
     return result
 
 
+def select_frontiers(path: Path) -> Path:
+    """Prefer V12.1, then V12, then V11 when using the default release path."""
+    if path.exists():
+        return path
+    if path.name == "kingdom-rush-frontiers-v12-1.swf":
+        for name in ("kingdom-rush-frontiers-v12.swf", "kingdom-rush-frontiers-v11.swf"):
+            fallback = path.with_name(name)
+            if fallback.exists():
+                return fallback
+    return path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--frontiers",
-        default="assets/kingdom-rush-frontiers-v12.swf",
-        help="V12 if available; V11 is a supported fallback",
+        default="assets/kingdom-rush-frontiers-v12-1.swf",
+        help="current V12.1 release if available; V12 then V11 are supported fallbacks",
     )
     parser.add_argument(
         "--kingdom-rush",
@@ -55,11 +67,7 @@ def main() -> int:
     args = parser.parse_args()
 
     validate()
-    frontiers = Path(args.frontiers)
-    if not frontiers.exists() and frontiers.name.endswith("v12.swf"):
-        fallback = frontiers.with_name("kingdom-rush-frontiers-v11.swf")
-        if fallback.exists():
-            frontiers = fallback
+    frontiers = select_frontiers(Path(args.frontiers))
 
     report = {
         "scope": summary(),
