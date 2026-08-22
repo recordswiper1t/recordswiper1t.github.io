@@ -4,3 +4,4 @@ Combined formation/equipment/reward verifier refresh.
 Real 12-unit battle-controller verifier refresh.
 Token-safe equipment verifier refresh.
 Full 50-battle expansion slice verifier refresh.
+Catalog-normalized full verifier refresh.
