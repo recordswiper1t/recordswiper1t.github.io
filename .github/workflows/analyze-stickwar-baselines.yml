@@ -70,7 +70,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          python tools/stickwar/analyze_baseline.py --exported /tmp/stickwar/sw2/export/scripts --out /tmp/stickwar/sw2-analysis.json
+          python tools/stickwar/analyze_baseline.py --baseline /tmp/stickwar/sw2/original.swf --exported /tmp/stickwar/sw2/export/scripts --out /tmp/stickwar/sw2-analysis.json
           {
             echo '=== SW1 classes ==='
             find /tmp/stickwar/sw1/export/scripts -type f -name '*.as' | sed 's#^.*/scripts/##' | sort
@@ -80,6 +80,7 @@ jobs:
           grep -RniE 'unit|army|miner|sword|archidon|spearton|magikill|giant|shadow|meric|albow|crawler|bomber|jugger|eclips|marrow|medusa|projectile|bullet|target|collision|hitTest|SharedObject|campaign|level|statue|population|mana|gold|path|update|enterFrame' /tmp/stickwar/sw2/export/scripts | head -n 12000 > /tmp/stickwar/sw2-hotpaths.txt || true
           grep -RniE 'miner|archidon|sword|spearton|magikill|giant|possess|control|upgrade|statue|campaign|level|gold|target|collision|hitTest|update|enterFrame' /tmp/stickwar/sw1/export/scripts | head -n 8000 > /tmp/stickwar/sw1-map.txt || true
       - name: Upload decompiled source analysis
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: stickwar-baseline-analysis
