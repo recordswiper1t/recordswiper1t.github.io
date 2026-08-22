@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit:
@@ -66,7 +66,6 @@ jobs:
           for n,title in expected.items():
               hits=list(root.rglob(f'Level{n}.as'))
               rows.append({'level':n,'title':title,'present':len(hits)==1,'source_path':str(hits[0].relative_to(root)) if len(hits)==1 else None})
-          # Record class-name evidence only; do not upload decompiled source.
           classes=sorted(p.stem for p in root.rglob('*.as'))
           hero_classes=[x for x in classes if 'Hero' in x]
           report={
@@ -81,18 +80,17 @@ jobs:
               'hero_class_names':hero_classes,
               'policy':'structural class-name/hash report only; SWF and decompiled source are not uploaded',
           }
-          Path('/tmp/report/official-krf-flash-audit.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+          Path('/tmp/report/official-krf-flash-audit.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
           print(json.dumps(report,indent=2))
           PY
 
-      - name: Require all seven post-campaign classes if present in official Flash
+      - name: Print stage source result
         run: |
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/report/official-krf-flash-audit.json',encoding='utf-8'))
           print('Level classes:',d['level_numbers'])
           print('Level16-22 all present:',d['all_level16_22_present'])
-          # This is an audit, not a hard failure: absence remains useful evidence.
           PY
 
       - name: Upload structural report only
@@ -104,3 +102,16 @@ jobs:
             /tmp/report/SHA256SUMS.txt
             /tmp/report/bytes.txt
           retention-days: 30
+
+      - name: Publish structural audit result to audit branch
+        run: |
+          set -euo pipefail
+          mkdir -p analysis/ultimate-source-recovery
+          cp /tmp/report/official-krf-flash-audit.json analysis/ultimate-source-recovery/official-krf-flash-audit.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis/ultimate-source-recovery/official-krf-flash-audit.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record official KRF Flash source audit [skip ci]'
+            git push origin HEAD:agent/ultimate-source-recovery
+          fi
