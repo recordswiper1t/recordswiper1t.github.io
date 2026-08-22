@@ -1,4 +1,4 @@
-name: Build Stick War Complete V1 combined campaign
+name: Build Super Stick War V1 complete expansion
 
 on:
   workflow_dispatch:
@@ -49,16 +49,20 @@ jobs:
           mkdir -p /tmp/stickwar/export /tmp/stickwar/import/scripts /tmp/stickwar/out
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/stickwar/export /tmp/stickwar/original.swf > /tmp/stickwar/export.log 2>&1 || true
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/StickWar.as
-          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/SpatialHash.as
-          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/units/Unit.as
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/UserInterface.as
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/Campaign.as
-      - name: Apply V1 campaign and low-level performance patches
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/CampaignGameScreen.as
+      - name: Apply all Super Stick War V1 systems
         shell: bash
         run: |
           set -euxo pipefail
-          python3 tools/stickwar/patches/patch_performance_v1.py /tmp/stickwar/export/scripts
-          python3 tools/stickwar/patches/patch_campaign_v1.py /tmp/stickwar/export/scripts
-          cd /tmp/stickwar/export/scripts
+          S=/tmp/stickwar/export/scripts
+          python3 tools/stickwar/patches/patch_performance_v1.py "$S"
+          python3 tools/stickwar/patches/patch_campaign_v2.py "$S"
+          python3 tools/stickwar/patches/patch_mastery_v1.py "$S"
+          python3 tools/stickwar/patches/patch_ui_super_v1.py "$S"
+          python3 tools/stickwar/patches/patch_objectives_lab_v1.py "$S"
+          cd "$S"
           for f in \
             'com/brockw/stickwar/engine/HealthBar.as' \
             'com/brockw/stickwar/engine/SpatialHash.as' \
@@ -67,7 +71,11 @@ jobs:
             'com/brockw/stickwar/engine/Team/Team.as' \
             'com/brockw/stickwar/engine/units/Unit.as' \
             'com/brockw/stickwar/engine/BloodManager.as' \
-            'com/brockw/stickwar/campaign/Campaign.as'; do
+            'com/brockw/stickwar/engine/UserInterface.as' \
+            'com/brockw/stickwar/GameScreen.as' \
+            'com/brockw/stickwar/campaign/Campaign.as' \
+            'com/brockw/stickwar/campaign/CampaignScreen.as' \
+            'com/brockw/stickwar/campaign/CampaignGameScreen.as'; do
             mkdir -p "/tmp/stickwar/import/scripts/$(dirname "$f")"
             cp "$f" "/tmp/stickwar/import/scripts/$f"
           done
@@ -78,38 +86,50 @@ jobs:
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/stickwar/original.swf /tmp/stickwar/out/stick-war-complete-v1.swf /tmp/stickwar/import > /tmp/stickwar/import.log 2>&1
           test -s /tmp/stickwar/out/stick-war-complete-v1.swf
           head -c 3 /tmp/stickwar/out/stick-war-complete-v1.swf | grep -Eq 'FWS|CWS|ZWS'
-      - name: Re-decompile and verify V1
+      - name: Re-decompile and verify every V1 system
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p /tmp/stickwar/verify
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/stickwar/verify /tmp/stickwar/out/stick-war-complete-v1.swf > /tmp/stickwar/verify.log 2>&1 || true
           S=/tmp/stickwar/verify/scripts
+          test -f "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
+          # Performance invariants.
           grep -F 'this.isFirst = false;' "$S/com/brockw/stickwar/engine/HealthBar.as"
-          grep -F 'private var visitMarks:Vector.<int>;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
-          grep -F 'this.visitMarks[entityId] = this.visitStamp;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
+          grep -F 'visitMarks:Vector.<int>' "$S/com/brockw/stickwar/engine/SpatialHash.as"
           grep -F 'this.partitions[index].length = size + 64;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
           grep -F 'this.projectileManager.airEffects.length = 0;' "$S/com/brockw/stickwar/engine/StickWar.as"
-          grep -F 'for(o = 0; o < dParent.numChildren - 1; o++)' "$S/com/brockw/stickwar/engine/StickWar.as"
-          grep -F 'for(o = dParent.numChildren - 1; o > 0; o--)' "$S/com/brockw/stickwar/engine/StickWar.as"
-          grep -F 'this.projectiles[i] = this.projectiles[last];' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
           grep -F 'this.projectiles.pop();' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
-          grep -F 'this._waitingToBeCleaned[i] = this._waitingToBeCleaned[last];' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
-          grep -F 'private var _lastStatueType:String;' "$S/com/brockw/stickwar/engine/Team/Team.as"
-          grep -F 'var u:UnitMove = null;' "$S/com/brockw/stickwar/engine/Team/Team.as"
-          grep -F 'Math.max(int(game.xml.xml.populationLimit),120)' "$S/com/brockw/stickwar/engine/Team/Team.as"
-          grep -F 'private var _selectionVisualState:int = -99;' "$S/com/brockw/stickwar/engine/units/Unit.as"
-          grep -F 'return xDiff * xDiff + yDiff * yDiff;' "$S/com/brockw/stickwar/engine/units/Unit.as"
-          grep -F 'private var bloodCursor:int = 0;' "$S/com/brockw/stickwar/engine/BloodManager.as"
+          grep -F '_lastStatueType' "$S/com/brockw/stickwar/engine/Team/Team.as"
+          grep -F '_selectionVisualState' "$S/com/brockw/stickwar/engine/units/Unit.as"
+          grep -F 'bloodCursor' "$S/com/brockw/stickwar/engine/BloodManager.as"
+          ! grep -F 'this.projectiles.splice(i,1)[0]' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          # 65-stage combined campaign + saves + playable Chaos.
           grep -F 'stickwarCompleteSaveV1' "$S/com/brockw/stickwar/campaign/Campaign.as"
           grep -F 'Archidon Border' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'Chaos Reborn' "$S/com/brockw/stickwar/campaign/Campaign.as"
           grep -F 'Inamorta Benchmark' "$S/com/brockw/stickwar/campaign/Campaign.as"
-          ! grep -F 'this.projectiles.splice(i,1)[0]' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          grep -F 'currentLevel >= 14' "$S/com/brockw/stickwar/campaign/CampaignScreen.as"
+          # 108-node persistent mastery + hybrid progression.
+          grep -F 'SUPER_MAX_RANK' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'getSuperTechName' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'getHybridSlots' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'applySuperMastery' "$S/com/brockw/stickwar/engine/units/Unit.as"
+          # Direct possession, sandbox, hybrid deployment and diagnostics.
+          grep -F 'togglePossession' "$S/com/brockw/stickwar/engine/UserInterface.as"
+          grep -F 'SUPER STICK WAR DIAGNOSTICS' "$S/com/brockw/stickwar/engine/UserInterface.as"
+          grep -F 'updateHybrid' "$S/com/brockw/stickwar/engine/UserInterface.as"
+          grep -F '_superPerfLastFrame' "$S/com/brockw/stickwar/GameScreen.as"
+          # Authored objective framework and Battle Lab/time attack.
+          grep -F '_superObjective' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
+          grep -F 'superStickWarLabTimesV1' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
+          grep -F 'applyBattleLabPreset' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
+          grep -F 'Boss Rush' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
           sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
-      - name: Upload verified build
+      - name: Upload verified Super Stick War build
         uses: actions/upload-artifact@v4
         with:
-          name: stick-war-complete-v1
+          name: super-stick-war-v1
           retention-days: 14
           path: |
             /tmp/stickwar/out/stick-war-complete-v1.swf
@@ -124,36 +144,30 @@ jobs:
           cp /tmp/stickwar/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
           sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
           cat > assets/STICKWAR-COMPLETE-V1-BUILD.txt <<'TXT'
-          Stick War Complete — V1 Combined Campaign + Performance
+          Super Stick War — V1 Complete Expansion
           Canonical SW2 baseline SHA-256: 03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5
+          SW1 reference baseline SHA-256: 9bff25416c98506ba01493b7e3fa523890632b4963e4f0ac33f5cbbb023c7c0b
           Toolchain: FFDec 26.2.1
 
-          Campaign foundation:
-          - 65 total stages: 12 SW1 remaster battles + all 14 original SW2 authored stages + 39 new postgame battles.
-          - Original SW2 campaign stages/controllers remain intact between the prequel and postgame.
-          - Separate SharedObject namespace: stickwarCompleteSaveV1.
-          - Expansion population floor raised to 120 for both teams; production costs and unit population values are unchanged.
-          - New postgame spans Order/Chaos remixes, northern wars, bosses, trials, ascendant battles, 100-unit war and benchmark finale.
+          - 65-stage campaign: 12 SW1 remasters + all 14 canonical SW2 stages + 39 postgame stages.
+          - Order and Chaos become playable across the campaign; late-game hybrid slots unlock at 1/2/3.
+          - 108 persistent mastery nodes across 18 Order/Chaos unit families, combining real SW2 research unlocks with earned stat mastery.
+          - SW1-style direct possession: select one combat unit and press F; WASD/arrows move, Space attacks, F releases.
+          - Bespoke boss, survival, economy, possession and benchmark objective framework for expansion encounters.
+          - Battle Lab supports Normal, Chaos, Massive Battle, Boss Rush, Time Attack, Possession and Benchmark presets.
+          - Persistent Time Attack best times use their own SharedObject.
+          - F2 sandbox exposes unit spawning, resources, swarm generation, cleanup, instant win and population safety controls.
+          - F1 live diagnostics reports FPS, actor/projectile/effect counts, population, render quality and active modes.
+          - Adaptive render quality degrades cosmetics under heavy load; combat/AI/movement/damage/cooldowns remain full-rate.
+          - Low-level engine optimization covers health-bar redraws, spatial queries/buckets, depth ordering, projectile cleanup, garrison allocation, selection/statue caching, distance math and effect/corpse recycling.
+          - Expansion saves are isolated in stickwarCompleteSaveV1.
 
-          Low-level performance foundation:
-          - Health bars stop redrawing unchanged vector graphics forever.
-          - Spatial query dedupe uses generation-stamped integer vectors instead of per-query Dictionary churn.
-          - Spatial buckets grow safely beyond vanilla density limits.
-          - Depth ordering uses bounded linear forward/reverse passes instead of repeated bubble-sort scans.
-          - Projectile cleanup uses in-place swap removal while preserving existing object pools.
-          - Empty per-frame garrison command allocation/execution is eliminated.
-          - Statue timeline state and unit selection-shadow graphics are cached.
-          - Hot squared-distance/collision Math.pow calls are multiplication.
-          - Overdue corpses are cleaned in bounded batches; blood/ash recycling avoids queue shifts.
-          - Transient air-effect arrays clear without splice-return allocation.
-
-          Combat attacks, movement, AI, damage, cooldowns and projectile simulation remain full-rate.
-          Rebuilt, re-decompiled, and structurally verified before publication.
+          Built from the pinned official SW2 baseline, imported with FFDec, then freshly re-decompiled and structurally verified before publication.
           TXT
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-BUILD.txt assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish verified Stick War Complete V1 [skip ci]'
+            git commit -m 'Publish verified Super Stick War V1 [skip ci]'
             git push origin HEAD:stickwar-complete-v1-foundation
           fi
