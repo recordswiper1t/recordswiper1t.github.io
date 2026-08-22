@@ -45,10 +45,15 @@ jobs:
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
 
       - name: Export sources and derive exact tower/runtime policy
@@ -149,20 +154,25 @@ jobs:
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
             -export script /tmp/u/verify /tmp/u/towers-rebound.swf >/tmp/u/verify.log 2>&1 || true
           python3 - <<'PY'
-          import json, pathlib
+          import json, pathlib, os
           classes=json.load(open('/tmp/u/report/tower-compile-classes.json',encoding='utf-8'))
           root=pathlib.Path('/tmp/u/verify/scripts')
           for cls in classes:
               p=root/(cls+'.as')
               if not p.is_file(): raise SystemExit(f'missing re-exported {cls}')
-          if 'qolTowerClipboard' not in (root/'Level.as').read_text(encoding='utf-8-sig',errors='replace'):
+          level=(root/'Level.as').read_text(encoding='utf-8-sig',errors='replace')
+          if 'qolTowerClipboard' not in level:
               raise SystemExit('lost Frontiers clipboard marker')
+          if os.environ.get('HAS_V121') == '1' and 'qolPopupsEnabled' not in level:
+              raise SystemExit('lost Frontiers V12.1 pop-up preference marker')
           out={
               'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
               'kr1_tier4_classes_compiled': classes,
               'count': len(classes),
               'frontiers_mod_markers_preserved': True,
-              'next_gate': 'wire Ultimate tower actions/build menu and map KR1 ability ranks into V11/V12 clipboard',
+              'v12_1_polish_preserved': os.environ.get('HAS_V121') == '1',
+              'next_gate': 'runtime-test KR1 ability ranks and V11/V12 clipboard behavior',
           }
           pathlib.Path('/tmp/u/report/tower-rebind-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
           print(json.dumps(out,indent=2))
