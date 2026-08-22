@@ -1,0 +1,82 @@
+name: Research FFDec tag merge path
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - '.github/workflows/research-ffdec-tag-merge.yml'
+      - 'tools/ultimate/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Capture FFDec CLI help and tag related commands
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/report
+          java -jar /tmp/ffdec/ffdec.jar -help > /tmp/report/ffdec-help.txt 2>&1 || true
+          grep -Ei 'xml|tag|abc|replace|import|export|swf' /tmp/report/ffdec-help.txt > /tmp/report/ffdec-tag-help.txt || true
+          echo '=== tag/xml/abc CLI lines ==='
+          cat /tmp/report/ffdec-tag-help.txt
+
+      - name: Fetch original Armor Games KR1 build for research only
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/kr1.swf
+          head -c 3 /tmp/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/kr1.swf > /tmp/report/kr1-sha256.txt
+
+      - name: Probe XML and raw tag round-trip commands
+        run: |
+          set -euo pipefail
+          FF='java -Xmx4g -jar /tmp/ffdec/ffdec.jar'
+          BASE='assets/kingdom-rush-frontiers-v11.swf'
+          test -s "$BASE"
+          set +e
+          $FF -swf2xml "$BASE" /tmp/report/krf.xml > /tmp/report/swf2xml-krf.log 2>&1
+          echo $? > /tmp/report/swf2xml-krf.exit
+          $FF -swf2xml /tmp/kr1.swf /tmp/report/kr1.xml > /tmp/report/swf2xml-kr1.log 2>&1
+          echo $? > /tmp/report/swf2xml-kr1.exit
+          $FF -xml2swf /tmp/report/krf.xml /tmp/report/krf-roundtrip.swf > /tmp/report/xml2swf-krf.log 2>&1
+          echo $? > /tmp/report/xml2swf-krf.exit
+          set -e
+          echo 'KRF swf2xml exit:' $(cat /tmp/report/swf2xml-krf.exit)
+          echo 'KR1 swf2xml exit:' $(cat /tmp/report/swf2xml-kr1.exit)
+          echo 'KRF xml2swf exit:' $(cat /tmp/report/xml2swf-krf.exit)
+          if [ -s /tmp/report/krf.xml ]; then
+            echo 'KRF XML bytes:' $(wc -c < /tmp/report/krf.xml)
+            head -40 /tmp/report/krf.xml > /tmp/report/krf-xml-head.txt
+          fi
+          if [ -s /tmp/report/kr1.xml ]; then
+            echo 'KR1 XML bytes:' $(wc -c < /tmp/report/kr1.xml)
+            head -40 /tmp/report/kr1.xml > /tmp/report/kr1-xml-head.txt
+          fi
+          if [ -s /tmp/report/krf-roundtrip.swf ]; then
+            head -c 3 /tmp/report/krf-roundtrip.swf | grep -Eq 'FWS|CWS|ZWS' && echo 'roundtrip SWF signature valid'
+            sha256sum /tmp/report/krf-roundtrip.swf > /tmp/report/krf-roundtrip-sha256.txt
+          fi
+
+      - name: Upload merge research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffdec-tag-merge-research
+          path: /tmp/report
+          retention-days: 30
