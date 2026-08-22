@@ -36,8 +36,10 @@ jobs:
           python3 -m py_compile tools/ultimate/preflight.py
           python3 -m py_compile tools/ultimate/audit_exports.py
           python3 -m py_compile tools/ultimate/build_ultimate.py
+          python3 -m py_compile tools/ultimate/level_signatures.py
+          python3 -m py_compile tools/ultimate/swf_xml_probe.py
 
-      - name: Validate complete stage scope
+      - name: Validate complete stage scope and source coverage
         run: |
           set -euo pipefail
           python3 tools/ultimate/content_manifest.py --json > /tmp/ultimate-manifest.json
@@ -53,8 +55,19 @@ jobs:
           assert s['krf_endless'] == 2
           assert s['original_campaign_and_post'] == 48
           assert s['original_all_including_endless'] == 51
+          assert s['verified_kr1_publisher_levels'] == 19
+          assert s['missing_or_reconstruction'] == 17
           ids=[x['id'] for x in data['stages']]
           assert len(ids) == len(set(ids)) == 51
+          mapped={x['source_locator']: x['id'] for x in data['stages'] if x['game']=='kr1' and x['source_locator']}
+          assert set(mapped) == {f'Level{i}' for i in range(1,20)}
+          assert mapped['Level13'] == 'kr1-sarelgaz-s-lair'
+          assert mapped['Level14'] == 'kr1-ruins-of-acaroth'
+          assert mapped['Level15'] == 'kr1-rotten-forest'
+          assert mapped['Level16'] == 'kr1-hushwood'
+          assert mapped['Level17'] == 'kr1-bandit-s-lair'
+          assert mapped['Level18'] == 'kr1-glacial-heights'
+          assert mapped['Level19'] == 'kr1-ha-kraj-plateau'
           print('stage manifest verified:', s)
           PY
 
