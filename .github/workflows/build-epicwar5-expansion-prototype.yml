@@ -47,6 +47,7 @@ jobs:
           python3 tools/epicwar5/expansion/patch_battle_12_units_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_progression_enforcement_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_expansion_campaign_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_campaign_newline_compat_v3.py /tmp/ew5/export
       - name: Rebuild prototype
         shell: bash
         run: |
@@ -109,6 +110,7 @@ jobs:
           grep -F 'exp_artlogicprime' "$e"
           grep -F 'EPIC WAR 5 — EXPANSION CAMPAIGN' "$w"
           grep -F 'clip.init(this.mGF,100 + id)' "$w"
+          grep -F '\nCLEARED' "$w"
       - name: Upload verified full prototype artifact
         uses: actions/upload-artifact@v4
         with:
