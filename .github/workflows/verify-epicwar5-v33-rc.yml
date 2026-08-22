@@ -1,0 +1,116 @@
+name: Verify Epic War 5 Expansion V3.3 Release Candidate
+
+on:
+  push:
+    branches:
+      - epicwar5-expansion-v33-rc
+    paths:
+      - '.github/workflows/verify-epicwar5-v33-rc.yml'
+      - 'tools/epicwar5/expansion/validate_v33_rc.py'
+      - 'epicwar5-expansion/index.html'
+      - 'assets/epic-war-5-expansion-v33.swf'
+      - 'assets/EPICWAR5-EXPANSION-V33-SHA256SUMS.txt'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rc-hardening:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-v33-rc
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Freeze exact release binary and launcher
+        shell: bash
+        run: |
+          set -euxo pipefail
+          EXPECTED='e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33'
+          test -s assets/epic-war-5-expansion-v33.swf
+          ACTUAL="$(sha256sum assets/epic-war-5-expansion-v33.swf | cut -d' ' -f1)"
+          test "$ACTUAL" = "$EXPECTED"
+          grep -Fx "$EXPECTED  assets/epic-war-5-expansion-v33.swf" assets/EPICWAR5-EXPANSION-V33-SHA256SUMS.txt
+          grep -F "/assets/epic-war-5-expansion-v33.swf?v=33-performance" epicwar5-expansion/index.html
+          grep -F "Play Expansion V3.3" epicwar5-expansion/index.html
+
+      - name: Download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ffdec
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Decompile exact released V3.3
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/rc/export /tmp/rc/roundtrip /tmp/rc/roundtrip-export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/rc/export assets/epic-war-5-expansion-v33.swf > /tmp/rc/export.log 2>&1 || true
+          test -f /tmp/rc/export/scripts/Game/Manager/DataManager.as
+          test -f /tmp/rc/export/scripts/Game/System/Battle/BattleSystem.as
+
+      - name: Run progression save reward softlock and performance invariants
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 tools/epicwar5/expansion/validate_v33_rc.py /tmp/rc/export
+          cp /tmp/EPICWAR5-V33-RC-REPORT.json /tmp/rc/EPICWAR5-V33-RC-REPORT.json
+
+      - name: FFDec round-trip smoke test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v33.swf /tmp/rc/roundtrip/v33-roundtrip.swf /tmp/rc/export > /tmp/rc/import.log 2>&1; then
+            echo '===== FFDec round-trip import diagnostics ====='
+            cat /tmp/rc/import.log
+            exit 1
+          fi
+          test -s /tmp/rc/roundtrip/v33-roundtrip.swf
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/rc/roundtrip-export /tmp/rc/roundtrip/v33-roundtrip.swf > /tmp/rc/roundtrip-export.log 2>&1 || true
+          python3 tools/epicwar5/expansion/validate_v33_rc.py /tmp/rc/roundtrip-export
+
+      - name: Write RC summary
+        shell: bash
+        run: |
+          set -euxo pipefail
+          CHECKS="$(python3 - <<'PY'
+          import json
+          print(json.load(open('/tmp/EPICWAR5-V33-RC-REPORT.json'))['checks_passed'])
+          PY
+          )"
+          cat > /tmp/rc/EPICWAR5-V33-RC-SUMMARY.txt <<EOF
+          Epic War 5 Expansion V3.3 — Release Candidate Hardening
+          Result: PASS
+          Frozen release SHA-256: e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33
+          Invariant checks passed: $CHECKS
+          FFDec decompile: PASS
+          Progression/save/reward/softlock static invariants: PASS
+          V3.3 performance regression guards: PASS
+          FFDec decompile -> import -> re-decompile round trip: PASS
+          Gameplay/content changes in this RC pass: NONE
+          EOF
+          cat /tmp/rc/EPICWAR5-V33-RC-SUMMARY.txt
+
+      - name: Upload RC evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v33-rc-evidence
+          retention-days: 30
+          path: |
+            /tmp/rc/EPICWAR5-V33-RC-REPORT.json
+            /tmp/rc/EPICWAR5-V33-RC-SUMMARY.txt
+            /tmp/rc/export.log
+            /tmp/rc/import.log
+            /tmp/rc/roundtrip-export.log

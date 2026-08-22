@@ -2,13 +2,14 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
 $Root = (Get-Location).Path
+$V121 = Join-Path $Root 'assets\kingdom-rush-frontiers-v12-1.swf'
 $V12 = Join-Path $Root 'assets\kingdom-rush-frontiers-v12.swf'
 $V11 = Join-Path $Root 'assets\kingdom-rush-frontiers-v11.swf'
 $V10 = Join-Path $Root 'assets\kingdom-rush-frontiers-v10.swf'
 $V9 = Join-Path $Root 'assets\kingdom-rush-frontiers-v9.swf'
 $V8 = Join-Path $Root 'assets\kingdom-rush-frontiers-v8.swf'
 $V7 = Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf'
-$Swf = if (Test-Path $V12) { $V12 } elseif (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
+$Swf = if (Test-Path $V121) { $V121 } elseif (Test-Path $V12) { $V12 } elseif (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
 if (-not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
 
 $Cache = Join-Path $Root '.native\ruffle'
@@ -55,23 +56,26 @@ if (-not (Test-Path $Exe)) {
     }
 }
 
-$label = if ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
+$label = if ($Swf -eq $V121) { 'V12.1 audio/pop-up polish' } elseif ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
 $backend = if ($ForceVulkan) { 'vulkan' } elseif ($ForceGl) { 'gl' } else { 'dx12' }
 if ($ForceDx12) { $backend = 'dx12' }
+
+function Invoke-Ruffle([string]$GraphicsBackend) {
+    $env:WGPU_BACKEND = $GraphicsBackend
+    $ruffleArgs = @('--graphics', $GraphicsBackend, $Swf) + $ForwardArgs
+    $proc = Start-Process -FilePath $Exe -ArgumentList $ruffleArgs -Wait -PassThru -NoNewWindow
+    return [int]$proc.ExitCode
+}
 
 Write-Host "Launching Kingdom Rush Frontiers $label with native Ruffle"
 Write-Host "Game: $Swf"
 Write-Host "Graphics backend: $backend"
-$env:WGPU_BACKEND = $backend
-& $Exe '--graphics' $backend $Swf @ForwardArgs
-$code = $LASTEXITCODE
+$code = Invoke-Ruffle $backend
 
-# The wgpu Vulkan crash seen on Windows is a native renderer panic. Prefer DX12
-# and automatically retry OpenGL when the selected non-Vulkan backend still dies.
+# Prefer DX12 on Windows. Only retry OpenGL if the actual Ruffle process exits
+# with a non-zero code; do not treat a blank PowerShell $LASTEXITCODE as failure.
 if ($code -ne 0 -and -not $ForceVulkan -and $backend -ne 'gl') {
-    Write-Warning "Ruffle exited with code $code using $backend. Retrying with OpenGL to avoid wgpu/Vulkan/DX12 driver failures."
-    $env:WGPU_BACKEND = 'gl'
-    & $Exe '--graphics' 'gl' $Swf @ForwardArgs
-    $code = $LASTEXITCODE
+    Write-Warning "Ruffle exited with code $code using $backend. Retrying with OpenGL."
+    $code = Invoke-Ruffle 'gl'
 }
 exit $code

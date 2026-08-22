@@ -1,0 +1,16 @@
+Epic War 5 — Expansion V3.3.1 Sitelock Hotfix
+Baseline V3.3 SHA-256: e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: 40712cc3685861ee93a97ad49cd4ff71c2ebc55c9959a1d9f160fcf39e8d6577
+
+Hotfix only:
+- Authorizes recordswiper1t.github.io in the original HostManager sitelock whitelist.
+- Disables legacy ads and Mochi tracking on GitHub Pages.
+- Leaves the V3.3 gameplay, progression, saves, rewards, performance systems and content unchanged.
+- Original V3.3 SWF remains archived for rollback.
+
+Verification:
+- Exact frozen V3.3 SWF decompiled.
+- Only HostManager source patched before FFDec import.
+- FFDec V3.3.1 rebuild succeeded.
+- Re-decompiled output contains GitHub Pages authorization and V3.3 regression markers.

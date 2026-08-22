@@ -1,0 +1,108 @@
+name: Build V12.1 audio and popup fixes
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/v12_1/**'
+      - '.github/workflows/build-v12-1-audio-popups.yml'
+  push:
+    branches: [agent/v12-1-audio-popups, main]
+    paths:
+      - 'tools/v12_1/**'
+      - '.github/workflows/build-v12-1-audio-popups.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export V12 ActionScript
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v121 /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v121 /tmp/import/scripts/'§_-aQ§' /tmp/out /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v121 assets/kingdom-rush-frontiers-v12.swf >/tmp/export-v121.log 2>&1 || true
+          test -f /tmp/v121/scripts/Level.as
+          test -f '/tmp/v121/scripts/§_-aQ§/§for for dynamic§.as'
+          test -f '/tmp/v121/scripts/§dynamic const function§.as'
+          test -f '/tmp/v121/scripts/§_-bK§.as'
+      - name: Apply V12.1 fixes
+        run: |
+          set -euo pipefail
+          python3 tools/v12_1/audio_popups.py /tmp/v121/scripts
+          cp /tmp/v121/scripts/Level.as /tmp/import/scripts/Level.as
+          cp '/tmp/v121/scripts/§dynamic const function§.as' '/tmp/import/scripts/§dynamic const function§.as'
+          cp '/tmp/v121/scripts/§_-bK§.as' '/tmp/import/scripts/§_-bK§.as'
+          cp '/tmp/v121/scripts/§_-aQ§/§for for dynamic§.as' '/tmp/import/scripts/§_-aQ§/§for for dynamic§.as'
+          [ -d /tmp/v121/_assets ] && cp -a /tmp/v121/_assets /tmp/import/_assets || true
+      - name: Import patched scripts
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v12.swf /tmp/out/kingdom-rush-frontiers-v12-1.swf /tmp/import >/tmp/import-v121.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v12-1.swf
+      - name: Re-export and verify
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v12-1.swf >/tmp/verify-v121.log 2>&1 || true
+          grep -F 'POP-UP HINTS:' /tmp/verify/scripts/Level.as
+          grep -F 'qolPopupsEnabled' /tmp/verify/scripts/Level.as
+          grep -F 'qolApplyCategoryVolumes' '/tmp/verify/scripts/§_-aQ§/§for for dynamic§.as'
+          grep -F 'requestedVolume' '/tmp/verify/scripts/§_-aQ§/§for for dynamic§.as'
+          grep -F 'if(Level.qolPopupsEnabled)' '/tmp/verify/scripts/§dynamic const function§.as'
+          grep -F 'Level.qolPopupsEnabled = false' '/tmp/verify/scripts/§_-bK§.as'
+          sha256sum /tmp/out/kingdom-rush-frontiers-v12-1.swf > /tmp/out/V12-1-SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-v12-1-audio-popups
+          path: /tmp/out
+      - name: Publish verified V12.1
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v12-1.swf assets/kingdom-rush-frontiers-v12-1.swf
+          sed 's#/tmp/out/kingdom-rush-frontiers-v12-1.swf#assets/kingdom-rush-frontiers-v12-1.swf#' /tmp/out/V12-1-SHA256SUMS.txt > assets/V12-1-SHA256SUMS.txt
+          cat > assets/V12-1-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V12.1 Audio + Pop-up Polish
+          - Fixes music/SFX mute state so pause/settings global mute cannot restore categories the player turned off.
+          - Existing channels mute immediately; requested per-sound volume is preserved for correct later unmute.
+          - Adds POP-UP HINTS ON/OFF to sandbox settings.
+          - The built-in Tooltips switch controls the same master preference.
+          - Pop-up OFF suppresses tooltips, tutorial BUILD HERE signs, enemy/tutorial notification cards and similar instructional prompts without disabling gameplay controls.
+          - Retains V12 The Last Rift and all earlier sandbox/performance features.
+          Built, re-exported and structurally verified with FFDec 26.2.1.
+          TXT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('desktop/run-native.ps1'); s=p.read_text(encoding='utf-8')
+          if '$V121 =' not in s:
+              s=s.replace("$V12 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v12.swf'", "$V121 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v12-1.swf'\n$V12 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v12.swf'",1)
+              s=s.replace('$Swf = if (Test-Path $V12) { $V12 }', '$Swf = if (Test-Path $V121) { $V121 } elseif (Test-Path $V12) { $V12 }',1)
+              s=s.replace("$label = if ($Swf -eq $V12) { 'V12 The Last Rift' }", "$label = if ($Swf -eq $V121) { 'V12.1 audio/pop-up polish' } elseif ($Swf -eq $V12) { 'V12 The Last Rift' }",1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          p=Path('desktop/run_native.py'); s=p.read_text(encoding='utf-8')
+          if 'V121_SWF' not in s:
+              s=s.replace('V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"', 'V121_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12-1.swf"\nV12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"',1)
+              s=s.replace('(V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF)', '(V121_SWF, V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF)',1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          for page in ['mod/fast.html']:
+              p=Path(page); s=p.read_text(encoding='utf-8')
+              s=s.replace('/assets/kingdom-rush-frontiers-v12.swf?v=12-last-rift','/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups')
+              p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/kingdom-rush-frontiers-v12-1.swf assets/V12-1-SHA256SUMS.txt assets/V12-1-BUILD.txt desktop/run-native.ps1 desktop/run_native.py mod/fast.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build verified V12.1 audio and popup polish [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi

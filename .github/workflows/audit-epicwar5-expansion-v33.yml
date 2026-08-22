@@ -1,0 +1,97 @@
+name: Audit Epic War 5 Expansion V3.3 Performance
+
+on:
+  push:
+    branches:
+      - epicwar5-expansion-v33-polish
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-v33.yml'
+      - 'tools/epicwar5/expansion/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-v33.yml'
+      - 'tools/epicwar5/expansion/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-v33-polish
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download exact game and FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5 /tmp/ffdec
+          curl -fL --retry 3 --connect-timeout 20 'https://cache.armorgames.com/files/games/epic-war-5-12518.swf' -o /tmp/ew5/original.swf
+          test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Build exact released V3.2
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5/export /tmp/ew5/out /tmp/ew5/final
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
+          python3 tools/epicwar5/expansion/build_expansion_storage_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_curve_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_catalog_compat_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_equipment_catalog_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_advanced_upgrades_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_12_units_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_enforcement_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_campaign_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_campaign_newline_compat_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_compat_v31.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_v31.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_compat_v32.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_v32.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_cleanup_v32.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_advanced_identity_v32.py /tmp/ew5/export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/v32.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/final /tmp/ew5/out/v32.swf > /tmp/ew5/final.log 2>&1 || true
+          test -f /tmp/ew5/final/scripts/Game/System/Battle/BattleSystem.as
+      - name: Build performance audit report
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd /tmp/ew5/final/scripts
+          {
+            echo '=== per-frame update methods ==='
+            grep -RniE 'function update|ENTER_FRAME|addEventListener\(Event\.ENTER_FRAME|update\(\)' Game/System/Battle Game/Interface | head -n 3000 || true
+            echo '=== array/list scans and allocations ==='
+            grep -RniE '\.length|new Array|\[\]|push\(|splice\(|indexOf\(|sort\(|filter\(|for each|for\(' Game/System/Battle | head -n 4500 || true
+            echo '=== target searches / distance / collisions ==='
+            grep -RniE 'target|nearest|distance|Math\.abs|Math\.sqrt|hitTest|collision|get.*Unit|get.*Enemy|char_list|unit_list|enemy_list' Game/System/Battle | head -n 5000 || true
+            echo '=== effects / projectiles / particles ==='
+            grep -RniE 'effect|particle|projectile|bullet|missile|arrow|magic|removeChild|addChild|dispose|destroy' Game/System/Battle Game/Manager | head -n 4000 || true
+            echo '=== UI hot paths ==='
+            grep -RniE 'htmlText|text =|gotoAndStop|visible =|updateView|draw|graphics\.' Game/Interface | head -n 3000 || true
+            echo '=== V3.2 expansion battle scaling ==='
+            grep -RniE 'initExpansion|createEnemyUnit|createEnemyPortal|eWave|tier >=|battle_exp_reward|battle_item_reward' Game/System/Battle/BattleControlEnemy.as | head -n 1200 || true
+          } > /tmp/ew5/v33-performance-audit.txt
+      - name: Upload exact V3.2 compiled source
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v33-performance-audit
+          retention-days: 7
+          path: |
+            /tmp/ew5/v33-performance-audit.txt
+            /tmp/ew5/final/scripts/Game
+            /tmp/ew5/import.log
+            /tmp/ew5/final.log

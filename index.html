@@ -5,32 +5,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-title" content="Flash Games">
+<meta name="theme-color" content="#090b10">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<meta http-equiv="Pragma" content="no-cache">
-<meta name="krf-build" content="v12-last-rift">
-<title>Kingdom Rush Frontiers — V12 The Last Rift</title>
+<title>My Games — iPhone Launcher</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#game{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}#menu{position:fixed;z-index:10;right:max(8px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));width:42px;height:42px;border:1px solid rgba(255,255,255,.25);border-radius:12px;background:#171717;color:#fff;font-size:24px;touch-action:manipulation;contain:layout paint style}#panel{position:fixed;z-index:9;right:max(8px,env(safe-area-inset-right));top:calc(max(8px,env(safe-area-inset-top)) + 48px);display:none;gap:8px;width:270px;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:14px;background:#111;contain:layout paint style}#panel.open{display:grid}.btn{appearance:none;border:0;border-radius:10px;padding:11px 12px;background:#d7a94d;color:#1f1708;font:600 14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:center;text-decoration:none}.secondary{background:#2d2d2d;color:#fff;border:1px solid #4b4b4b}#hint{position:fixed;z-index:8;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:7px 10px;border-radius:9px;background:#111;color:#ddd;font-size:11px;pointer-events:none;opacity:.82;white-space:nowrap}
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;background:#090b10;color:#fff}body{padding:max(18px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:radial-gradient(circle at 50% -10%,#2f3340 0,#11141b 38%,#090b10 75%)}main{width:min(680px,100%);margin:0 auto}.top{padding:12px 4px 18px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;color:#c9cddd}.top h1{font-size:clamp(38px,12vw,64px);line-height:.92;letter-spacing:-.045em;margin:8px 0 12px}.top p{margin:0;color:#b9bfca;line-height:1.45}.grid{display:grid;gap:12px}.game{display:block;text-decoration:none;color:#fff;padding:20px;border-radius:20px;border:1px solid #353b49;background:linear-gradient(145deg,#1a1e29,#11141a);box-shadow:0 12px 36px rgba(0,0,0,.28);touch-action:manipulation}.game:active{transform:scale(.985)}.game .n{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#f0c45d;color:#211804;font-weight:1000;margin-bottom:20px}.game h2{font-size:25px;margin:0 0 6px}.game p{margin:0;color:#aeb5c2;line-height:1.4}.game strong{color:#fff}.tag{display:inline-block;margin-top:13px;padding:6px 9px;border-radius:999px;background:#242a36;border:1px solid #3b4352;color:#d8dde6;font-size:11px;font-weight:800}.help{margin-top:16px;padding:16px;border:1px solid #313745;border-radius:16px;background:#0e1117;color:#b8bfca;font-size:13px;line-height:1.5}.help b{color:#fff}.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.links a{color:#e8ca78;text-decoration:none;font-weight:700}
 </style>
 </head>
 <body>
-<iframe id="game" src="/mod/fast.html?v=12-last-rift" allow="fullscreen; autoplay; clipboard-read; clipboard-write" allowfullscreen title="Kingdom Rush Frontiers V12"></iframe>
-<button id="menu" aria-label="Game controls">⋯</button>
-<div id="panel">
-<a class="btn" href="/mod/fast.html?v=12-last-rift">Play V12 — The Last Rift</a>
-<a class="btn secondary" href="/mod/">V12 details / native desktop</a>
-<a class="btn secondary" href="https://github.com/recordswiper1t/recordswiper1t.github.io">Download native laptop build</a>
-<button class="btn secondary" id="reload">Reload V12</button>
-<button class="btn secondary" id="full">Full screen</button>
-</div>
-<div id="hint">V12 THE LAST RIFT • Browser mode • Native desktop recommended for huge waves</div>
-<script>
-const panel=document.getElementById('panel'),game=document.getElementById('game');
-document.getElementById('menu').onclick=()=>panel.classList.toggle('open');
-document.getElementById('reload').onclick=()=>{panel.classList.remove('open');const u=new URL('/mod/fast.html',location.origin);u.searchParams.set('v','12-last-rift-'+Date.now());game.src=u.toString()};
-document.getElementById('full').onclick=()=>{panel.classList.remove('open');if(game.requestFullscreen)game.requestFullscreen().catch(()=>{})};
-setTimeout(()=>{const h=document.getElementById('hint');if(h)h.style.display='none'},6500);
-</script>
+<main>
+<section class="top"><div class="eyebrow">IPHONE GAME LAUNCHER</div><h1>Pick a game.</h1><p>Tap one, rotate your iPhone to landscape, then tap <b>Start game</b>. The iPhone players use lighter settings and touch-safe controls.</p></section>
+<section class="grid">
+<a class="game" href="/iphone/krf.html"><span class="n">1</span><h2>Kingdom Rush Frontiers</h2><p><strong>V12.1</strong> — The Last Rift plus audio and pop-up fixes.</p><span class="tag">Best with touch</span></a>
+<a class="game" href="/iphone/stickwar.html"><span class="n">2</span><h2>Super Stick War</h2><p>Complete Expansion V1 — 65-stage campaign, Battle Lab and sandbox.</p><span class="tag">Touch pad included</span></a>
+<a class="game" href="/iphone/epicwar5.html"><span class="n">3</span><h2>Epic War 5 Expansion</h2><p><strong>V3.3.1</strong> — performance build with the GitHub Pages sitelock fix.</p><span class="tag">iPhone low-power mode</span></a>
+</section>
+<section class="help"><b>For the closest thing to full-screen on iPhone:</b> in Safari tap Share → Add to Home Screen, then launch this site from the new icon. Your Ruffle saves stay in this browser/site storage, so avoid clearing Safari website data.<div class="links"><a href="/mod/">KRF details</a><a href="/stickwar-complete/">Stick War details</a><a href="/epicwar5-expansion/">Epic War details</a></div></section>
+</main>
 </body>
 </html>
