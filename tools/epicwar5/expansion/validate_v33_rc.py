@@ -62,9 +62,18 @@ def method(text, name, next_name=None):
 
 
 def threshold_pairs(body):
-    # FFDec may emit either `if (...) return N;` or `if (...) { return N; }`.
-    return [(int(a), int(b)) for a,b in re.findall(
-        r'if\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*>=\s*(\d+)\s*\)\s*(?:\{\s*)?return\s+(\d+)\s*;', body, re.S)]
+    # FFDec changes brace/label layout between export/import cycles. Parse each
+    # threshold condition first, then locate the first return before the next
+    # threshold. This is intentionally layout-agnostic while preserving pairing.
+    conds = list(re.finditer(r'if\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*>=\s*(\d+)\s*\)', body, re.S))
+    out = []
+    for i, m in enumerate(conds):
+        end = conds[i + 1].start() if i + 1 < len(conds) else len(body)
+        chunk = body[m.end():end]
+        r = re.search(r'return\s+(\d+)\s*;', chunk, re.S)
+        if r:
+            out.append((int(m.group(1)), int(r.group(1))))
+    return out
 
 
 dm = read('Manager/DataManager.as')
