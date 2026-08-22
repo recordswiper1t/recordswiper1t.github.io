@@ -94,7 +94,14 @@ def main() -> int:
     kf_names = set(kfm)
     stage_own = set(stm)
 
-    direct_stage_refs = set(refs["this_refs_not_declared_locally"]) | set(refs["super_refs"])
+    # Unqualified calls can be inherited calls too. Only treat them as Level API
+    # references when the original KR1 Level actually declares that member.
+    inherited_unqualified = set(refs["unqualified_calls_not_declared_locally"]) & k1_names
+    direct_stage_refs = (
+        set(refs["this_refs_not_declared_locally"])
+        | set(refs["super_refs"])
+        | inherited_unqualified
+    )
     missing_for_stage = sorted(x for x in direct_stage_refs if x not in kf_names and x not in stage_own)
     already_shared_for_stage = sorted(x for x in direct_stage_refs if x in kf_names)
 
@@ -106,6 +113,7 @@ def main() -> int:
         "kr1_level_members_absent_from_krf_count": len(k1_names - kf_names),
         "krf_level_members_absent_from_kr1_count": len(kf_names - k1_names),
         "stage_inherited_references": refs,
+        "stage_inherited_unqualified_calls_confirmed_on_kr1_level": sorted(inherited_unqualified),
         "stage_refs_already_available_on_krf": already_shared_for_stage,
         "stage_refs_missing_on_krf": missing_for_stage,
         "adapter_candidates": {
