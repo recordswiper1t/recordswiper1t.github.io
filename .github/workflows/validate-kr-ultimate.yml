@@ -1,0 +1,95 @@
+name: Validate Kingdom Rush Ultimate foundation
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - 'tools/ultimate/**'
+      - 'docs/KINGDOM_RUSH_ULTIMATE.md'
+      - '.github/workflows/validate-kr-ultimate.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/**'
+      - 'docs/KINGDOM_RUSH_ULTIMATE.md'
+      - '.github/workflows/validate-kr-ultimate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile Ultimate tooling
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/ultimate/content_manifest.py
+          python3 -m py_compile tools/ultimate/preflight.py
+          python3 -m py_compile tools/ultimate/audit_exports.py
+          python3 -m py_compile tools/ultimate/build_ultimate.py
+
+      - name: Validate complete stage scope
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/content_manifest.py --json > /tmp/ultimate-manifest.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/ultimate-manifest.json', encoding='utf-8'))
+          s=data['summary']
+          assert s['kr1_main'] == 12
+          assert s['kr1_post_campaign'] == 14
+          assert s['kr1_endless'] == 1
+          assert s['krf_main'] == 15
+          assert s['krf_post_campaign'] == 7
+          assert s['krf_endless'] == 2
+          assert s['original_campaign_and_post'] == 48
+          assert s['original_all_including_endless'] == 51
+          ids=[x['id'] for x in data['stages']]
+          assert len(ids) == len(set(ids)) == 51
+          print('stage manifest verified:', s)
+          PY
+
+      - name: Verify existing Frontiers runtime is a valid SWF
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'tools/ultimate')
+          from preflight import inspect_swf
+          choices=[
+              Path('assets/kingdom-rush-frontiers-v12.swf'),
+              Path('assets/kingdom-rush-frontiers-v11.swf'),
+          ]
+          swf=next((p for p in choices if p.exists()), None)
+          assert swf is not None, 'no V12/V11 Frontiers runtime found'
+          result=inspect_swf(swf)
+          assert result['valid_swf'], result
+          print('Frontiers base verified:', result['path'], result['sha256'])
+          PY
+
+      - name: Confirm full merge remains fail-closed without external source inputs
+        run: |
+          set -euo pipefail
+          set +e
+          python3 tools/ultimate/preflight.py --json > /tmp/preflight.json
+          code=$?
+          set -e
+          test "$code" -eq 2
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/preflight.json', encoding='utf-8'))
+          assert data['frontiers']['valid_swf']
+          assert not data['ready_for_full_binary_merge']
+          assert 'kingdom_rush_original' in data['missing_source_groups']
+          assert 'frontiers_post_campaign_and_endless' in data['missing_source_groups']
+          print('fail-closed source gating verified')
+          PY
