@@ -21,7 +21,7 @@ import tempfile
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from content_manifest import STAGES, summary, validate  # noqa: E402
-from preflight import inspect_swf  # noqa: E402
+from preflight import inspect_swf, select_frontiers  # noqa: E402
 
 
 def run(cmd: list[str], *, stdout=None) -> None:
@@ -106,9 +106,18 @@ def structural_merge(
     if "qolTowerClipboard" not in level_text:
         raise SystemExit("Stage-1 merge lost Frontiers sandbox/clipboard marker")
     level15_text = (verify_scripts / "Level15.as").read_text(encoding="utf-8-sig", errors="replace")
+    release_name = frontiers.name
+    last_rift_expected = release_name in {
+        "kingdom-rush-frontiers-v12.swf",
+        "kingdom-rush-frontiers-v12-1.swf",
+    }
     last_rift_preserved = "THE LAST RIFT" in level15_text
-    if frontiers.name.endswith("v12.swf") and not last_rift_preserved:
+    if last_rift_expected and not last_rift_preserved:
         raise SystemExit("Stage-1 merge lost V12 Last Rift marker")
+    v121_polish_expected = release_name == "kingdom-rush-frontiers-v12-1.swf"
+    v121_polish_preserved = "qolPopupsEnabled" in level_text
+    if v121_polish_expected and not v121_polish_preserved:
+        raise SystemExit("Stage-1 merge lost V12.1 pop-up preference marker")
 
     result = {
         "path": str(merged_swf),
@@ -118,6 +127,7 @@ def structural_merge(
         "prefix": prefix,
         "frontiers_mod_marker_preserved": True,
         "last_rift_preserved": last_rift_preserved,
+        "v12_1_polish_preserved": v121_polish_preserved if v121_polish_expected else None,
         "verified_namespaced_classes": [p.stem for p in required[2:]],
         "merge_report": str(merge_report),
         "gameplay_ready": False,
@@ -132,7 +142,7 @@ def structural_merge(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ffdec", required=True, help="path to ffdec.jar")
-    parser.add_argument("--frontiers", default="assets/kingdom-rush-frontiers-v12.swf")
+    parser.add_argument("--frontiers", default="assets/kingdom-rush-frontiers-v12-1.swf")
     parser.add_argument("--kingdom-rush", required=True, dest="kr1")
     parser.add_argument("--frontiers-extra-export", help="optional exported later KRF content")
     parser.add_argument("--work", default="work/ultimate")
@@ -146,12 +156,7 @@ def main() -> int:
     if not ffdec.is_file():
         raise SystemExit(f"ffdec.jar not found: {ffdec}")
 
-    frontiers = Path(args.frontiers)
-    if not frontiers.exists() and frontiers.name.endswith("v12.swf"):
-        fallback = frontiers.with_name("kingdom-rush-frontiers-v11.swf")
-        if fallback.exists():
-            frontiers = fallback
-    frontiers = frontiers.resolve()
+    frontiers = select_frontiers(Path(args.frontiers)).resolve()
     kr1 = Path(args.kr1).resolve()
 
     fr_info = inspect_swf(frontiers)
@@ -207,7 +212,7 @@ def main() -> int:
         },
         "inventory": str(report_path),
         "port_plan": str(port_plan),
-        "runtime_policy": "KRF V12/V11 is authoritative; KR1 content is collision-safe namespaced then selectively rebound",
+        "runtime_policy": "current KRF V12.1 release is authoritative; V12/V11 are fallbacks; KR1 content is collision-safe namespaced then selectively rebound",
         "merge_state": "source_inventory_ready",
         "next_gate": "build Stage-1 namespaced structural merge, then rebind Southport to Frontiers shared core",
     }
