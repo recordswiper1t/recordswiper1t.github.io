@@ -118,7 +118,9 @@ jobs:
           grep -F 'if(tier >= 17)' "$e"
           grep -F 'if(tier >= 21)' "$e"
           grep -F 'itemGetValue(itemReward) + 1,99' "$r"
-          grep -F '"\\nT" + threat' "$w"
+          grep -F 'var threat:int = 1' "$w"
+          grep -F 'threat = Math.min(5,1 + int((i - 1) / 5))' "$w"
+          grep -F '+ threat + " • "' "$w"
       - name: Upload verified V3.2 build
         uses: actions/upload-artifact@v4
         with:
