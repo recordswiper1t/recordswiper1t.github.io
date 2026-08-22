@@ -110,10 +110,9 @@ jobs:
           from pathlib import Path
           import sys
           sys.path.insert(0, 'tools/ultimate')
-          from preflight import inspect_swf
-          choices=[Path('assets/kingdom-rush-frontiers-v12.swf'), Path('assets/kingdom-rush-frontiers-v11.swf')]
-          swf=next((p for p in choices if p.exists()), None)
-          assert swf is not None, 'no V12/V11 Frontiers runtime found'
+          from preflight import inspect_swf, select_frontiers
+          swf=select_frontiers(Path('assets/kingdom-rush-frontiers-v12-1.swf'))
+          assert swf.exists(), 'no V12.1/V12/V11 Frontiers runtime found'
           result=inspect_swf(swf)
           assert result['valid_swf'], result
           print('Frontiers base verified:', result['path'], result['sha256'])
@@ -131,8 +130,9 @@ jobs:
           import json
           data=json.load(open('/tmp/preflight.json', encoding='utf-8'))
           assert data['frontiers']['valid_swf']
+          assert data['frontiers']['path'].endswith('kingdom-rush-frontiers-v12-1.swf')
           assert not data['ready_for_full_binary_merge']
           assert 'kingdom_rush_original' in data['missing_source_groups']
           assert 'frontiers_post_campaign_and_endless' in data['missing_source_groups']
-          print('fail-closed local-source gating verified')
+          print('fail-closed local-source gating verified on V12.1')
           PY
