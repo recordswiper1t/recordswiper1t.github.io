@@ -18,15 +18,15 @@ if t.count(old)!=1: raise SystemExit('catalog compatibility anchor not found exa
 t=t.replace(old,new,1)
 p.write_text(t,encoding='utf-8',newline='\n')
 
-# Normalize FFDec's apostrophe escaping in the final vanilla item so the
-# catalog appender has one stable block to replace.
+# The catalog appender's Python triple-quoted anchor evaluates \' to a plain
+# apostrophe. Emit exactly that ActionScript text so its replacement is stable.
 p=root/'System'/'StatDef'/'CharItemStat.as'
 t=p.read_text(encoding='utf-8-sig')
 start=t.index('            case 30:\n')
 end=t.index('         }\n         var a:*',start)
 canonical='''            case 30:
                this.name_id = "itm_special";
-               this.name_str = "Artlogic\\'s Badge";
+               this.name_str = "Artlogic\'s Badge";
                this.desc = "Grants awesome skill!?";
                this.rank = 3;
                this.ability_name_id = "p_special";
