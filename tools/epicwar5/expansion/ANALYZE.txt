@@ -6,3 +6,4 @@ Token-safe equipment verifier refresh.
 Full 50-battle expansion slice verifier refresh.
 Catalog-normalized full verifier refresh.
 FFDec diagnostic full-stack rebuild refresh.
+Import-error diagnostic refresh.
