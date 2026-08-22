@@ -1,0 +1,129 @@
+name: Probe Ultimate world-map campaign selector
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/build_campaign_router.py'
+      - 'tools/ultimate/build_campaign_selector.py'
+      - 'tools/ultimate/campaign_registry.py'
+      - 'tools/ultimate/content_manifest.py'
+      - '.github/workflows/probe-ultimate-campaign-selector.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/build_campaign_router.py'
+      - 'tools/ultimate/build_campaign_selector.py'
+      - 'tools/ultimate/campaign_registry.py'
+      - 'tools/ultimate/content_manifest.py'
+      - '.github/workflows/probe-ultimate-campaign-selector.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare enhanced runtime and tooling
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/ultimate/build_campaign_router.py tools/ultimate/build_campaign_selector.py
+          mkdir -p /tmp/u /tmp/ffdec /tmp/u/report
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          else
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=0' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          fi
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export runtime and apply router plus selector
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/export /tmp/u/import/scripts
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/export "$KRF_BASE" >/tmp/u/export.log 2>&1 || true
+          test -f '/tmp/u/export/scripts/§_-BQ§.as'
+          test -f '/tmp/u/export/scripts/§class const for§.as'
+          test -f /tmp/u/export/scripts/Level.as
+          python3 tools/ultimate/build_campaign_router.py /tmp/u/export/scripts \
+            --report /tmp/u/report/router.json
+          python3 tools/ultimate/build_campaign_selector.py /tmp/u/export/scripts \
+            --report /tmp/u/report/selector.json
+          cp '/tmp/u/export/scripts/§_-BQ§.as' '/tmp/u/import/scripts/§_-BQ§.as'
+          cp '/tmp/u/export/scripts/§class const for§.as' '/tmp/u/import/scripts/§class const for§.as'
+          cp /tmp/u/export/scripts/Level.as /tmp/u/import/scripts/Level.as
+
+      - name: Compile map selector into enhanced runtime
+        run: |
+          set -euo pipefail
+          java -Xmx8g -jar /tmp/ffdec/ffdec.jar -onerror abort \
+            -importScript "$KRF_BASE" /tmp/u/campaign-selector.swf /tmp/u/import \
+            >/tmp/u/import.log 2>&1
+          test -s /tmp/u/campaign-selector.swf
+          head -c 3 /tmp/u/campaign-selector.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify selector plus original map route
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/verify
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/verify /tmp/u/campaign-selector.swf >/tmp/u/verify.log 2>&1 || true
+          game='/tmp/u/verify/scripts/§_-BQ§.as'
+          map='/tmp/u/verify/scripts/§class const for§.as'
+          level=/tmp/u/verify/scripts/Level.as
+          test -f "$game" && test -f "$map" && test -f "$level"
+          grep -F 'function ultimateStartStage' "$game"
+          grep -F 'getDefinitionByName("Level" + param1)' "$game"
+          grep -F 'private var ultimateCampaignButton:Sprite' "$map"
+          grep -F 'KINGDOM RUSH ULTIMATE' "$map"
+          grep -F '34 source-ready originals' "$map"
+          grep -F 'KR1__Level1' "$map"
+          grep -F 'KR1__Level19' "$map"
+          grep -F 'kr1-southport' "$map"
+          grep -F 'kr1-ha-kraj-plateau' "$map"
+          grep -F 'krf-hammerhold' "$map"
+          grep -F 'krf-emberspike-depths' "$map"
+          grep -F 'this.game.§while const switch§(param1,param2,false)' "$map"
+          grep -F 'qolTowerClipboard' "$level"
+          if [ "$HAS_V12" = 1 ]; then
+            grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          if [ "$HAS_V121" = 1 ]; then
+            grep -F 'qolPopupsEnabled' "$level"
+          fi
+          sha256sum /tmp/u/campaign-selector.swf >/tmp/u/report/campaign-selector-SHA256.txt
+
+      - name: Upload structural verification only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-world-map-selector-probe
+          path: |
+            /tmp/u/report/router.json
+            /tmp/u/report/selector.json
+            /tmp/u/report/campaign-selector-SHA256.txt
+            /tmp/u/import.log
+            /tmp/u/verify.log
+          retention-days: 30
