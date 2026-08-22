@@ -62,6 +62,7 @@ jobs:
           python3 tools/epicwar5/expansion/patch_polish_compat_v31.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_v31.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_v32.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_advanced_identity_v32.py /tmp/ew5/export
       - name: Rebuild V3.2 SWF
         shell: bash
         run: |
@@ -94,8 +95,13 @@ jobs:
           grep -F 'Advanced 10-18' "$s"
           grep -F 'army slots 7-12 unlock later' "$f"
           grep -F 'next " + next' "$f"
-          grep -F 'expansionPolishTree' "$c"
-          grep -F 'fallback = [35,36,37,39,46,47,48' "$c"
+          grep -F 'case 10:' "$c"
+          grep -F 'return [20,46,52,15,47,39,37,48,35]' "$c"
+          grep -F 'return [20,29,69,15,39,53,37,38,75]' "$c"
+          grep -F 'return [20,46,71,15,47,72,42,48,73]' "$c"
+          grep -F 'return [15,25,71,36,72,73,38,74,77]' "$c"
+          grep -F 'return [20,25,35,36,38,39,40,41,43]' "$c"
+          if grep -Fq 'expansionPolishTree' "$c"; then echo 'generic tree helper unexpectedly survived' >&2; exit 1; fi
           grep -F 'Health +35%, defense +12%' "$ca"
           grep -F 'All resistance, health +10%, damage -15%' "$ca"
           grep -F 'Damage +25%, health +25%, defense +15%, regen +75' "$ca"
