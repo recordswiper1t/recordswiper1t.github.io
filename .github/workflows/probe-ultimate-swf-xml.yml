@@ -1,0 +1,124 @@
+name: Probe Ultimate SWF XML merge surface
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - 'tools/ultimate/xml_probe.py'
+      - '.github/workflows/probe-ultimate-swf-xml.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/xml_probe.py'
+      - '.github/workflows/probe-ultimate-swf-xml.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile XML probe
+        run: python3 -m py_compile tools/ultimate/xml_probe.py
+
+      - name: Fetch original Armor Games KR1 web build for structural probe only
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 --retry-delay 2 \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' \
+            -o /tmp/kr1.swf
+          test -s /tmp/kr1.swf
+          head -c 3 /tmp/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/kr1.swf > /tmp/KR1-SOURCE-SHA256.txt
+
+      - name: Select Frontiers runtime
+        run: |
+          set -euo pipefail
+          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            cp assets/kingdom-rush-frontiers-v12.swf /tmp/krf.swf
+          else
+            cp assets/kingdom-rush-frontiers-v11.swf /tmp/krf.swf
+          fi
+          head -c 3 /tmp/krf.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/krf.swf > /tmp/KRF-SOURCE-SHA256.txt
+
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
+            -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Convert both SWFs to FFDec internal XML
+        run: |
+          set -euo pipefail
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/kr1.swf /tmp/kr1.xml
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/krf.swf /tmp/krf.xml
+          test -s /tmp/kr1.xml
+          test -s /tmp/krf.xml
+
+      - name: Verify XML to SWF round-trip is structurally readable
+        run: |
+          set -euo pipefail
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/kr1.xml /tmp/kr1-roundtrip.swf
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/krf.xml /tmp/krf-roundtrip.swf
+          for f in /tmp/kr1-roundtrip.swf /tmp/krf-roundtrip.swf; do
+            test -s "$f"
+            head -c 3 "$f" | grep -Eq 'FWS|CWS|ZWS'
+          done
+          rm -rf /tmp/verify-kr1 /tmp/verify-krf
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -selectclass 'Level1' -export script /tmp/verify-kr1 /tmp/kr1-roundtrip.swf >/tmp/verify-kr1.log 2>&1 || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -selectclass 'Level1' -export script /tmp/verify-krf /tmp/krf-roundtrip.swf >/tmp/verify-krf.log 2>&1 || true
+          test -f /tmp/verify-kr1/scripts/Level1.as
+          test -f /tmp/verify-krf/scripts/Level1.as
+
+      - name: Build Level1/GLevel1 linkage and dependency reports
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/report
+          python3 tools/ultimate/xml_probe.py /tmp/kr1.xml \
+            --target Level1 --target GLevel1 --target Map --target Wave \
+            --out /tmp/report/kr1-level1-xml-probe.json
+          python3 tools/ultimate/xml_probe.py /tmp/krf.xml \
+            --target Level1 --target GLevel1 --target Map --target Wave \
+            --out /tmp/report/krf-level1-xml-probe.json
+          cp /tmp/KR1-SOURCE-SHA256.txt /tmp/report/
+          cp /tmp/KRF-SOURCE-SHA256.txt /tmp/report/
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ('kr1','krf'):
+              p=Path('/tmp/report')/f'{name}-level1-xml-probe.json'
+              d=json.loads(p.read_text())
+              print(name, 'elements=', d['element_count'], 'defs=', d['character_definition_count'], 'max_id=', d['max_character_id'], 'closure=', d['dependency_closure_count'])
+              print(name, 'target linkages=', d['target_linkages'][:20])
+          PY
+
+      - name: Ensure source payloads are not uploaded
+        run: |
+          set -euo pipefail
+          test ! -e /tmp/report/kr1.swf
+          test ! -e /tmp/report/krf.swf
+          test ! -e /tmp/report/kr1.xml
+          test ! -e /tmp/report/krf.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-level1-xml-structural-probe
+          path: /tmp/report
+          retention-days: 30
