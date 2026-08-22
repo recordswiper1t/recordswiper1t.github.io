@@ -43,7 +43,7 @@ jobs:
       - name: Apply V12 expansion and scoring patches
         run: |
           set -euo pipefail
-          python3 tools/v12/build-v12.py /tmp/v12/scripts
+          python3 tools/v12/run-build-v12.py /tmp/v12/scripts
           for f in 'Level.as' 'Level15.as' 'Enemy.as' 'EnemyCanibalBeast.as' 'EnemyTremor.as'; do
             cp "/tmp/v12/scripts/$f" "/tmp/import/scripts/$f"
           done
