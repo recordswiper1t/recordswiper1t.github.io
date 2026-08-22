@@ -40,6 +40,7 @@ jobs:
           python3 tools/epicwar5/expansion/patch_progression_curve_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_catalog_compat_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_expansion_equipment_catalog_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_advanced_upgrades_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
