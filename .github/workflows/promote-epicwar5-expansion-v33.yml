@@ -81,3 +81,5 @@ jobs:
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Publish Epic War 5 Expansion V3.3 [skip ci]'
           git push origin HEAD:epicwar5-expansion-v33-polish
+
+# Promotion retry: use recursive artifact discovery after successful V3.3 verification.
