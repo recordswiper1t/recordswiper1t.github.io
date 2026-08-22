@@ -2,15 +2,19 @@ name: Audit original KR1 publisher source
 
 on:
   push:
-    branches: [agent/v13-kingdom-rush-ultimate]
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - '.github/workflows/audit-kr1-official-source.yml'
-      - 'tools/ultimate/**'
+      - 'tools/ultimate/audit_exports.py'
+      - 'tools/ultimate/port_plan.py'
+      - 'tools/ultimate/content_manifest.py'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/audit-kr1-official-source.yml'
-      - 'tools/ultimate/**'
+      - 'tools/ultimate/audit_exports.py'
+      - 'tools/ultimate/port_plan.py'
+      - 'tools/ultimate/content_manifest.py'
   workflow_dispatch:
 
 permissions:
