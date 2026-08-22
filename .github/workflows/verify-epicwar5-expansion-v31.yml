@@ -1,0 +1,115 @@
+name: Verify Epic War 5 Expansion V3.1
+
+on:
+  push:
+    branches:
+      - epicwar5-expansion-v31-polish
+    paths:
+      - '.github/workflows/verify-epicwar5-expansion-v31.yml'
+      - 'tools/epicwar5/expansion/**'
+      - 'epicwar5-expansion/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/verify-epicwar5-expansion-v31.yml'
+      - 'tools/epicwar5/expansion/**'
+      - 'epicwar5-expansion/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-v31-polish
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download exact game and FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5 /tmp/ffdec
+          curl -fL --retry 3 --connect-timeout 20 'https://cache.armorgames.com/files/games/epic-war-5-12518.swf' -o /tmp/ew5/original.swf
+          test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export and apply V3 plus V3.1 polish
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ew5/export /tmp/ew5/out /tmp/ew5/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
+          python3 tools/epicwar5/expansion/build_expansion_storage_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_curve_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_catalog_compat_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_equipment_catalog_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_advanced_upgrades_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_12_units_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_progression_enforcement_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_expansion_campaign_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_campaign_newline_compat_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_v31.py /tmp/ew5/export
+      - name: Rebuild polished SWF
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v31.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1; then
+            echo '===== FFDec import diagnostics ====='
+            cat /tmp/ew5/import.log
+            exit 1
+          fi
+          test -s /tmp/ew5/out/epic-war-5-expansion-v31.swf
+      - name: Re-decompile and verify polish markers
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/verify /tmp/ew5/out/epic-war-5-expansion-v31.swf > /tmp/ew5/verify.log 2>&1 || true
+          d=/tmp/ew5/verify/scripts/Game/Manager/DataManager.as
+          f=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormation.as
+          a=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationAcc.as
+          s=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationSkill.as
+          c=/tmp/ew5/verify/scripts/Game/System/StatDef/CharTotalStat.as
+          r=/tmp/ew5/verify/scripts/Game/Interface/BattleResult.as
+          w=/tmp/ew5/verify/scripts/Game/Interface/WorldMap.as
+          p=/tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
+          e=/tmp/ew5/verify/scripts/Game/System/Battle/EnemyWave.as
+          grep -F 'getStageNormalClear() >= 12 && this.getStageExtraClear() >= 8' "$d"
+          grep -F 'expansionArmySlotsForClears' "$d"
+          grep -F 'expansionEquipmentSlotsForClears' "$d"
+          grep -F 'dat_stage_expansion_stat.length < 25' "$d"
+          grep -F 'MATCH_NUM >= 10 ? 18 : 15' "$s"
+          grep -F 'Advanced locked: 18 unique clears' "$s"
+          grep -F 'expansionHasAnyEquipment' "$f"
+          grep -F 'slot >= 10 ? 18 : 15' "$f"
+          grep -F 'Math.min(Math.max(this.pop,1),16)' "$c"
+          grep -F 'Math.min(Math.max(this.reduce_damage,0),0.8)' "$c"
+          grep -F 'Army slot ' "$r"
+          grep -F 'Advanced upgrades unlocked!' "$r"
+          grep -F 'this.mGF.datMgr.saveData()' "$r"
+          grep -F '12 story and 8 extra' "$w"
+          grep -F 'Progress " + this.mGF.datMgr.expansionProgressCount() + "/50' "$w"
+          grep -F 'Gear slot ' "$a"
+          grep -F '_count_refresh:int' "$p"
+          grep -F 'this.pop_total = Math.min(this.pop_total + 1,this.pop_max)' "$p"
+          grep -F '_cached_total:int' "$e"
+          grep -F 'this._cached_total = this.getTotalEnemyWave()' "$e"
+      - name: Upload V3.1 verification artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v31-verified
+          retention-days: 7
+          path: |
+            /tmp/ew5/out/epic-war-5-expansion-v31.swf
+            /tmp/ew5/import.log
+            /tmp/ew5/verify.log
