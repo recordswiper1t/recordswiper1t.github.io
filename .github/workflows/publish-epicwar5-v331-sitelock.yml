@@ -1,0 +1,129 @@
+name: Publish Epic War 5 Expansion V3.3.1 Sitelock Hotfix
+
+on:
+  push:
+    branches:
+      - epicwar5-v33-sitelock-hotfix
+    paths:
+      - '.github/workflows/publish-epicwar5-v331-sitelock.yml'
+      - 'tools/epicwar5/expansion/patch_sitelock_v331.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-v33-sitelock-hotfix
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Freeze V3.3 baseline and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test "$(sha256sum assets/epic-war-5-expansion-v33.swf | cut -d' ' -f1)" = 'e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33'
+          mkdir -p /tmp/ffdec /tmp/v331/src /tmp/v331/out /tmp/v331/verify
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Decompile exact V3.3 and apply host hotfix
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v331/src assets/epic-war-5-expansion-v33.swf > /tmp/v331/export.log 2>&1 || true
+          test -f /tmp/v331/src/scripts/Game/Manager/HostManager.as
+          python3 tools/epicwar5/expansion/patch_sitelock_v331.py /tmp/v331/src
+      - name: Rebuild V3.3.1 hotfix SWF
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v33.swf /tmp/v331/out/epic-war-5-expansion-v331.swf /tmp/v331/src > /tmp/v331/import.log 2>&1; then
+            cat /tmp/v331/import.log
+            exit 1
+          fi
+          test -s /tmp/v331/out/epic-war-5-expansion-v331.swf
+      - name: Re-decompile and verify hotfix plus V3.3 regressions
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v331/verify /tmp/v331/out/epic-war-5-expansion-v331.swf > /tmp/v331/verify.log 2>&1 || true
+          hm=/tmp/v331/verify/scripts/Game/Manager/HostManager.as
+          main=/tmp/v331/verify/scripts/Game/Main.as
+          dm=/tmp/v331/verify/scripts/Game/Manager/DataManager.as
+          cb=/tmp/v331/verify/scripts/Game/System/GameObject/Character/CharacterBase.as
+          bs=/tmp/v331/verify/scripts/Game/System/Battle/BattleSystem.as
+          be=/tmp/v331/verify/scripts/Game/System/Battle/BattleControlEnemy.as
+          ca=/tmp/v331/verify/scripts/Game/System/StatDef/CharAbilityStat.as
+          acc=/tmp/v331/verify/scripts/Game/Interface/WorldMapFormationAcc.as
+          grep -F 'lastIndexOf("recordswiper1t.github.io") > -1' "$hm"
+          grep -F 'this._host_name = "github-pages"' "$hm"
+          grep -F 'this._block_site = false' "$hm"
+          grep -F 'this._enable_mochibot = false' "$hm"
+          grep -F 'this._enable_ads = false' "$hm"
+          grep -F 'this.mGF.hostMgr._block_site' "$main"
+          grep -F 'if(CLEARS >= 45)' "$dm"
+          grep -F 'dat_item_inv.length < 57' "$dm"
+          grep -F 'Math.abs(myClip.x - child.x) <= 900' "$cb"
+          grep -F 'var myDepth:int = this.getZDepth()' "$cb"
+          if grep -Fq 'children.sort(this.zSorting)' "$cb"; then echo 'V3.3 performance regression: full sort returned' >&2; exit 1; fi
+          grep -F 'load >= 175' "$bs"
+          grep -F 'firstClear:Boolean' "$be"
+          grep -F 'x_conquerormedal' "$ca"
+          grep -F 'if(itemSlot > 57)' "$acc"
+      - name: Stage V3.3.1 release and update launcher
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp /tmp/v331/out/epic-war-5-expansion-v331.swf assets/epic-war-5-expansion-v331.swf
+          HASH="$(sha256sum assets/epic-war-5-expansion-v331.swf | cut -d' ' -f1)"
+          printf '%s  assets/epic-war-5-expansion-v331.swf\n' "$HASH" > assets/EPICWAR5-EXPANSION-V331-SHA256SUMS.txt
+          cat > assets/EPICWAR5-EXPANSION-V331-BUILD.txt <<EOF
+          Epic War 5 — Expansion V3.3.1 Sitelock Hotfix
+          Baseline V3.3 SHA-256: e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33
+          Toolchain: FFDec 26.2.1
+          Release SWF SHA-256: $HASH
+
+          Hotfix only:
+          - Authorizes recordswiper1t.github.io in the original HostManager sitelock whitelist.
+          - Disables legacy ads and Mochi tracking on GitHub Pages.
+          - Leaves the V3.3 gameplay, progression, saves, rewards, performance systems and content unchanged.
+          - Original V3.3 SWF remains archived for rollback.
+
+          Verification:
+          - Exact frozen V3.3 SWF decompiled.
+          - Only HostManager source patched before FFDec import.
+          - FFDec V3.3.1 rebuild succeeded.
+          - Re-decompiled output contains GitHub Pages authorization and V3.3 regression markers.
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('epicwar5-expansion/index.html')
+          t=p.read_text(encoding='utf-8')
+          t=t.replace('Epic War 5 — Expansion V3.3</title>', 'Epic War 5 — Expansion V3.3.1</title>')
+          t=t.replace('EXPANSION V3.3 • PERFORMANCE + QUALITY', 'EXPANSION V3.3.1 • SITELOCK HOTFIX')
+          t=t.replace('Play Expansion V3.3</button>', 'Play Expansion V3.3.1</button>')
+          t=t.replace('Loading Epic War 5 Expansion V3.3…', 'Loading Epic War 5 Expansion V3.3.1…')
+          t=t.replace('Expansion V3.3 · performance-first · 57 relics · same 25-stage Expansion', 'Expansion V3.3.1 · V3.3 gameplay + GitHub Pages hotfix')
+          t=t.replace("const SWF='/assets/epic-war-5-expansion-v33.swf?v=33-performance'", "const SWF='/assets/epic-war-5-expansion-v331.swf?v=331-sitelock'")
+          t=t.replace("swfFileName:'epic-war-5-expansion-v33.swf'", "swfFileName:'epic-war-5-expansion-v331.swf'")
+          t=t.replace('V3.3 passed exact V3.2 rebuild → patch → FFDec import → re-decompile verification.', 'V3.3.1 keeps the verified V3.3 game and fixes the original domain sitelock on GitHub Pages.')
+          p.write_text(t,encoding='utf-8')
+          PY
+          grep -F '/assets/epic-war-5-expansion-v331.swf?v=331-sitelock' epicwar5-expansion/index.html
+          grep -F 'Play Expansion V3.3.1' epicwar5-expansion/index.html
+      - name: Commit verified V3.3.1 hotfix to branch
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/epic-war-5-expansion-v331.swf assets/EPICWAR5-EXPANSION-V331-BUILD.txt assets/EPICWAR5-EXPANSION-V331-SHA256SUMS.txt epicwar5-expansion/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Publish Epic War 5 Expansion V3.3.1 sitelock hotfix [skip ci]'
+          git push origin HEAD:epicwar5-v33-sitelock-hotfix
