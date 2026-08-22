@@ -2,7 +2,7 @@ name: Probe KR1 Southport on Frontiers shared core
 
 on:
   push:
-    branches: [agent/v13-kingdom-rush-ultimate]
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - 'tools/ultimate/rebind_namespaced_scripts.py'
       - 'tools/ultimate/port_plan.py'
@@ -43,10 +43,15 @@ jobs:
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
 
       - name: Export source scripts and build policy
@@ -121,20 +126,25 @@ jobs:
           test -f /tmp/u/rebound-export/scripts/KR1__Level1.as
           grep -F 'extends Level' /tmp/u/rebound-export/scripts/KR1__Level1.as
           grep -F 'qolTowerClipboard' /tmp/u/rebound-export/scripts/Level.as
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ "$KRF_BASE" != 'assets/kingdom-rush-frontiers-v11.swf' ]; then
             grep -F 'THE LAST RIFT' /tmp/u/rebound-export/scripts/Level15.as
           fi
+          if [ "$HAS_V121" = '1' ]; then
+            grep -F 'qolPopupsEnabled' /tmp/u/rebound-export/scripts/Level.as
+          fi
           python3 - <<'PY'
-          import json
+          import json, os
           from pathlib import Path
           r=json.load(open('/tmp/u/rebind-report.json', encoding='utf-8'))
           Path('/tmp/u/southport-result.json').write_text(json.dumps({
               'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
               'shared_core_reference_map_count': r['shared_core_reference_map_count'],
               'content_classes_patchable': r['stats'].get('content_classes_patched',0),
               'reference_tokens_patchable': r['stats'].get('reference_tokens_rebound',0),
               'southport_extends_frontiers_level': True,
               'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': os.environ.get('HAS_V121') == '1',
           },indent=2),encoding='utf-8')
           PY
 
