@@ -78,9 +78,6 @@ def patch_game(text: str) -> tuple[str, dict]:
 def patch_level(text: str) -> tuple[str, dict]:
     changes = 0
 
-    # These are KRF tutorial/UI assumptions that are unsafe when KR1 Level1 is
-    # running with currentLevel==1. Preserve the KR1 source number, guard only
-    # the native Frontiers behavior.
     old = "         if(this.game.currentLevel == 1)\n"
     new = '         if(this.game.ultimateStageGame != "kr1" && this.game.currentLevel == 1)\n'
     if old in text:
@@ -93,23 +90,24 @@ def patch_level(text: str) -> tuple[str, dict]:
         text = replace_once(text, old, new, "KRF Level1 tutorial guard B")
         changes += 1
 
-    # Ashbite has a few Frontiers-map-specific spawn offsets. On imported KR1
-    # maps, force the generic/default positioning branch instead.
     old = "               switch(this.game.currentLevel)\n"
     new = '               switch(this.game.ultimateStageGame == "kr1" ? 0 : this.game.currentLevel)\n'
     if old in text:
         text = replace_once(text, old, new, "Frontiers dragon map-position guard")
         changes += 1
 
-    old_key = '''      private function qolTimeAttackKey() : String\n      {\n         return getQualifiedClassName(this) + ":" + String(this.mode);\n      }\n'''
-    if old_key in text:
-        new_key = '''      private function qolTimeAttackKey() : String\n      {\n         var stageKey:String = this.game != null && this.game.ultimateStageId != "" ? this.game.ultimateStageId : getQualifiedClassName(this);\n         return stageKey + ":" + String(this.mode);\n      }\n'''
-        text = replace_once(text, old_key, new_key, "stable Time Attack stage key")
+    v11_key = '''      private function qolTimeAttackKey() : String\n      {\n         return getQualifiedClassName(this) + ":" + String(this.mode);\n      }\n'''
+    v12_key = '''      private function qolTimeAttackKey() : String\n      {\n         var key:String = getQualifiedClassName(this) + ":" + String(this.mode);\n         if(this is Level15 && Level15.qolV12PostBossActive)\n         {\n            key += ":postboss";\n         }\n         return key;\n      }\n'''
+    stable_v11 = '''      private function qolTimeAttackKey() : String\n      {\n         var stageKey:String = this.game != null && this.game.ultimateStageId != "" ? this.game.ultimateStageId : getQualifiedClassName(this);\n         return stageKey + ":" + String(this.mode);\n      }\n'''
+    stable_v12 = '''      private function qolTimeAttackKey() : String\n      {\n         var stageKey:String = this.game != null && this.game.ultimateStageId != "" ? this.game.ultimateStageId : getQualifiedClassName(this);\n         var key:String = stageKey + ":" + String(this.mode);\n         if(this is Level15 && Level15.qolV12PostBossActive)\n         {\n            key += ":postboss";\n         }\n         return key;\n      }\n'''
+    if v12_key in text:
+        text = replace_once(text, v12_key, stable_v12, "stable V12 Time Attack stage key")
+        changes += 1
+    elif v11_key in text:
+        text = replace_once(text, v11_key, stable_v11, "stable V11 Time Attack stage key")
         changes += 1
     elif "this.game.ultimateStageId" not in text:
-        # V12 may have extended the body for Last Rift scoring. Fail closed
-        # rather than silently losing stable stage identity.
-        raise SystemExit("stable Time Attack key: unrecognised V12 function shape")
+        raise SystemExit("stable Time Attack key: unrecognised enhanced runtime function shape")
 
     return text, {"guard_or_key_changes": changes}
 
@@ -140,6 +138,7 @@ def main() -> None:
             "frontiers_level1_casts_guarded": True,
             "frontiers_dragon_special_offsets_disabled_on_kr1": True,
             "time_attack_key_uses_stable_stage_id": True,
+            "v12_last_rift_postboss_key_preserved": True,
         },
     }
     if args.report:
