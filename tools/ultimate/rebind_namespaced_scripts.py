@@ -10,6 +10,11 @@ KR1 content definitions, replacing references to namespaced *shared/colliding*
 core classes with the authoritative Frontiers class names. Shadow KR1 core
 classes remain present but are not rewritten/imported, so they become dormant.
 
+A small number of shared names can be excluded from rebinding when an explicit
+compatibility shim intentionally keeps that namespaced identity alive. The first
+use is `KR1__Level`: KR1 stages keep extending it while the class itself is
+replaced with a thin adapter over Frontiers `Level`.
+
 Because all target content classes already exist in the merged SWF, FFDec's
 `-importScript` can replace them even though its CLI cannot add brand-new AS3
 classes to a SWF.
@@ -42,13 +47,26 @@ def load_plan(path: Path) -> dict[str, dict]:
     return out
 
 
-def build_rebinder(plan: dict[str, dict], prefix: str) -> tuple[re.Pattern[str], dict[str, str]]:
+def normalize_exclusions(values: list[str], prefix: str) -> set[str]:
+    out: set[str] = set()
+    for value in values:
+        value = value.strip()
+        if not value:
+            continue
+        out.add(value if value.startswith(prefix) else prefix + value)
+    return out
+
+
+def build_rebinder(plan: dict[str, dict], prefix: str, exclusions: set[str]) -> tuple[re.Pattern[str], dict[str, str]]:
     mapping: dict[str, str] = {}
     for source, row in plan.items():
+        namespaced = prefix + source
+        if namespaced in exclusions:
+            continue
         if row.get("policy") == "shadow_definition_keep_refs_on_krf":
-            mapping[prefix + source] = source
+            mapping[namespaced] = source
     if not mapping:
-        raise SystemExit("port plan contains no shared-core shadow definitions")
+        raise SystemExit("port plan contains no shared-core shadow definitions after exclusions")
     alternatives = "|".join(re.escape(x) for x in sorted(mapping, key=len, reverse=True))
     pattern = re.compile(rf"(?<![{IDENT_CHARS}])({alternatives})(?![{IDENT_CHARS}])")
     return pattern, mapping
@@ -66,13 +84,20 @@ def main() -> None:
     p.add_argument("--output", required=True, help="output import root; patched files are written beneath scripts/")
     p.add_argument("--report", required=True)
     p.add_argument("--prefix", default="KR1__")
+    p.add_argument(
+        "--exclude-rebind",
+        action="append",
+        default=[],
+        help="shared namespaced identity to keep (repeatable), e.g. KR1__Level or Level",
+    )
     args = p.parse_args()
 
     root = Path(args.scripts)
     if not root.is_dir():
         raise SystemExit(f"scripts dir missing: {root}")
     plan = load_plan(Path(args.plan))
-    pattern, mapping = build_rebinder(plan, args.prefix)
+    exclusions = normalize_exclusions(args.exclude_rebind, args.prefix)
+    pattern, mapping = build_rebinder(plan, args.prefix, exclusions)
 
     out_root = Path(args.output)
     if out_root.exists():
@@ -110,8 +135,6 @@ def main() -> None:
         if count == 0:
             stats["content_classes_without_shared_refs"] += 1
             continue
-        # The declaration itself must remain namespaced. If this trips, the
-        # policy accidentally tried to rebind the content class's own identity.
         after_cls = declared_class(patched)
         if after_cls != cls:
             raise SystemExit(f"class identity changed unexpectedly: {cls} -> {after_cls}")
@@ -126,6 +149,7 @@ def main() -> None:
     report = {
         "prefix": args.prefix,
         "shared_core_reference_map_count": len(mapping),
+        "excluded_rebinds": sorted(exclusions),
         "stats": dict(stats),
         "changed_classes": changed_classes,
         "skipped_shadow_class_count": len(skipped_shadow_classes),
@@ -133,12 +157,14 @@ def main() -> None:
         "policy": {
             "content_class_identity_stays_namespaced": True,
             "shared_core_references_rebound_to_frontiers": True,
+            "explicit_adapter_identities_may_remain_namespaced": True,
             "kr1_shadow_core_definitions_left_dormant": True,
         },
     }
     Path(args.report).write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
     print(json.dumps({
         "shared_core_reference_map_count": len(mapping),
+        "excluded_rebinds": sorted(exclusions),
         "content_classes_patched": stats["content_classes_patched"],
         "reference_tokens_rebound": stats["reference_tokens_rebound"],
         "shadow_definitions_skipped": stats["shadow_definitions_skipped"],
