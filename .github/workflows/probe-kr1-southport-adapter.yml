@@ -4,13 +4,9 @@ on:
   push:
     branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
-      - 'tools/ultimate/level_api_diff.py'
-      - 'tools/ultimate/build_level_adapter.py'
-      - 'tools/ultimate/rebind_namespaced_scripts.py'
-      - '.github/workflows/probe-kr1-southport-adapter.yml'
-  pull_request:
-    branches: [main]
-    paths:
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/port_plan.py'
+      - 'tools/ultimate/extract_class_names.py'
       - 'tools/ultimate/level_api_diff.py'
       - 'tools/ultimate/build_level_adapter.py'
       - 'tools/ultimate/rebind_namespaced_scripts.py'
@@ -75,12 +71,13 @@ jobs:
       - name: Build fully namespaced KR1 plus enhanced Frontiers SWF
         run: |
           set -euo pipefail
+          mkdir -p /tmp/u/report
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/u/kr1.swf /tmp/u/kr1.xml
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml "$KRF_BASE" /tmp/u/krf.xml
           python3 tools/ultimate/merge_swf_xml.py \
             --base /tmp/u/krf.xml --source /tmp/u/kr1.xml \
             --class-map /tmp/u/all-prefix-map.json \
-            --output /tmp/u/merged.xml --report /tmp/u/merge-report.json
+            --output /tmp/u/merged.xml --report /tmp/u/report/merge-report.json
           java -Xmx8g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/u/merged.xml /tmp/u/merged.swf
           head -c 3 /tmp/u/merged.swf | grep -Eq 'FWS|CWS|ZWS'
 
@@ -196,6 +193,7 @@ jobs:
         with:
           name: kr1-southport-level-adapter-probe
           path: |
+            /tmp/u/report/merge-report.json
             /tmp/u/report/southport-level-api.json
             /tmp/u/report/level-adapter-build.json
             /tmp/u/report/rebind-report.json
