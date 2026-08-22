@@ -1,0 +1,28 @@
+Epic War 5 — Expansion V3.3 Performance + Quality
+Source: canonical Armor Games SWF SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33
+
+Performance-first changes:
+- Character collision/target scans use a generous X-axis broad phase before Flash hit-test calls.
+- Unit depth placement uses incremental insertion rather than allocating/sorting the entire battlefield on every spawn.
+- Health bars, player army counters and wave counts update at lower staggered rates while simulation timing stays per-frame.
+- Enemy-wave counting no longer reissues movement orders to every wave unit during each count scan.
+- Expansion disposable-wave concurrency is capped at 16-22 per wave controller while bosses/elites remain intact.
+- Rain/blood-rain and snow particle budgets are sharply reduced and scale down further when adaptive quality engages.
+- Off-camera/transient hit effects, damage text and blood splats are culled/capped.
+- BattleSystem automatically drops Flash render quality only under very heavy display-list load and restores it when load settles.
+
+Quality/fix changes:
+- Repairs V3/V3.2 Expansion relic ownership values so earned first-clear gear is actually selectable.
+- Future first-clear Expansion gear is stored with the correct ownership value.
+- Adds Field Standard at 45 unique clears and Conqueror Medal at 50 unique clears.
+- Equipment catalog grows from 55 to 57 entries (+3.6%), safely below the requested 10% content-growth ceiling.
+- No new stages, units, army slots or upgrade slots.
+- V3.2 role-specific advanced trees, progression, gear tradeoffs and threat bands remain intact.
+
+Verification:
+- Exact V3.2 baseline rebuilt from the canonical clean SWF.
+- V3.2 re-decompiled before the V3.3 patch was applied.
+- FFDec imported the V3.3 source successfully.
+- Re-decompiled V3.3 release contains all required performance/fix markers.
