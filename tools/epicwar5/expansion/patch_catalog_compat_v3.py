@@ -33,4 +33,20 @@ canonical='''            case 30:
 '''
 t=t[:start]+canonical+t[end:]
 p.write_text(t,encoding='utf-8',newline='\n')
-print('Normalized Expansion V3 inventory migration and legacy item anchors for equipment catalog')
+
+# The vanilla ninth ability uses "last nonzero wins" resistance blocks, while
+# the advanced layer stacks abilities 10..18 with strongest-value semantics.
+# Normalize ability 9 into that same shape before the advanced patch runs.
+p=root/'System'/'StatDef'/'CharTotalStat.as'
+t=p.read_text(encoding='utf-8-sig')
+for prop in ['resist_strike','resist_slash','resist_pierce']:
+    old=f'''         if(ability9.{prop} != 0)\n         {{\n            this.{prop} = ability9.{prop};\n         }}\n'''
+    new=f'''         if(ability9.{prop} != 0 && ability9.{prop} > this.{prop})\n         {{\n            this.{prop} = ability9.{prop};\n         }}\n'''
+    if t.count(old)!=1: raise SystemExit(f'ability9 {prop} compatibility anchor expected once, got {t.count(old)}')
+    t=t.replace(old,new,1)
+old='''         if(ability9.resist_magic != 0)\n         {\n            this.resist_magic = ability9.resist_magic;\n         }\n'''
+new='''         if(Boolean(ability9.resist_magic) && ability9.resist_magic > this.resist_magic)\n         {\n            this.resist_magic = ability9.resist_magic;\n         }\n'''
+if t.count(old)!=1: raise SystemExit(f'ability9 magic compatibility anchor expected once, got {t.count(old)}')
+t=t.replace(old,new,1)
+p.write_text(t,encoding='utf-8',newline='\n')
+print('Normalized Expansion V3 catalog and advanced-upgrade compatibility anchors')
