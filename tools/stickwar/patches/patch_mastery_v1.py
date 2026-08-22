@@ -116,6 +116,6 @@ unit_method=r'''      public function applySuperMastery(rank:int) : void
 one(U,'      public function setBuilding() : void\n',unit_method+'      public function setBuilding() : void\n','unit method')
 
 T='com/brockw/stickwar/engine/Team/Team.as'
-one(T,'         unit.init(game);\n         unit.healthBar.reset();\n','         unit.init(game);\n         if(game.main != null && game.main.campaign != null)\n         {\n            unit.applySuperMastery(game.main.campaign.getSuperRank(unit.type));\n            game.main.campaign.applySuperResearch(this,unit.type);\n         }\n         unit.healthBar.reset();\n','spawn mastery')
+one(T,'         unit.init(game);\n         unit.healthBar.reset();\n','         unit.init(game);\n         if(game.main != null && game.main.campaign != null && !this.isEnemy)\n         {\n            unit.applySuperMastery(game.main.campaign.getSuperRank(unit.type));\n            game.main.campaign.applySuperResearch(this,unit.type);\n         }\n         unit.healthBar.reset();\n','spawn mastery')
 one(T,'         this.unitGroups[unit.type].push(unit);\n','         if(!(unit.type in this.unitGroups) || this.unitGroups[unit.type] == null) this.unitGroups[unit.type] = [];\n         this.unitGroups[unit.type].push(unit);\n','hybrid group')
 print('Super mastery V1 applied')
