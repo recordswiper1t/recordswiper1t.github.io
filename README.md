@@ -2,44 +2,48 @@
 
 This repository contains three performance-first Flash/ActionScript mod projects. Release binaries are built through pinned-source/FFDec workflows and are only promoted when their release checks pass.
 
+## Play now
+
+The GitHub Pages root is the shared **laptop + iPhone game hub**. Laptop buttons open the full browser shells; iPhone buttons use the lighter touch-first players.
+
+For the highest laptop performance, download/extract the repository and use native Ruffle:
+
+```text
+# Windows
+desktop\run-native.bat --game krf
+desktop\run-native.bat --game stickwar
+desktop\run-native.bat --game epicwar5
+
+# macOS / Linux
+sh desktop/run-native.sh --game krf
+sh desktop/run-native.sh --game stickwar
+sh desktop/run-native.sh --game epicwar5
+```
+
+The launcher downloads native Ruffle on first use and reuses the cached executable. See [`desktop/README.md`](desktop/README.md) for renderer fallback, stable/nightly selection and performance notes.
+
 ## Project status
 
 | Project | Current state | Main features |
 | --- | --- | --- |
 | **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
-| **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
+| **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12.1 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
 | **Epic War 5** | Released on `main` through Expansion V3.3.1 | Sandbox builds, expanded campaign/equipment/progression, large-battle performance pass, release-candidate verification and sitelock hotfix |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
-## Kingdom Rush Frontiers — current released desktop mod
-
-The recommended laptop version is native Ruffle from `desktop/`.
-
-### Windows
-
-Download the repository as a ZIP, extract it, then run:
-
-`desktop\run-native.bat`
-
-The launcher downloads Ruffle on first use and automatically selects the newest verified Frontiers SWF in `assets/`.
-
-### macOS / Linux
-
-Run:
-
-`sh desktop/run-native.sh`
-
-See [`desktop/README.md`](desktop/README.md) for renderer troubleshooting, sandbox controls, scoring and performance settings.
+## Kingdom Rush Frontiers — current released mod
 
 Current Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish.
 
+The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, recycle/loop play, tower clipboard, cleanup/cheat controls, diagnostics and adaptive load controls. Native Ruffle is recommended for large swarms because it avoids browser/WebAssembly overhead.
+
 ## Kingdom Rush Ultimate — V13
 
-Development lives in [PR #42](../../pull/42). The architecture keeps Frontiers V12 as the authoritative runtime and imports KR1 content through a collision-safe namespace/rebind layer so existing sandbox/performance systems remain intact.
+Development lives in [PR #42](../../pull/42). The architecture keeps Frontiers V12.1 as the authoritative runtime and imports KR1 content through a collision-safe namespace/rebind layer so existing sandbox/performance systems remain intact.
 
-The branch is not promoted to a release until imported KR stages, KR tower/hero compatibility, combined campaign saves/UI and final FFDec round-trip/runtime gates pass. See `docs/KINGDOM_RUSH_ULTIMATE.md` on that branch for the detailed compatibility plan.
+The branch is not promoted to a release until imported KR stages, KR tower/hero compatibility, combined campaign saves/UI and final FFDec round-trip/runtime gates pass. See `docs/KINGDOM_RUSH_ULTIMATE.md` and `docs/KINGDOM_RUSH_ULTIMATE_STATUS.md` on that branch for the detailed compatibility/release plan.
 
 ## Super Stick War — SW1 + SW2
 

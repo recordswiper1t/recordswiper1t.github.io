@@ -1,6 +1,6 @@
-# Kingdom Rush Frontiers — native desktop mod
+# Native desktop launcher — KRF, Super Stick War and Epic War 5
 
-This is the recommended way to play the mod on a laptop. It runs the newest verified SWF directly in native Ruffle instead of the browser/WebAssembly player.
+This is the highest-performance laptop path for the released Flash mods. It runs the selected verified SWF directly in native Ruffle instead of the browser/WebAssembly player.
 
 ## Fastest way to play
 
@@ -8,8 +8,16 @@ This is the recommended way to play the mod on a laptop. It runs the newest veri
 
 1. Download the repository ZIP and extract it.
 2. Open the `desktop` folder.
-3. Double-click `run-native.bat`.
+3. Double-click `run-native.bat` for Kingdom Rush Frontiers, or run one of the commands below from Command Prompt / PowerShell.
 4. The first launch downloads native Ruffle automatically; later launches reuse `.native\ruffle\ruffle.exe`.
+
+```text
+desktop\run-native.bat --game krf
+desktop\run-native.bat --game stickwar
+desktop\run-native.bat --game epicwar5
+```
+
+Windows also accepts the shortcuts `--krf`, `--stickwar` and `--epicwar5`.
 
 No Python installation is required on Windows.
 
@@ -18,18 +26,20 @@ No Python installation is required on Windows.
 Run:
 
 ```text
-sh desktop/run-native.sh
+sh desktop/run-native.sh --game krf
+sh desktop/run-native.sh --game stickwar
+sh desktop/run-native.sh --game epicwar5
 ```
 
 Python 3 is required for the macOS/Linux bootstrap launcher.
 
-## Build selection
+## Released game selection
 
-The launchers always choose the newest verified game file present, currently preferring:
+- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V7 fallback.
+- `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
+- `epicwar5` launches `assets/epic-war-5-expansion-v331.swf`, the released V3.3.1 performance/sitelock build.
 
-`V12 → V11 → V10 → V9 → V8 → V7 fallback`
-
-V12 is **The Last Rift** audit release. It keeps every V11 sandbox/performance feature and adds the post-final-boss act, loop-run scoring, renderer hardening and additional performance work.
+Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish.
 
 ## Windows graphics crash protection
 
@@ -41,20 +51,20 @@ Some Windows systems can hit a native Ruffle/wgpu Vulkan panic. The launcher the
 - Explicit Vulkan test only: `desktop\run-native.bat --vulkan`
 - Force DX12: `desktop\run-native.bat --dx12`
 
-If a cached Ruffle build itself appears broken, run `desktop\run-native.bat --refresh`.
+These renderer options work with every `--game` selection. If a cached Ruffle build itself appears broken, add `--refresh`.
 
 ## Ruffle channel
 
-The default is a recent Ruffle nightly because Flash compatibility/performance fixes land there first. To use the newest stable release instead:
+The default is a recent Ruffle nightly because Flash compatibility/performance fixes land there first. To use the newest stable release instead, add `--stable`, for example:
 
 ```text
-desktop\run-native.bat --stable
-sh desktop/run-native.sh --stable
+desktop\run-native.bat --game stickwar --stable
+sh desktop/run-native.sh --game epicwar5 --stable
 ```
 
-## Current sandbox features
+## Kingdom Rush Frontiers sandbox features
 
-The in-level sandbox is organized into Heroes, Enemies, Waves/Time Attack, Towers/Clipboard, Cheats/Cleanup and Performance pages. Opening the sandbox pauses the level.
+The KRF in-level sandbox is organized into Heroes, Enemies, Waves/Time Attack, Towers/Clipboard, Cheats/Cleanup and Performance pages. Opening the sandbox pauses the level.
 
 Highlights include:
 
@@ -79,20 +89,20 @@ This approach is deliberate: the current FFDec import pipeline can reliably repl
 
 ## Performance
 
-The mod keeps combat simulation full-rate: attacks, targeting and movement are not skipped for performance. Optimization is concentrated on allocations, UI redraws, cosmetic cadence, Send-All back-pressure and adaptive render quality under extreme swarm load.
+All three released mod lines keep combat simulation full-rate. Optimization is concentrated on allocations, targeting/search work, UI redraws, cosmetic cadence/effect budgets, swarm back-pressure and adaptive render quality rather than skipping core attacks/movement.
 
 For best laptop performance:
 
 - plug into power and disable battery saver;
 - close the browser copy while using native Ruffle;
 - on dual-GPU Windows laptops, assign `.native\ruffle\ruffle.exe` to the high-performance GPU;
-- use the Performance page to enable diagnostics and tune thresholds;
+- use each game's diagnostics/performance controls when available;
 - compare nightly vs `--stable` if one Ruffle build regresses on your hardware.
 
 ## Saves and records
 
-Native Ruffle stores Flash local data separately from browser Ruffle. The mod's Time Attack/loop records use Flash local shared storage as well, so browser and desktop records may be separate unless their local data is migrated.
+Native Ruffle stores Flash local data separately from browser Ruffle. KRF Time Attack/loop records and other Flash local saves may therefore be separate from the browser versions unless their local data is migrated.
 
 ## Build verification
 
-Release SWFs are built from the previous verified binary, imported with FFDec, re-exported, and checked for required ActionScript markers before they are published. SHA-256 files in `assets/` identify the exact verified binaries.
+Release SWFs are built from verified binaries/sources, imported with FFDec where applicable, re-exported, and checked for required gameplay/mod markers before they are published. SHA-256/build records in `assets/` identify the verified binaries.
