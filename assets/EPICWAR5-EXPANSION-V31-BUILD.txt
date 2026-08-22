@@ -1,0 +1,27 @@
+Epic War 5 — Expansion V3.1 Polish
+Source: canonical Armor Games SWF SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: 723c9e8b89710d2ce7b624cb2da97822fd145c7178c403caab0b33747058374b
+
+V3.1 polish changes:
+- Expansion campaign opens after 12 story + 8 extra clears; trials remain parallel challenges.
+- Advanced upgrade costs reduced from 45x rank to 18x rank.
+- Formation upgrade indicators understand all 18 upgrade slots.
+- Equipment indicators understand all three gear slots.
+- General damage reduction capped at 80% to prevent immunity stacking.
+- Per-unit population capped at 16 to control runaway 12-slot swarms.
+- Battle results announce progression unlocks and flush saves immediately.
+- Expansion save arrays self-repair to the expected length on load.
+- World-map expansion panel shows overall progress, army slots, and equipment slots.
+- Player-unit and enemy-wave population scans are throttled to reduce battlefield overhead.
+
+Scope unchanged:
+- 25 Expansion stages.
+- 55 total equipment entries.
+- 12 maximum army slots.
+- 18 upgrade slots per unit/hero.
+
+Verification:
+- Full V3 + V3.1 patch stack applied to the exact clean SWF.
+- FFDec import/rebuild succeeded.
+- Re-decompiled release contains all required V3.1 polish markers.
