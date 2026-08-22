@@ -40,6 +40,7 @@ jobs:
           python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_12_units_v3.py /tmp/ew5/export
       - name: Rebuild prototype
         shell: bash
         run: |
@@ -56,6 +57,7 @@ jobs:
           a=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationAcc.as
           c=/tmp/ew5/verify/scripts/Game/System/StatDef/CharTotalStat.as
           r=/tmp/ew5/verify/scripts/Game/Interface/BattleResult.as
+          b=/tmp/ew5/verify/scripts/Game/System/Battle/BattleControlPlayer.as
           grep -F 'unit_equip12_id' "$d"
           grep -F 'stage_expansion_stat' "$d"
           grep -F 'case "item2"' "$d"
@@ -78,6 +80,12 @@ jobs:
           grep -F 'itemAbility2.health' "$c"
           grep -F 'itemAbility3.attack' "$c"
           grep -F 'expansionGetUnitEquip(expansionSlot)' "$r"
+          grep -F 'expansionUnits:Array' "$b"
+          grep -F 'getQualifiedClassName' "$b"
+          grep -F 'slot = i + 7' "$b"
+          grep -F 'new PlayerUnit(this.mGF,this.bSys,clip' "$b"
+          grep -F 'NUM >= 8 && NUM <= 13' "$b"
+          grep -F 'expansionExecuteSelected' "$b"
       - name: Upload prototype verification artifact
         uses: actions/upload-artifact@v4
         with:
