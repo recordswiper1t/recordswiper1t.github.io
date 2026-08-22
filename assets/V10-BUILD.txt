@@ -1,0 +1,9 @@
+Kingdom Rush Frontiers — V10 Complete Follow-up Fixes
+- Cronan toggle-off destroys both falcon and boar companions.
+- Adds Rurin Longbeard, the Dark Descent dwarf stage hero, as a tenth hero toggle.
+- Send All activates the normal first-wave/power state so Meteor and Reinforcements unlock.
+- Map-special buildings can be sold, including player-placed and preplaced instances handled by their tower classes.
+- Special Buildings prioritizes the real map specials: Legion Archer, Mercenary/Genie Camp, Spear Maiden Hut, Pirate Cannon Camp, Dwarf Riflemen, Pirate Barracks, and Dwarf Hall.
+- Normal advanced branches remain on separate pages.
+- Retains V9 menu/timer/enemy fixes and V8 native performance optimizations.
+Built, re-exported, and structurally verified with FFDec 26.2.1.
