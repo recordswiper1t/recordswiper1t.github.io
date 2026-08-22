@@ -1,0 +1,32 @@
+Epic War 5 Expansion V3.3 — Release Candidate Hardening
+Result: PASS
+Frozen release SHA-256: e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33
+Validation workflow run: 32579216848
+Evidence artifact digest: sha256:df88b2ae7e250c634040cf471f38c92bce41dd38401324d2a1dae5b99c2880df
+Invariant checks passed: 102
+
+Verified against the exact checked-in V3.3 SWF:
+- Release binary checksum and launcher pin are correct.
+- Army progression is monotonic: 3 slots initially, 8 at 20 unique clears, 12 at 45 and 50.
+- Equipment progression is 1 slot initially, 2 at 15 clears, 3 at 35.
+- Advanced upgrades unlock at 18 unique clears.
+- Expansion campaign requires the 12 story and 8 extra clears; trials are optional accelerators.
+- All 25 Expansion battle inputs 101..125 route to Expansion stages 1..25.
+- Expansion battle result IDs map to stages 26..50 and persist sequential clear progression.
+- All 25 Expansion stages have unique first-clear relic rewards.
+- First-clear relic ownership and V3/V3.2 ownership migration use selectable inventory values.
+- Army slots 7..12, equipment slots 2/3, upgrades 10..18, Expansion clear bank, and 57-item inventory have save/load mappings and migration guards.
+- Field Standard and Conqueror Medal milestone rewards are present.
+- V3.2 role-specific advanced trees and upgrade-pricing behavior survive V3.3.
+- V3.3 broad-phase targeting, incremental depth insertion, UI/population throttling, wave caps, effect culling, weather budgets, and adaptive heavy-load rendering are present.
+- Legacy full-battlefield spawn sorting is absent.
+
+Round-trip smoke test:
+- FFDec decompile of the exact release: PASS
+- FFDec import/rebuild from that decompile: PASS
+- Re-decompile of the round-trip SWF: PASS
+- Same 102 invariant checks on the round-trip source: PASS
+
+Gameplay/content changes made by this RC pass: NONE
+
+This file freezes V3.3 as the recommended full-playthrough baseline. Any future gameplay/balance/content changes should use a new version after playthrough feedback rather than modifying this release in place.
