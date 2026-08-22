@@ -1,0 +1,131 @@
+name: Build V11 sandbox polish
+
+on:
+  push:
+    branches:
+      - main
+      - agent/v11-sandbox-polish
+    paths:
+      - 'tools/v11/**'
+      - '.github/workflows/build-v11-sandbox.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/v11/**'
+      - '.github/workflows/build-v11-sandbox.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export current V10 ActionScript
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v11-scripts /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v11-scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v11-scripts assets/kingdom-rush-frontiers-v10.swf > /tmp/export-v11.log 2>&1 || true
+          test -f /tmp/v11-scripts/scripts/Level.as
+          test -f /tmp/v11-scripts/scripts/TowerArcherCrossbow.as
+          test -f '/tmp/v11-scripts/scripts/§_-Zs§.as'
+      - name: Apply V11 patches
+        run: |
+          set -euo pipefail
+          python3 tools/v11/blueprints.py /tmp/v11-scripts/scripts
+          python3 tools/v11/level_core.py /tmp/v11-scripts/scripts
+          python3 tools/v11/ui_perf.py /tmp/v11-scripts/scripts
+          for f in \
+            'Level.as' \
+            'TowerArcherCrossbow.as' 'TowerArcherTotem.as' \
+            'TowerMageArchmage.as' 'TowerMageNecromancer.as' \
+            'TowerEngineerDwaarp.as' 'TowerEngineerMech.as' \
+            'TowerSoldierAssassin.as' 'TowerSoldierTemplar.as' \
+            'TowerDwarfRiflemen.as' '§_-Zs§.as'; do
+            cp "/tmp/v11-scripts/scripts/$f" "/tmp/import/scripts/$f"
+          done
+          if [ -d /tmp/v11-scripts/_assets ]; then cp -a /tmp/v11-scripts/_assets /tmp/import/_assets; fi
+      - name: Import patched ActionScript
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v10.swf /tmp/out/kingdom-rush-frontiers-v11.swf /tmp/import > /tmp/import-v11.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v11.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v11.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-export and verify V11
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v11.swf > /tmp/verify-v11.log 2>&1 || true
+          grep -F 'V11 SANDBOX' /tmp/verify/scripts/Level.as
+          grep -F 'qolTowerBlueprintFor' /tmp/verify/scripts/Level.as
+          grep -F 'qolProcessTowerPaste' /tmp/verify/scripts/Level.as
+          grep -F 'qolDiagnosticsFrame' /tmp/verify/scripts/Level.as
+          grep -F 'SELL ALL MAP SPECIALS' /tmp/verify/scripts/Level.as
+          grep -F 'AGGRESSIVE LAPTOP' /tmp/verify/scripts/Level.as
+          grep -F 'return "qol_necro";' /tmp/verify/scripts/Level.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerArcherCrossbow.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerArcherTotem.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerMageArchmage.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerMageNecromancer.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerEngineerDwaarp.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerEngineerMech.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerSoldierAssassin.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerSoldierTemplar.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerDwarfRiflemen.as
+          grep -F 'qolBlueprintActions' '/tmp/verify/scripts/§_-Zs§.as'
+      - name: Publish V11 and update launchers
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v11.swf assets/kingdom-rush-frontiers-v11.swf
+          sha256sum assets/kingdom-rush-frontiers-v11.swf > assets/V11-SHA256SUMS.txt
+          cat > assets/V11-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V11 Sandbox Polish + Performance
+          - Reorganizes the mod menu into Heroes, Enemies, Waves/Time Attack, Towers/Clipboard, Cheats/Cleanup, and Performance pages with a live status strip.
+          - Adds Normal, Chaos, Benchmark, and Time Attack presets.
+          - Adds live FPS/entity/bullet/tower diagnostics and configurable heavy/extreme/ultra swarm thresholds; Send All back-pressure uses the same thresholds.
+          - Adds enemy-count steps of 1/5/25, Clear All Enemies, Remove All Heroes, Sell All Map Specials, and clipboard reset controls.
+          - Ctrl+C/Ctrl+V now preserves standard tower level 1/2/3 and exact purchased ability ranks for Crossbow, Totem, Archmage, Necromancer, DWAARP, Mecha, Assassin and Templar. Dwarf Riflemen and Dwarf Hall permanent upgrade ranks are also captured.
+          - Paste checks the source tower's full invested cost and reconciles the normal build/upgrade charges to that exact amount, without overwriting unrelated cash changes during replay.
+          - Map-special building types are copyable; live hired mercenaries/pirates/amazons and one-shot cannon firing state are intentionally not cloned because they are live entities/actions rather than permanent tower upgrades.
+          - Fixes the old Necromancer clipboard action alias (`qol_necro`).
+          - Retains V10 Rurin/Cronan/Send-All/special-selling fixes, V9 pause/timer/catalog fixes, and V8 native/swarm optimizations.
+          - Combat attacks, targeting and movement remain full-rate; V11 only tunes cosmetic cadence/back-pressure and reuses the existing allocation-free child snapshot hot paths.
+          Built, re-exported, and structurally verified with FFDec 26.2.1.
+          TXT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('desktop/run_native.py'); s=p.read_text(encoding='utf-8')
+          if 'V11_SWF' not in s:
+              s=s.replace("V10_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v10.swf'", "V11_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v11.swf'\nV10_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v10.swf'",1)
+              s=s.replace('SWF = V10_SWF if V10_SWF.exists() else (V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF))', 'SWF = V11_SWF if V11_SWF.exists() else (V10_SWF if V10_SWF.exists() else (V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF)))',1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          p=Path('desktop/run-native.ps1'); s=p.read_text(encoding='utf-8')
+          if '$V11 =' not in s:
+              s=s.replace("$V10 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v10.swf'", "$V11 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v11.swf'\n$V10 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v10.swf'",1)
+              s=s.replace('$Swf = if (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }', '$Swf = if (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }',1)
+              s=s.replace("$label = if ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }", "$label = if ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }",1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+      - name: Commit verified V11
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v11.swf assets/V11-BUILD.txt assets/V11-SHA256SUMS.txt desktop/run_native.py desktop/run-native.ps1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build verified V11 sandbox mod [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
