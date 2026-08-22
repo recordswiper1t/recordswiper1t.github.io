@@ -38,12 +38,18 @@ jobs:
           python3 -m py_compile tools/ultimate/build_campaign_router.py
           python3 -m py_compile tools/ultimate/campaign_registry.py
           python3 tools/ultimate/campaign_registry.py --json >/tmp/routes.json
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
             echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
             echo 'HAS_V12=0' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
           mkdir -p /tmp/u /tmp/ffdec
           curl -fL --retry 4 \
@@ -95,6 +101,9 @@ jobs:
             grep -F 'qolV12PostBossActive' "$level"
             grep -F ':postboss' "$level"
             grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          if [ "$HAS_V121" = 1 ]; then
+            grep -F 'qolPopupsEnabled' "$level"
           fi
           sha256sum /tmp/u/campaign-router.swf >/tmp/u/report/campaign-router-SHA256.txt
 
