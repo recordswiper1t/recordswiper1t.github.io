@@ -87,15 +87,17 @@ jobs:
           grep -F 'this.visitMarks[entityId] = this.visitStamp;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
           grep -F 'this.partitions[index].length = size + 64;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
           grep -F 'this.projectileManager.airEffects.length = 0;' "$S/com/brockw/stickwar/engine/StickWar.as"
-          grep -F 'Two linear cocktail passes' "$S/com/brockw/stickwar/engine/StickWar.as"
-          grep -F 'Swap-remove finished projectiles' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          grep -F 'for(o = 0; o < dParent.numChildren - 1; o++)' "$S/com/brockw/stickwar/engine/StickWar.as"
+          grep -F 'for(o = dParent.numChildren - 1; o > 0; o--)' "$S/com/brockw/stickwar/engine/StickWar.as"
+          grep -F 'this.projectiles[i] = this.projectiles[last];' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          grep -F 'this.projectiles.pop();' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          grep -F 'this._waitingToBeCleaned[i] = this._waitingToBeCleaned[last];' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
           grep -F 'private var _lastStatueType:String;' "$S/com/brockw/stickwar/engine/Team/Team.as"
           grep -F 'var u:UnitMove = null;' "$S/com/brockw/stickwar/engine/Team/Team.as"
           grep -F 'private var _selectionVisualState:int = -99;' "$S/com/brockw/stickwar/engine/units/Unit.as"
           grep -F 'return xDiff * xDiff + yDiff * yDiff;' "$S/com/brockw/stickwar/engine/units/Unit.as"
           grep -F 'private var bloodCursor:int = 0;' "$S/com/brockw/stickwar/engine/BloodManager.as"
           ! grep -F 'this.projectiles.splice(i,1)[0]' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
-          ! grep -F 'this.redBar.graphics.lineTo(-BAR_WIDTH / 2 + BAR_WIDTH * this._health / this._totalHealth,-BAR_HEIGHT / 2);' /dev/null
           sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
       - name: Upload verified build
         uses: actions/upload-artifact@v4
