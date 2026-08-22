@@ -42,13 +42,14 @@ jobs:
           mkdir -p /tmp/ffdec /tmp/v4/src /tmp/v4/out /tmp/v4/verify
           curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-      - name: Decompile V3.3.1 and apply V4 foundation
+      - name: Decompile V3.3.1 and apply V4 layers
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4/src assets/epic-war-5-expansion-v331.swf > /tmp/v4/export.log 2>&1 || true
           test -f /tmp/v4/src/scripts/Game/Manager/DataManager.as
           python3 tools/epicwar5/expansion/v4/patch_v4_foundation.py /tmp/v4/src
+          python3 tools/epicwar5/expansion/v4/patch_v4_support.py /tmp/v4/src
       - name: Rebuild V4 prototype
         shell: bash
         run: |
@@ -59,7 +60,7 @@ jobs:
             exit 1
           fi
           test -s /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf
-      - name: Re-decompile and verify V4 foundation
+      - name: Re-decompile and verify V4 stack
         shell: bash
         run: |
           set -euxo pipefail
@@ -75,6 +76,7 @@ jobs:
           br=$game/Interface/BattleResult.as
           ps=$game/System/Battle/PlayerSpell.as
           pu=$game/System/Battle/PlayerUnit.as
+          bp=$game/System/Battle/BattleControlPlayer.as
           hm=$game/Manager/HostManager.as
           cb=$game/System/GameObject/Character/CharacterBase.as
 
@@ -87,6 +89,7 @@ jobs:
           grep -F 'v4_hard_stage_stat' "$dm"
           grep -F 'v4_epic_stage_stat' "$dm"
           grep -F 'sandboxMaxAll()' "$dm"
+          grep -F 'v4EquippedArmyCount' "$dm"
           grep -F 'if(this.v4_sandbox_enabled != 0) return ""' "$dm"
 
           # Player-facing settings / achievement surfaces.
@@ -95,9 +98,9 @@ jobs:
           grep -F 'Difficulty:' "$opt"
           grep -F 'Doctrine:' "$opt"
           grep -F 'V4 LEGACY ACHIEVEMENTS' "$ach"
-          grep -F '48 ACHIEVEMENTS' "$ach" || grep -F '/48' "$ach"
+          grep -F '/48' "$ach"
 
-          # Sandbox is present but only installs when persistent master is enabled.
+          # Sandbox is installed only when persistent master is enabled.
           grep -F 'v4SandboxBattle:Boolean = false' "$bs"
           grep -F 'this.v4SandboxBattle = this.mGF.datMgr.v4_sandbox_enabled != 0' "$bs"
           grep -F 'if(!this.v4SandboxBattle) return' "$bs"
@@ -105,13 +108,33 @@ jobs:
           grep -F 'sandboxFreeSpells' "$ps"
           grep -F 'sandboxFastUnits' "$pu"
 
-          # Legacy doctrine and difficulty gameplay hooks.
+          # Legacy doctrine and Hard/Epic revenge-wave hooks.
           grep -F 'v4ApplyAllyDoctrine' "$cm"
           grep -F 'v4ScaleEnemy' "$cm"
           grep -F 'this.mGF.datMgr.v4_doctrine == 2' "$pu"
           grep -F 'triggerBurst(COUNT:int = 3)' "$ew"
           grep -F 'REVENGE WAVE!' "$be"
           grep -F 'EPIC COUNTER WAVE!' "$be"
+          grep -F 'v4RevengeTriggered=true' "$be"
+
+          # EW1/EW2/EW4-inspired active castle/support research.
+          grep -F 'LEGACY BATTLE RESEARCH' "$bs"
+          grep -F 'ARROW TOWER' "$bs"
+          grep -F 'FORTIFIED GATE' "$bs"
+          grep -F 'WAR ACADEMY' "$bs"
+          grep -F 'ARCANE ALTAR' "$bs"
+          grep -F 'v4SupportObjectCount' "$bs"
+          grep -F 'v4GateUntouched' "$bs"
+          grep -F 'v4CreateSupportObject' "$cm"
+          grep -F 'v4SpendMana' "$bp"
+
+          # Event-boundary challenge achievement tracking.
+          grep -F 'v4BattleFrames++' "$bs"
+          grep -F 'v4SpellUsed = true' "$ps"
+          grep -F 'v4HeroCritical = true' "$bp"
+          grep -F 'v4AchievementUnlock(31)' "$br"
+          grep -F 'v4AchievementUnlock(36)' "$br"
+          grep -F 'v4AchievementUnlock(39)' "$br"
           grep -F 'V4 ACHIEVEMENT:' "$br"
 
           # V3.3.1 baseline and performance regression guards.
@@ -129,7 +152,7 @@ jobs:
       - name: Upload verified V4 prototype
         uses: actions/upload-artifact@v4
         with:
-          name: epicwar5-expansion-v4-foundation-verified
+          name: epicwar5-expansion-v4-legacy-verified
           retention-days: 7
           path: |
             /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf
