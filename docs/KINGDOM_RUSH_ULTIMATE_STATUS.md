@@ -8,11 +8,15 @@ The branch contains reproducible CI for the release-critical structural and comp
 
 - KR1 + Frontiers collision-safe binary coexistence and FFDec round-trip verification.
 - Southport / `KR1__Level1` recompilation against the Frontiers shared core.
-- One compatibility adapter plus all publisher-source KR1 `Level1`–`Level19` stage classes.
+- **The real 37-member KR1 `Level` semantic bridge compiles with all publisher-source KR1 `Level1`–`Level19` stage classes and survives a fresh FFDec re-export verification.**
 - All eight publisher-source KR1 tier-4 tower classes.
 - All nine publisher-source selectable KR1 hero classes.
 - Combined campaign/save routing, world-map selector, tower menu and hero selector surfaces.
 - Preservation checks for Frontiers sandbox markers, The Last Rift, and—when V12.1 is selected—the V12.1 `qolPopupsEnabled` marker.
+- A strengthened composition workflow combines the semantic bridge, all source-ready stages/towers/heroes, and shared campaign/roster UI into one candidate and retains the candidate SWF as an Actions artifact when the gate succeeds.
+- The V13 branch is merged with the current `main` laptop/iPhone release shell, including the three-game native Ruffle launcher and current V12.1 browser labels.
+
+The semantic bridge is generated from the namespaced KR1 `Level` export while keeping Frontiers `Level` as the parent runtime. Required ActionScript imports are preserved, and the build fails if any expected compatibility member is absent.
 
 A green compile or serialized SWF is necessary but is **not** sufficient for release.
 
@@ -28,6 +32,12 @@ The following cannot be truthfully completed by static CI alone:
 
 ## Content-source blockers
 
-The publisher KR1 Flash build provides `Level1`–`Level19`, not the complete later KR1 content target. The existing Frontiers Flash source also lacks the later Frontiers post-campaign/endless set. Those remaining maps require either a compatible source the user is entitled to use or a legal reconstruction inside the Flash runtime.
+The publisher KR1 Flash build provides `Level1`–`Level19`, not the complete later KR1 content target. The existing Frontiers Flash source also lacks the later Frontiers post-campaign/endless set. In total, 17 locked-scope original stage/endless pieces are absent from the verified Flash inputs. Those remaining maps require either compatible legitimate source material or reconstruction inside the Flash runtime.
 
-Until those dependencies and runtime gates are satisfied, PR #42 remains a draft and no launcher should promote an Ultimate SWF as the completed V13 release.
+A reference-only CI probe searches the verified builds for loader, URL, external/premium asset and missing-stage references without committing publisher source bodies.
+
+## Native iPhone distinction
+
+The Safari/Ruffle iPhone players are already part of the public hub. A modified native full-content iOS app is a separate port and remains source-dependent: its inventory tooling requires a legitimately owned user-supplied IPA/app bundle and does not bypass FairPlay or redistribute paid game assets.
+
+Until the missing content dependencies and runtime gameplay gates are satisfied, PR #42 remains a draft and no launcher should promote an Ultimate SWF as the completed V13 release.
