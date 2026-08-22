@@ -46,7 +46,14 @@ jobs:
             -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
           head -c 3 /tmp/ultimate/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
-          test -s assets/kingdom-rush-frontiers-v11.swf
+          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V12 Last Rift' >> "$GITHUB_ENV"
+          else
+            test -s assets/kingdom-rush-frontiers-v11.swf
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V11 sandbox' >> "$GITHUB_ENV"
+          fi
 
       - name: Export KR1 class names
         run: |
@@ -60,13 +67,14 @@ jobs:
           python3 tools/ultimate/extract_class_names.py /tmp/kr1scripts/scripts \
             --prefix 'KR1__' --output /tmp/ultimate/kr1-class-map.json
 
-      - name: Convert source and V11 base to FFDec XML
+      - name: Convert source and enhanced Frontiers base to FFDec XML
         run: |
           set -euo pipefail
+          echo "Using $KRF_BASE_LABEL: $KRF_BASE"
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
             -swf2xml /tmp/ultimate/kr1.swf /tmp/ultimate/kr1.xml
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
-            -swf2xml assets/kingdom-rush-frontiers-v11.swf /tmp/ultimate/krf.xml
+            -swf2xml "$KRF_BASE" /tmp/ultimate/krf.xml
           test -s /tmp/ultimate/kr1.xml
           test -s /tmp/ultimate/krf.xml
 
@@ -92,7 +100,7 @@ jobs:
             >/tmp/ultimate/merged-as3.txt
           test -s /tmp/ultimate/merged-as3.txt
 
-      - name: Verify original Frontiers and namespaced KR1 classes coexist
+      - name: Verify enhanced Frontiers and namespaced KR1 classes coexist
         run: |
           set -euo pipefail
           mkdir -p /tmp/merged-scripts
@@ -104,6 +112,10 @@ jobs:
           test -f "$root/Level1.as"
           test -f "$root/Level15.as"
           test -f "$root/TowerArcherCrossbow.as"
+          grep -R -F -q 'qolTowerClipboard' "$root/Level.as"
+          if [ "$KRF_BASE_LABEL" = 'V12 Last Rift' ]; then
+            grep -R -F -q 'THE LAST RIFT' "$root/Level15.as"
+          fi
           test -f "$root/KR1__Level1.as"
           test -f "$root/KR1__Level13.as"
           test -f "$root/KR1__Level19.as"
@@ -111,13 +123,16 @@ jobs:
           test -f "$root/KR1__TowerEngineerTesla.as"
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, json
+          import hashlib, json, os
           p=Path('/tmp/ultimate/merged.swf')
           h=hashlib.sha256(p.read_bytes()).hexdigest()
           roots=Path('/tmp/merged-scripts/scripts')
           report={
+              'frontiers_base': os.environ.get('KRF_BASE'),
+              'frontiers_base_label': os.environ.get('KRF_BASE_LABEL'),
               'merged_swf_size': p.stat().st_size,
               'merged_swf_sha256': h,
+              'frontiers_mod_markers_preserved': True,
               'verified_classes': [
                   'Level1','Level15','TowerArcherCrossbow',
                   'KR1__Level1','KR1__Level13','KR1__Level19',
