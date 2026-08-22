@@ -14,6 +14,10 @@ $Cache = Join-Path $Root '.native\ruffle'
 $Exe = Join-Path $Cache 'ruffle.exe'
 $Refresh = $args -contains '--refresh'
 $Stable = $args -contains '--stable'
+$ForceVulkan = $args -contains '--vulkan'
+$ForceGl = $args -contains '--gl'
+$ForceDx12 = $args -contains '--dx12'
+$ForwardArgs = @($args | Where-Object { $_ -notin @('--refresh','--stable','--vulkan','--gl','--dx12') })
 
 if ($Refresh -and (Test-Path $Cache)) { Remove-Item $Cache -Recurse -Force }
 
@@ -51,7 +55,22 @@ if (-not (Test-Path $Exe)) {
 }
 
 $label = if ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
+$backend = if ($ForceVulkan) { 'vulkan' } elseif ($ForceGl) { 'gl' } else { 'dx12' }
+if ($ForceDx12) { $backend = 'dx12' }
+
 Write-Host "Launching Kingdom Rush Frontiers $label with native Ruffle"
 Write-Host "Game: $Swf"
-& $Exe $Swf
-exit $LASTEXITCODE
+Write-Host "Graphics backend: $backend"
+$env:WGPU_BACKEND = $backend
+& $Exe '--graphics' $backend $Swf @ForwardArgs
+$code = $LASTEXITCODE
+
+# The wgpu Vulkan crash seen on Windows is a native renderer panic. Prefer DX12
+# and automatically retry OpenGL when the selected non-Vulkan backend still dies.
+if ($code -ne 0 -and -not $ForceVulkan -and $backend -ne 'gl') {
+    Write-Warning "Ruffle exited with code $code using $backend. Retrying with OpenGL to avoid wgpu/Vulkan/DX12 driver failures."
+    $env:WGPU_BACKEND = 'gl'
+    & $Exe '--graphics' 'gl' $Swf @ForwardArgs
+    $code = $LASTEXITCODE
+}
+exit $code
