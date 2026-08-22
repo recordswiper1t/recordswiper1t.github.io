@@ -57,12 +57,14 @@ jobs:
             echo '=== stages / campaign ==='
             grep -RniE 'mission_stage|stageSetValue|stageGetValue|stage_id|stageSelect|stage_select|trial|extra' Game | head -n 900 || true
             echo '=== stat definitions ==='
-            grep -RniE 'CharTotalStat|ItemTotalStat|Stage.*Stat|Enemy.*Stat|unit_ability' Game | head -n 900 || true
+            find Game/System/StatDef -maxdepth 1 -type f -printf '%f\n' | sort || true
+            echo '=== battle / enemy controllers ==='
+            find Game/System/Battle -maxdepth 1 -type f -printf '%f\n' | sort || true
           } > /tmp/ew5/class-map.txt
           grep -RlE 'unit_equip|item.*equip|equip.*item|ability[0-9]|unlockAbility|mission_stage|stageSetValue|stageGetValue|CharTotalStat|ItemTotalStat' Game | sort -u > /tmp/ew5/candidate-files.txt || true
           mkdir -p /tmp/ew5/candidates
           while IFS= read -r f; do mkdir -p "/tmp/ew5/candidates/$(dirname "$f")"; cp "$f" "/tmp/ew5/candidates/$f"; done < /tmp/ew5/candidate-files.txt
-      - name: Upload expansion analysis
+      - name: Upload full expansion source analysis
         uses: actions/upload-artifact@v4
         with:
           name: epicwar5-expansion-analysis
@@ -71,4 +73,5 @@ jobs:
             /tmp/ew5/class-map.txt
             /tmp/ew5/candidate-files.txt
             /tmp/ew5/candidates
+            /tmp/ew5/export/scripts/Game
             /tmp/ew5/export.log
