@@ -1,0 +1,134 @@
+name: Build V10 final verified release
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/build-v10.py'
+      - 'tools/build-v10-map-specials.py'
+      - '.github/workflows/build-v10-final.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/build-v10.py'
+      - 'tools/build-v10-map-specials.py'
+      - '.github/workflows/build-v10-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export current V9 sources
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v10-scripts /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v10-scripts /tmp/import/scripts /tmp/out
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -exportFileTimeout 120 -export script /tmp/v10-scripts assets/kingdom-rush-frontiers-v9.swf > /tmp/export-v10.log 2>&1 || true
+          test -f /tmp/v10-scripts/scripts/Level.as
+          test -f /tmp/v10-scripts/scripts/TowerHolder.as
+          test -f '/tmp/v10-scripts/scripts/§_-Xb§.as'
+      - name: Apply V10 patches
+        run: |
+          set -euo pipefail
+          # build-v10 inserts Legion Archer sell with an if-guard, not a switch case.
+          # Fix the stale self-check in a temporary copy without changing patch semantics.
+          cp tools/build-v10.py /tmp/build-v10-fixed.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/build-v10-fixed.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("'§_-Xb§.as': ['case \\\"sell\\\"']", "'§_-Xb§.as': ['if(param1 == \\\"sell\\\")']")
+          p.write_text(s,encoding='utf-8')
+          PY
+          python3 /tmp/build-v10-fixed.py /tmp/v10-scripts/scripts
+          python3 tools/build-v10-map-specials.py /tmp/v10-scripts/scripts
+          for f in \
+            'Level.as' 'Level14.as' 'SoldierHeroCronan.as' 'TowerHolder.as' \
+            'TowerDwarfRiflemen.as' 'TowerSoldierPirates.as' \
+            '§_-Zs§.as' '§_-MR§.as' '§_-Xb§.as' \
+            '§return const if§.as' '§override import§.as'; do
+            cp "/tmp/v10-scripts/scripts/$f" "/tmp/import/scripts/$f"
+          done
+          if [ -d /tmp/v10-scripts/_assets ]; then cp -a /tmp/v10-scripts/_assets /tmp/import/_assets; fi
+      - name: Import patched scripts
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v9.swf /tmp/out/kingdom-rush-frontiers-v10.swf /tmp/import > /tmp/import-v10.log 2>&1
+          test -s /tmp/out/kingdom-rush-frontiers-v10.swf
+          head -c 3 /tmp/out/kingdom-rush-frontiers-v10.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-export and verify final V10
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 60 -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v10.swf > /tmp/verify-v10.log 2>&1 || true
+          grep -F 'Rurin Longbeard' /tmp/verify/scripts/Level.as
+          grep -F 'qolEnsureSendAllLevelStarted' /tmp/verify/scripts/Level.as
+          grep -F 'qolDetachHero' /tmp/verify/scripts/Level.as
+          grep -F 'qolCleanupCompanions' /tmp/verify/scripts/SoldierHeroCronan.as
+          grep -F 'falcon.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
+          grep -F 'boar.destroyThis()' /tmp/verify/scripts/SoldierHeroCronan.as
+          grep -F 'if(param1 == "sell")' '/tmp/verify/scripts/§_-Xb§.as'
+          grep -F 'case "sell"' /tmp/verify/scripts/TowerDwarfRiflemen.as
+          grep -F 'case "sell"' /tmp/verify/scripts/TowerSoldierPirates.as
+          grep -F 'case "sell"' '/tmp/verify/scripts/§_-Zs§.as'
+          grep -F 'case "sell"' '/tmp/verify/scripts/§_-MR§.as'
+          grep -F 'case "sell"' '/tmp/verify/scripts/§return const if§.as'
+          grep -F 'case "sell"' '/tmp/verify/scripts/§override import§.as'
+          grep -F 'Legion Archer' /tmp/verify/scripts/TowerHolder.as
+          grep -F 'Mercenary / Genie Camp' /tmp/verify/scripts/TowerHolder.as
+          grep -F 'Spear Maiden Hut' /tmp/verify/scripts/TowerHolder.as
+          grep -F 'MAP SPECIAL BUILDINGS' /tmp/verify/scripts/TowerHolder.as
+      - name: Publish V10 and update launchers
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          cp /tmp/out/kingdom-rush-frontiers-v10.swf assets/kingdom-rush-frontiers-v10.swf
+          sha256sum assets/kingdom-rush-frontiers-v10.swf > assets/V10-SHA256SUMS.txt
+          cat > assets/V10-BUILD.txt <<'TXT'
+          Kingdom Rush Frontiers — V10 Final Follow-up Fixes
+          - Cronan toggle-off destroys both falcon and boar companions.
+          - Adds Rurin Longbeard, the Dark Descent dwarf hero, as the tenth hero toggle.
+          - Send All initializes normal first-wave state so Meteor, Reinforcements and other powers unlock.
+          - Real map-special buildings are prioritized: Legion Archer, Mercenary/Genie Camp, Spear Maiden Hut, Pirate Cannon Camp, Dwarf Riflemen, Pirate Barracks and Dwarf Hall.
+          - Supported player-placed and preplaced special towers expose sell controls.
+          - Normal tier-4 branches are separated from map-special buildings.
+          - Retains V9 pause-safe menus, visible timer, 47-enemy selector and V8 native/performance optimizations.
+          Built, imported, re-exported and structurally verified with FFDec 26.2.1.
+          TXT
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('desktop/run_native.py'); s=p.read_text(encoding='utf-8')
+          if 'V10_SWF' not in s:
+              s=s.replace("V9_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v9.swf'", "V10_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v10.swf'\nV9_SWF = ROOT / 'assets' / 'kingdom-rush-frontiers-v9.swf'",1)
+              s=s.replace('SWF = V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF)', 'SWF = V10_SWF if V10_SWF.exists() else (V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF))',1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          p=Path('desktop/run-native.ps1'); s=p.read_text(encoding='utf-8')
+          if '$V10 =' not in s:
+              s=s.replace("$V9 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v9.swf'", "$V10 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v10.swf'\n$V9 = Join-Path $Root 'assets\\kingdom-rush-frontiers-v9.swf'",1)
+              s=s.replace('$Swf = if (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }', '$Swf = if (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }',1)
+              p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+      - name: Commit verified V10
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/kingdom-rush-frontiers-v10.swf assets/V10-BUILD.txt assets/V10-SHA256SUMS.txt desktop/run_native.py desktop/run-native.ps1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build verified V10 final mod [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
