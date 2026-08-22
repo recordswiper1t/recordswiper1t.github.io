@@ -50,7 +50,7 @@ All basic tiers remain shared. At tier 4, every build spot should expose all fou
 - Mage: Arcane Wizard, Sorcerer Mage, Archmage Tower, Necromancer Tower
 - Artillery: Tesla x104, 500mm Big Bertha, DWAARP, Battle-Mecha T200
 
-The existing V11 blueprint/copy-paste layer should be extended to KR1 tier-4 classes rather than replaced.
+`tools/ultimate/tower_registry.py` is the runtime source of truth for these branches. It records the audited classes, including `KR1__TowerEngineerBfg` for Big Bertha, and provides stable `ultimate_*` action IDs. The eight current Frontiers branches retain their existing V11/V12 `qol_*` actions as implementation aliases while the eight KR1 branches get new actions. The existing V11 blueprint/copy-paste layer should be extended to KR1 tier-4 classes rather than replaced.
 
 ## Hero target
 
@@ -66,7 +66,7 @@ Required compatibility work:
 
 ## Campaign/save architecture
 
-Use stable IDs from the manifest, not `Level15`-style class names, as save keys.
+Use stable IDs from the manifest, not `Level15`-style class names, as save keys. `tools/ultimate/campaign_registry.py` maps those stable IDs to runtime identities only when source is actually available.
 
 Suggested model:
 
@@ -125,11 +125,25 @@ A fully prefixed binary is safe but would otherwise carry a second KR1 engine. `
 
 - KR1 content identities such as `KR1__Level1` remain namespaced.
 - KR1 stage graphics such as `KR1__GLevel1` remain namespaced so their imported art/timelines are used.
-- references from KR1 content to shared colliding core types are rewritten from `KR1__Level`, `KR1__Enemy`, `KR1__Wave`, etc. back to the authoritative Frontiers `Level`, `Enemy`, `Wave`, etc.
-- the prefixed KR1 shadow-core definitions remain in the SWF but become dormant.
-- because the content classes already exist after Stage 1, FFDec `-importScript` can now replace/recompile them.
+- references from KR1 content to shared colliding core types are rewritten back to authoritative Frontiers classes.
+- explicit compatibility identities can be excluded from that rewrite; the first is `KR1__Level`.
+- because the content classes already exist after Stage 1, FFDec `-importScript` can replace/recompile them.
 
-The first compile probe deliberately targets only **Southport (`KR1__Level1`)**. Any compile errors at that point identify specific KR1-vs-Frontiers API differences that need adapters instead of hiding them behind a fake successful merge.
+## KR1 Level compatibility adapter
+
+A direct `KR1__Level1 extends Level` rewrite is useful as a diagnostic but too brittle as the final design. Imported KR1 stages legitimately use inherited names that may not exist under the same API in Frontiers.
+
+The preferred architecture is:
+
+1. KR1 stages retain `extends KR1__Level`.
+2. The already-imported `KR1__Level` definition is replaced with a thin `KR1__Level extends Level` compatibility class.
+3. `tools/ultimate/level_api_diff.py` computes only the inherited KR1 `Level` members a stage references that Frontiers lacks.
+4. `tools/ultimate/build_level_adapter.py` can generate typed-neutral compile stubs for those missing names. Those stubs are diagnostic only and must be replaced with explicit Frontiers-backed semantics or proven irrelevant before gameplay certification.
+5. `rebind_namespaced_scripts.py --exclude-rebind KR1__Level` rebinds other shared-core references while preserving the adapter inheritance identity.
+
+`tools/ultimate/build_southport_adapter.py` turns the complete Southport sequence into a reproducible local build: structural merged SWF -> API contract -> adapter -> Southport rebind -> FFDec replacement -> re-export verification.
+
+`tools/ultimate/stage_api_matrix.py` generalises the same API analysis across all publisher-source `Level1`-`Level19`. The `probe-kr1-stage-adapter-matrix.yml` CI job attempts to compile all 19 stage classes against one union adapter. This determines whether one compatibility superclass can support the complete source-ready KR1 campaign/post-campaign set.
 
 ## Port order
 
@@ -145,7 +159,8 @@ The first compile probe deliberately targets only **Southport (`KR1__Level1`)**.
 Port **Southport** into the Frontiers runtime with Frontiers towers/heroes first. It must pass:
 
 - structural SWF round-trip with both code sets present
-- Southport class recompilation against Frontiers `Level` shared core
+- `KR1__Level` compatibility class compilation over Frontiers `Level`
+- Southport recompilation through that adapter
 - paths and wave timing
 - enemy exits/lives
 - build spots
@@ -154,9 +169,11 @@ Port **Southport** into the Frontiers runtime with Frontiers towers/heroes first
 - Heroic/Iron modes
 - V11/V12 sandbox and Time Attack controls
 
+The compiler matrix can prove the class layer for Level1–Level19 early, but runtime certification remains stage-by-stage.
+
 ### Gate C — combined towers
 
-Implement four tier-4 choices per family and extend clipboard/ability-rank handling to the KR1 branches. Test all 16 tier-4 towers on Southport and Hammerhold.
+Implement four tier-4 choices per family using `tower_registry.py` and extend clipboard/ability-rank handling to the KR1 branches. Test all 16 tier-4 towers on Southport and Hammerhold.
 
 ### Gate D — KR1 roster and campaign
 
@@ -182,28 +199,34 @@ Do not mark Port Tortuga through Darklight Depths (or the two Frontiers endless 
 
 ## Current branch status
 
-`agent/v13-kingdom-rush-ultimate` preserves the V12 work, including The Last Rift.
+`agent/v13-kingdom-rush-ultimate-clean` is based directly on current `main` and preserves the verified V12 Last Rift runtime.
 
 Implemented/under CI proof:
 
 - complete 51-stage original-game manifest plus V12 bonus stage metadata
 - complete 16-tier-4-tower / 29-selectable-hero target manifest
+- canonical runtime tower class/action registry for all 16 branches
 - source/preflight validation with SHA-256 recording
 - official-publisher KR1 structural audit
 - ActionScript collision reporting and import policy generation
 - FFDec XML schema/round-trip probes
 - streaming character-ID/linkage/ABC definition merger
 - fully namespaced KR1 binary-coexistence proof workflow
-- shared-core rebind tooling
-- Southport-to-Frontiers-core compile probe
+- shared-core rebind tooling with explicit compatibility exclusions
+- Southport API-diff and Frontiers-backed `KR1__Level` compile-bridge tooling
+- reproducible Southport adapter build pipeline
+- Level1-Level19 union adapter matrix/probe
+- stable campaign/save runtime registry
+- expensive audit workflows narrowed so unrelated Ultimate commits do not continuously refetch/re-export both games
 - ignored local binary inputs/work directories
 
 Not yet claimable as complete:
 
 - a gameplay-verified Southport inside the enhanced Frontiers runtime
+- semantic implementations for any generated `KR1__Level` adapter stubs
 - combined tier-4 upgrade UI/behavior
 - KR1 hero compatibility adapters and combined hero selector
-- all KR1 campaign/post-campaign stages in the combined runtime
+- all KR1 campaign/post-campaign stages runtime-tested
 - later Frontiers post-campaign/endless maps
 - final combined campaign/save UI and launcher promotion
 
