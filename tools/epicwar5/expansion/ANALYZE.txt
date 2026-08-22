@@ -7,3 +7,4 @@ Full 50-battle expansion slice verifier refresh.
 Catalog-normalized full verifier refresh.
 FFDec diagnostic full-stack rebuild refresh.
 Import-error diagnostic refresh.
+Campaign newline compatibility rebuild refresh.
