@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -71,25 +71,31 @@ jobs:
           test -d /tmp/krf/scripts
           test -n "$(find /tmp/krf/scripts -name '*.as' -print -quit)"
 
-      - name: Build class collision and namespace report
+      - name: Build class collision, namespace and port-policy reports
         run: |
           set -euo pipefail
           python3 tools/ultimate/audit_exports.py \
             --kr1 /tmp/kr1/scripts \
             --krf /tmp/krf/scripts \
             --output /tmp/ultimate/ultimate-inventory.json
+          python3 tools/ultimate/port_plan.py \
+            --kr1 /tmp/kr1/scripts \
+            --krf /tmp/krf/scripts \
+            --output /tmp/ultimate/kr1-port-plan.json
           python3 - <<'PY'
           import json
-          p='/tmp/ultimate/ultimate-inventory.json'
-          d=json.load(open(p, encoding='utf-8'))
-          print('KR1 class count:', d['kr1']['class_count'])
-          print('KRF class count:', d['krf']['class_count'])
-          print('Collision count:', d['collision_count'])
-          print('KR1 detected levels:', len(d['kr1']['groups']['level']))
-          print('KRF detected levels:', len(d['krf']['groups']['level']))
-          print('KR1 tower candidates:', len(d['kr1']['groups']['tower']))
-          print('KR1 hero candidates:', len(d['kr1']['groups']['hero']))
-          print('KR1 enemy candidates:', len(d['kr1']['groups']['enemy']))
+          inv=json.load(open('/tmp/ultimate/ultimate-inventory.json', encoding='utf-8'))
+          plan=json.load(open('/tmp/ultimate/kr1-port-plan.json', encoding='utf-8'))
+          print('KR1 class count:', inv['kr1']['class_count'])
+          print('KRF class count:', inv['krf']['class_count'])
+          print('Collision count:', inv['collision_count'])
+          print('KR1 detected levels:', len(inv['kr1']['groups']['level']))
+          print('KR1 tower candidates:', len(inv['kr1']['groups']['tower']))
+          print('KR1 hero candidates:', len(inv['kr1']['groups']['hero']))
+          print('KR1 enemy candidates:', len(inv['kr1']['groups']['enemy']))
+          print('Port policy counts:', plan['counts'])
+          assert plan['collision_count'] == inv['collision_count']
+          assert any(x['target']=='KR1_Level1' for x in plan['stage_logic'])
           PY
 
       - name: Record audit provenance
@@ -99,7 +105,7 @@ jobs:
           Source URL is the historical Armor Games publisher game-file endpoint:
           https://cache.armorgames.com/files/games/kingdom-rush-12141.swf
           FFDec: 26.2.1
-          Output contains hashes and structural class inventories only.
+          Output contains hashes, structural class inventories and a generated import policy only.
           TXT
 
       - uses: actions/upload-artifact@v4
@@ -107,5 +113,6 @@ jobs:
           name: kr1-frontiers-structural-audit
           path: |
             /tmp/ultimate/ultimate-inventory.json
+            /tmp/ultimate/kr1-port-plan.json
             /tmp/ultimate/KR1-SOURCE-SHA256.txt
             /tmp/ultimate/README.txt
