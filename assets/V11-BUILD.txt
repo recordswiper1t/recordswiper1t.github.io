@@ -1,0 +1,12 @@
+Kingdom Rush Frontiers — V11 Sandbox Polish + Performance
+- Reorganizes the mod menu into Heroes, Enemies, Waves/Time Attack, Towers/Clipboard, Cheats/Cleanup, and Performance pages with a live status strip.
+- Adds Normal, Chaos, Benchmark, and Time Attack presets.
+- Adds live FPS/entity/bullet/tower diagnostics and configurable heavy/extreme/ultra swarm thresholds; Send All back-pressure uses the same thresholds.
+- Adds enemy-count steps of 1/5/25, Clear All Enemies, Remove All Heroes, Sell All Map Specials, and clipboard reset controls.
+- Ctrl+C/Ctrl+V now preserves standard tower level 1/2/3 and exact purchased ability ranks for Crossbow, Totem, Archmage, Necromancer, DWAARP, Mecha, Assassin and Templar. Dwarf Riflemen and Dwarf Hall permanent upgrade ranks are also captured.
+- Paste checks the source tower's full invested cost and reconciles the normal build/upgrade charges to that exact amount, without overwriting unrelated cash changes during replay.
+- Map-special building types are copyable; live hired mercenaries/pirates/amazons and one-shot cannon firing state are intentionally not cloned because they are live entities/actions rather than permanent tower upgrades.
+- Fixes the old Necromancer clipboard action alias (`qol_necro`).
+- Retains V10 Rurin/Cronan/Send-All/special-selling fixes, V9 pause/timer/catalog fixes, and V8 native/swarm optimizations.
+- Combat attacks, targeting and movement remain full-rate; V11 only tunes cosmetic cadence/back-pressure and reuses the existing allocation-free child snapshot hot paths.
+Built, re-exported, and structurally verified with FFDec 26.2.1.
