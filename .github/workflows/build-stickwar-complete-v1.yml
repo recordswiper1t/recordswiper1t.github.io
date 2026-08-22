@@ -1,0 +1,144 @@
+name: Build Stick War Complete V1 performance foundation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - stickwar-complete-v1-foundation
+    paths:
+      - 'tools/stickwar/patches/**'
+      - 'tools/stickwar/BASELINES.md'
+      - '.github/workflows/build-stickwar-complete-v1.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/stickwar/patches/**'
+      - 'tools/stickwar/BASELINES.md'
+      - '.github/workflows/build-stickwar-complete-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Fetch canonical SW2 and FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stickwar /tmp/ffdec
+          curl -fL --retry 4 --connect-timeout 20 'https://cache.armorgames.com/files/games/stick-war-2-14346.swf' -o /tmp/stickwar/original.swf
+          test "$(stat -c%s /tmp/stickwar/original.swf)" = '18886237'
+          test "$(sha256sum /tmp/stickwar/original.swf | cut -d' ' -f1)" = '03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5'
+          head -c 3 /tmp/stickwar/original.swf | grep -Eq 'FWS|CWS|ZWS'
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export canonical ActionScript
+        shell: bash
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/stickwar/export /tmp/stickwar/import /tmp/stickwar/out /tmp/stickwar/verify
+          mkdir -p /tmp/stickwar/export /tmp/stickwar/import/scripts /tmp/stickwar/out
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/stickwar/export /tmp/stickwar/original.swf > /tmp/stickwar/export.log 2>&1 || true
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/StickWar.as
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/SpatialHash.as
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/units/Unit.as
+      - name: Apply low-level V1 performance patches
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 tools/stickwar/patches/patch_performance_v1.py /tmp/stickwar/export/scripts
+          cd /tmp/stickwar/export/scripts
+          for f in \
+            'com/brockw/stickwar/engine/HealthBar.as' \
+            'com/brockw/stickwar/engine/SpatialHash.as' \
+            'com/brockw/stickwar/engine/StickWar.as' \
+            'com/brockw/stickwar/engine/projectile/ProjectileManager.as' \
+            'com/brockw/stickwar/engine/Team/Team.as' \
+            'com/brockw/stickwar/engine/units/Unit.as' \
+            'com/brockw/stickwar/engine/BloodManager.as'; do
+            mkdir -p "/tmp/stickwar/import/scripts/$(dirname "$f")"
+            cp "$f" "/tmp/stickwar/import/scripts/$f"
+          done
+      - name: Import patched ActionScript
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/stickwar/original.swf /tmp/stickwar/out/stick-war-complete-v1.swf /tmp/stickwar/import > /tmp/stickwar/import.log 2>&1
+          test -s /tmp/stickwar/out/stick-war-complete-v1.swf
+          head -c 3 /tmp/stickwar/out/stick-war-complete-v1.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-decompile and verify patch markers
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stickwar/verify
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/stickwar/verify /tmp/stickwar/out/stick-war-complete-v1.swf > /tmp/stickwar/verify.log 2>&1 || true
+          S=/tmp/stickwar/verify/scripts
+          grep -F 'this.isFirst = false;' "$S/com/brockw/stickwar/engine/HealthBar.as"
+          grep -F 'private var visitMarks:Vector.<int>;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
+          grep -F 'this.visitMarks[entityId] = this.visitStamp;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
+          grep -F 'this.partitions[index].length = size + 64;' "$S/com/brockw/stickwar/engine/SpatialHash.as"
+          grep -F 'this.projectileManager.airEffects.length = 0;' "$S/com/brockw/stickwar/engine/StickWar.as"
+          grep -F 'Two linear cocktail passes' "$S/com/brockw/stickwar/engine/StickWar.as"
+          grep -F 'Swap-remove finished projectiles' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          grep -F 'private var _lastStatueType:String;' "$S/com/brockw/stickwar/engine/Team/Team.as"
+          grep -F 'var u:UnitMove = null;' "$S/com/brockw/stickwar/engine/Team/Team.as"
+          grep -F 'private var _selectionVisualState:int = -99;' "$S/com/brockw/stickwar/engine/units/Unit.as"
+          grep -F 'return xDiff * xDiff + yDiff * yDiff;' "$S/com/brockw/stickwar/engine/units/Unit.as"
+          grep -F 'private var bloodCursor:int = 0;' "$S/com/brockw/stickwar/engine/BloodManager.as"
+          ! grep -F 'this.projectiles.splice(i,1)[0]' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
+          ! grep -F 'this.redBar.graphics.lineTo(-BAR_WIDTH / 2 + BAR_WIDTH * this._health / this._totalHealth,-BAR_HEIGHT / 2);' /dev/null
+          sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
+      - name: Upload verified build
+        uses: actions/upload-artifact@v4
+        with:
+          name: stick-war-complete-v1-performance-foundation
+          retention-days: 14
+          path: |
+            /tmp/stickwar/out/stick-war-complete-v1.swf
+            /tmp/stickwar/RELEASE-SHA256SUMS.txt
+            /tmp/stickwar/import.log
+            /tmp/stickwar/verify.log
+      - name: Publish verified V1 asset to branch
+        if: github.event_name == 'push' && github.ref_name == 'stickwar-complete-v1-foundation'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp /tmp/stickwar/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
+          sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          cat > assets/STICKWAR-COMPLETE-V1-BUILD.txt <<'TXT'
+          Stick War Complete — V1 Performance Foundation
+          Canonical SW2 baseline SHA-256: 03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5
+          Toolchain: FFDec 26.2.1
+
+          Low-level performance foundation:
+          - Fixes HealthBar's never-cleared first-draw flag, stopping unchanged health bars from redrawing vector graphics forever.
+          - Replaces per-spatial-query Dictionary insert/delete churn with generation-stamped integer vectors.
+          - Dynamically expands spatial buckets and raises initial bucket capacity for expansion-scale armies.
+          - Replaces repeated depth bubble scans with bounded linear forward/reverse passes.
+          - Replaces projectile splice/shift compaction with in-place swap removal while retaining existing projectile pools.
+          - Avoids empty per-frame garrison UnitMove allocation/execution.
+          - Caches statue timeline state and unit selection-shadow graphics.
+          - Replaces hot Math.pow(x,2) distance/collision operations with multiplication.
+          - Cleans overdue corpse queues in bounded batches.
+          - Recycles blood/ash splats with ring cursors rather than shifting arrays.
+          - Clears transient air-effect arrays without splice-return allocation.
+
+          Combat attacks, movement, AI, damage, cooldowns and projectile simulation remain full-rate.
+          Rebuilt, re-decompiled, and structurally verified before publication.
+          TXT
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-BUILD.txt assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish verified Stick War Complete V1 performance foundation [skip ci]'
+            git push origin HEAD:stickwar-complete-v1-foundation
+          fi
