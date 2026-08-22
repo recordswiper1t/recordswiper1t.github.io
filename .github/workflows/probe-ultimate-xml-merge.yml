@@ -1,0 +1,147 @@
+name: Probe V13 tag-level KR1 + Frontiers merge
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/extract_class_names.py'
+      - '.github/workflows/probe-ultimate-xml-merge.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/extract_class_names.py'
+      - '.github/workflows/probe-ultimate-xml-merge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch original Armor Games KR1 build
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ultimate
+          curl -fL --retry 4 'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/ultimate/kr1.swf
+          head -c 3 /tmp/ultimate/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/ultimate/kr1.swf | tee /tmp/ultimate/KR1-SHA256.txt
+
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export KR1 class inventory and build full namespace map
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/kr1-export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 -export script /tmp/kr1-export /tmp/ultimate/kr1.swf >/tmp/ultimate/kr1-export.log 2>&1 || true
+          test -d /tmp/kr1-export/scripts
+          python3 tools/ultimate/extract_class_names.py /tmp/kr1-export/scripts --prefix 'KR1__' --output /tmp/ultimate/kr1-class-map.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/ultimate/kr1-class-map.json'))
+          assert d['count'] >= 900, d['count']
+          for name in ('Level','Level1','Enemy','TowerEngineer'):
+              assert d['classes'][name] == 'KR1__' + name
+          print('KR1 namespace map:', d['count'], 'classes')
+          PY
+
+      - name: Convert both SWFs to FFDec XML
+        run: |
+          set -euo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -swf2xml assets/kingdom-rush-frontiers-v11.swf /tmp/ultimate/krf.xml >/tmp/ultimate/krf-swf2xml.log 2>&1
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/ultimate/kr1.swf /tmp/ultimate/kr1.xml >/tmp/ultimate/kr1-swf2xml.log 2>&1
+          test -s /tmp/ultimate/krf.xml
+          test -s /tmp/ultimate/kr1.xml
+          du -h /tmp/ultimate/krf.xml /tmp/ultimate/kr1.xml
+
+      - name: Merge namespaced KR1 definition tags into Frontiers XML
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/merge_swf_xml.py \
+            --base /tmp/ultimate/krf.xml \
+            --source /tmp/ultimate/kr1.xml \
+            --class-map /tmp/ultimate/kr1-class-map.json \
+            --output /tmp/ultimate/merged.xml \
+            --report /tmp/ultimate/merge-report.json
+          test -s /tmp/ultimate/merged.xml
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/ultimate/merge-report.json'))
+          assert r['stats']['top_level_tags_imported'] > 0
+          assert r['character_id_offset'] > r['base_max_character_id']
+          print('imported tags:', r['stats']['top_level_tags_imported'])
+          print('renamed XML tokens:', r['stats'].get('class_tokens_renamed', 0))
+          print('new ID range:', r['imported_character_id_range'])
+          PY
+
+      - name: Rebuild merged XML to SWF
+        run: |
+          set -euo pipefail
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/ultimate/merged.xml /tmp/ultimate/ultimate-probe.swf >/tmp/ultimate/xml2swf.log 2>&1
+          test -s /tmp/ultimate/ultimate-probe.swf
+          head -c 3 /tmp/ultimate/ultimate-probe.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/ultimate/ultimate-probe.swf | tee /tmp/ultimate/ULTIMATE-PROBE-SHA256.txt
+
+      - name: Re-export probe and require both Level1 identities
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/probe-export
+          mkdir -p /tmp/probe-export
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/probe-export /tmp/ultimate/ultimate-probe.swf >/tmp/ultimate/probe-export.log 2>&1 || true
+          test -d /tmp/probe-export/scripts
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, json
+          root=Path('/tmp/probe-export/scripts')
+          names=set()
+          pat=re.compile(r'\bclass\s+([^\s{]+)')
+          for p in root.rglob('*.as'):
+              text=p.read_text(encoding='utf-8-sig', errors='replace')
+              m=pat.search(text)
+              if m: names.add(m.group(1).rstrip('{'))
+          out={
+              'class_count': len(names),
+              'has_frontiers_Level1': 'Level1' in names,
+              'has_namespaced_KR1_Level1': 'KR1__Level1' in names,
+              'has_namespaced_KR1_Level': 'KR1__Level' in names,
+              'has_namespaced_KR1_Enemy': 'KR1__Enemy' in names,
+              'sample_namespaced': sorted(x for x in names if x.startswith('KR1__'))[:100],
+          }
+          Path('/tmp/ultimate/probe-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          print(json.dumps(out,indent=2))
+          assert out['has_frontiers_Level1'], 'Frontiers Level1 disappeared during XML merge'
+          assert out['has_namespaced_KR1_Level1'], 'KR1 Level1 ABC identity was not namespaced by XML transform'
+          assert out['has_namespaced_KR1_Level'], 'KR1 base Level class was not namespaced'
+          PY
+
+      - name: Upload structural probe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v13-xml-merge-probe
+          path: |
+            /tmp/ultimate/*SHA256.txt
+            /tmp/ultimate/*report.json
+            /tmp/ultimate/probe-result.json
+            /tmp/ultimate/*xml.log
+            /tmp/ultimate/*export.log
+          if-no-files-found: ignore
