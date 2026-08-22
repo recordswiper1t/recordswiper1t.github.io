@@ -5,6 +5,7 @@ on:
     branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - '.github/workflows/discover-ultimate-external-stage-sources.yml'
+      - 'tools/ultimate/content_manifest.py'
   workflow_dispatch:
 
 permissions:
@@ -37,7 +38,7 @@ jobs:
           java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/u/kr1 /tmp/u/kr1.swf >/tmp/u/kr1.log 2>&1 || true
           java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/u/krf "$KRF" >/tmp/u/krf.log 2>&1 || true
 
-      - name: Extract loader and missing-stage references without source bodies
+      - name: Extract loader missing-stage and network references without source bodies
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -49,31 +50,42 @@ jobs:
             'port tortuga','storm atoll','sunken citadel','bonesburg','desecrated grove','dusk chateau','darklight depths','nasde','nas\'de','temple of evil'
           ]
           str_re=re.compile(r'(["\'])(.*?)(?<!\\)\1')
+          network_tokens=('urlrequest','loader','loadbytes','loadermx','navigateToURL'.lower(),'extern','premium','dlc','asset','campaign')
           out={}
           for game,root in roots.items():
             rows=[]
             for p in root.rglob('*.as'):
               text=p.read_text(encoding='utf-8-sig',errors='replace')
+              low_text=text.lower()
               hits=[]
               for _,s in str_re.findall(text):
                 low=s.lower()
                 interesting=(
-                  'http://' in low or 'https://' in low or '.swf' in low or
+                  'http://' in low or 'https://' in low or '.swf' in low or '.json' in low or '.xml' in low or
                   any(n in low for n in names) or
-                  ('level' in low and any(x in low for x in ('load','asset','premium','campaign')))
+                  ('level' in low and any(x in low for x in ('load','asset','premium','campaign','external')))
                 )
                 if interesting and len(s) <= 500:
                   hits.append(s)
-              if hits:
-                rows.append({'file':str(p.relative_to(root)),'strings':sorted(set(hits))})
+              token_hits=sorted({tok for tok in network_tokens if tok in low_text})
+              if hits or token_hits:
+                rows.append({'file':str(p.relative_to(root)),'strings':sorted(set(hits)),'network_tokens':token_hits})
             out[game]=rows
-          Path('/tmp/u/report/external-stage-references.json').write_text(json.dumps(out,indent=2,ensure_ascii=False),encoding='utf-8')
+          report={
+            'scope':'reference-only; no publisher source bodies retained',
+            'missing_stage_names':names,
+            'games':out,
+            'summary':{game:{'files_with_hits':len(rows),'string_hits':sum(len(r['strings']) for r in rows)} for game,rows in out.items()},
+          }
+          Path('/tmp/u/report/external-stage-references.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
+          print(json.dumps(report['summary'],indent=2))
           for game,rows in out.items():
             print('\n==',game,'==')
             for row in rows:
-              print(row['file'])
-              for s in row['strings']:
-                print(' ',s)
+              if row['strings']:
+                print(row['file'])
+                for s in row['strings']:
+                  print(' ',s)
           PY
 
       - name: Upload reference-only discovery report
