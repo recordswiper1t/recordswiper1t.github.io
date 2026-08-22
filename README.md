@@ -8,7 +8,7 @@ This repository contains three performance-first Flash/ActionScript mod projects
 | --- | --- | --- |
 | **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
 | **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
-| **Super Stick War (SW1 + SW2)** | V1 release candidate in PR #39 | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
+| **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
 | **Epic War 5** | Released on `main` through Expansion V3.3.1 | Sandbox builds, expanded campaign/equipment/progression, large-battle performance pass, release-candidate verification and sitelock hotfix |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
@@ -43,9 +43,9 @@ The branch is not promoted to a release until imported KR stages, KR tower/hero 
 
 ## Super Stick War — SW1 + SW2
 
-The release candidate lives in [PR #39](../../pull/39). Its build is based on a pinned official Stick War 2 baseline and remasters SW1 content into that runtime rather than pretending to merge two unrelated binaries.
+**V1 is released on `main`.** The verified binary is `assets/stick-war-complete-v1.swf`, with matching `STICKWAR-COMPLETE-V1-BUILD.txt` and SHA-256 manifest in `assets/`. The playable web shell is under `stickwar-complete/`.
 
-Target V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery nodes, direct possession, authored expansion objectives, Battle Lab presets, sandbox controls, diagnostics and performance optimization without lowering combat simulation rate.
+V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery nodes, direct possession, authored expansion objectives, Battle Lab presets, sandbox controls, diagnostics and performance optimization without lowering combat simulation rate. The release SWF passed FFDec import and fresh re-decompile verification before publication.
 
 ## Epic War 5
 
