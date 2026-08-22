@@ -24,6 +24,14 @@ from build_level_adapter import _constructor_from_frontiers  # noqa: E402
 from level_api_diff import FUNC_RE, VAR_RE  # noqa: E402
 from level_semantic_match import find_matching_brace  # noqa: E402
 
+IMPORT_RE = re.compile(r"^\s*import\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;", re.MULTILINE)
+# FFDec occasionally omits an import when decompiling a member in isolation.
+# Keep a tiny standard-library fallback table for unqualified AS3 types that
+# can legally appear in copied KR1 members.
+STANDARD_IMPORTS = {
+    "Dictionary": "flash.utils.Dictionary",
+}
+
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig", errors="replace")
@@ -64,6 +72,24 @@ def extract_function(text: str, name: str) -> str | None:
     return None
 
 
+def required_imports(source_texts: list[str], generated_body: str) -> list[str]:
+    """Return only imports whose simple names occur in the generated bridge."""
+    by_name: dict[str, str] = {}
+    for text in source_texts:
+        for match in IMPORT_RE.finditer(text):
+            path = match.group(1)
+            simple = path.rsplit(".", 1)[-1]
+            by_name.setdefault(simple, path)
+    for simple, path in STANDARD_IMPORTS.items():
+        by_name.setdefault(simple, path)
+
+    used: list[str] = []
+    for simple, path in sorted(by_name.items()):
+        if re.search(rf"(?<![\w$]){re.escape(simple)}(?![\w$])", generated_body):
+            used.append(path)
+    return used
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--namespaced-kr1-level", type=Path, required=True)
@@ -74,6 +100,7 @@ def main() -> int:
     args = ap.parse_args()
 
     source = read(args.namespaced_kr1_level)
+    frontiers_source = read(args.frontiers_level)
     contract = json.loads(args.contract.read_text(encoding="utf-8"))
     candidates = contract.get("adapter_candidates", {})
     if not isinstance(candidates, dict):
@@ -100,9 +127,15 @@ def main() -> int:
         chunks.append(chunk)
         copied.append({"name": name, "kind": kind})
 
-    lines = [
-        "package",
-        "{",
+    generated_body = "\n".join([ctor_params, *chunks])
+    imports = required_imports([source, frontiers_source], generated_body)
+
+    lines = ["package", "{"]
+    for path in imports:
+        lines.append(f"   import {path};")
+    if imports:
+        lines.append("")
+    lines += [
         "   public class KR1__Level extends Level",
         "   {",
         f"      public function KR1__Level({ctor_params})",
@@ -122,11 +155,13 @@ def main() -> int:
         "copied_member_count": len(copied),
         "copied_members": copied,
         "missing_members": missing,
+        "required_imports": imports,
         "frontiers_constructor": {"parameters": ctor_params, "forwarded_arguments": ctor_args},
         "policy": {
             "frontiers_level_is_parent": True,
             "only_contract_missing_members_copied": True,
             "source_is_namespaced_merge_export": True,
+            "required_imports_preserved": True,
             "generated_source_not_committed": True,
         },
     }
