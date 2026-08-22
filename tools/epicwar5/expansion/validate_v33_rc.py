@@ -51,6 +51,11 @@ def method(text, name, next_name=None):
     return text[start:end]
 
 
+def threshold_pairs(body):
+    return [(int(a), int(b)) for a,b in re.findall(
+        r'if\s*\(\s*CLEARS\s*>=\s*(\d+)\s*\)\s*return\s+(\d+)\s*;', body, re.S)]
+
+
 dm = read('Manager/DataManager.as')
 br = read('Interface/BattleResult.as')
 wm = read('Interface/WorldMap.as')
@@ -68,14 +73,14 @@ bs = read('System/Battle/BattleSystem.as')
 
 # ---- Progression invariants -------------------------------------------------
 army = method(dm, 'expansionArmySlotsForClears', 'expansionEquipmentSlotsForClears')
-pairs = [(int(a), int(b)) for a,b in re.findall(r'if\(CLEARS >= (\d+)\) return (\d+);', army)]
+pairs = threshold_pairs(army)
 expected = [(45,12),(38,11),(31,10),(25,9),(20,8),(14,7),(9,6),(5,5),(2,4)]
-if pairs != expected or 'return 3;' not in army:
+if pairs != expected or not re.search(r'return\s+3\s*;', army):
     raise SystemExit(f'RC FAIL [army progression]: got {pairs}, expected {expected}')
 ok('army progression', '3 slots at 0 clears; 12 slots at 45 clears')
 
 equip = method(dm, 'expansionEquipmentSlotsForClears', 'expansionUpgradeCostMultiplier')
-if [(int(a),int(b)) for a,b in re.findall(r'if\(CLEARS >= (\d+)\) return (\d+);', equip)] != [(35,3),(15,2)] or 'return 1;' not in equip:
+if threshold_pairs(equip) != [(35,3),(15,2)] or not re.search(r'return\s+1\s*;', equip):
     raise SystemExit('RC FAIL [equipment progression]: expected 1 -> 2@15 -> 3@35')
 ok('equipment progression', '1 slot -> 2 at 15 -> 3 at 35')
 
