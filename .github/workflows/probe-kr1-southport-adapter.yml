@@ -102,6 +102,7 @@ jobs:
             --output /tmp/u/report/southport-level-api.json
           python3 tools/ultimate/build_level_adapter.py \
             --contract /tmp/u/report/southport-level-api.json \
+            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
             --output /tmp/u/adapter-import/scripts/KR1__Level.as \
             --report /tmp/u/report/level-adapter-build.json
           grep -F 'class KR1__Level extends Level' /tmp/u/adapter-import/scripts/KR1__Level.as
@@ -162,6 +163,7 @@ jobs:
               'compile_success': True,
               'missing_frontiers_level_members_bridged': len(api['stage_refs_missing_on_krf']),
               'generated_bridge_members': build['generated_member_count'],
+              'frontiers_constructor_forwarding': build.get('frontiers_constructor',{}),
               'southport_extends_kr1_level_adapter': True,
               'kr1_level_adapter_extends_frontiers_level': True,
               'frontiers_mod_markers_preserved': True,
@@ -181,7 +183,7 @@ jobs:
           result={
               'compile_success': False,
               'exit_code': int(Path('/tmp/u/import-adapter.exit').read_text().strip()),
-              'meaning': 'The first KR1__Level bridge exposed additional compile-time API/type incompatibilities.',
+              'meaning': 'The KR1__Level bridge exposed additional compile-time API/type incompatibilities.',
               'log_tail': '\n'.join(log.splitlines()[-160:]),
           }
           Path('/tmp/u/report/southport-adapter-result.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
