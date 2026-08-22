@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#090b0c">
+<title>Stick War Complete — V1 Foundation</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--bg:#090b0c;--card:#121516;--line:#343b3d;--gold:#d4ad4b;--muted:#aeb6b8}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#f4f7f7}body{background:radial-gradient(circle at 50% 0,#30372e 0,#151918 38%,#090b0c 78%)}.wrap{width:min(1040px,100%);margin:auto;padding:22px 14px 64px}.hero,.card{background:rgba(18,21,22,.97);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:12px}.pill{display:inline-block;border:1px solid #6b5a2d;background:#2c2616;color:#f4d783;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}h1{font-size:clamp(37px,8vw,64px);line-height:.94;letter-spacing:-.045em;margin:10px 0}h2{margin:0 0 12px}p,li{color:var(--muted);line-height:1.5}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px}.stat{padding:14px;border:1px solid #31383a;border-radius:13px;background:#0e1112}.stat b{display:block;font-size:25px;color:white}.stat small{color:#9ba4a6}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button,button{appearance:none;border:1px solid #4a4f4a;border-radius:11px;padding:10px 13px;background:#242925;color:#fff;font:700 14px inherit;cursor:pointer}.primary{background:var(--gold)!important;color:#1c170b!important;border-color:#b79541!important}.panel{display:none}.panel.active{display:block}.stage{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #292e30}.stage:last-child{border:0}.badge{font-weight:900;color:#f0d17e}.threat{font-size:12px;border:1px solid #474f51;padding:5px 7px;border-radius:999px;color:#dce1e2}.muted{color:#899294;font-size:12px}.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}.form label{font-size:12px;color:#aeb6b8}.form select,.form input{width:100%;margin-top:5px;border:1px solid #42494b;border-radius:10px;background:#0b0d0e;color:#fff;padding:10px}textarea{width:100%;min-height:80px;background:#0b0d0e;color:#e9eeee;border:1px solid #42494b;border-radius:10px;padding:10px}.notice{border-left:3px solid #b8933f;padding-left:12px}.good{color:#b9dfb8}.bad{color:#efb1a6}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}#playerShell{display:none;position:fixed;inset:0;background:#000;z-index:50}#player{position:absolute;inset:0;display:grid;place-items:center}ruffle-player{width:100%!important;height:100%!important}.float{position:fixed;z-index:60;right:10px;top:10px}
+</style></head><body>
+<main class="wrap">
+<section class="hero"><span class="pill">STICK WAR COMPLETE • V1 FOUNDATION</span><h1>One Inamorta.<br>One massive campaign.</h1>
+<p>Unified Stick War 1 → Stick War 2 progression, Order + Chaos, endgame hybrids, possession challenges, bosses, Battle Lab, and a performance-first engine plan for huge armies.</p>
+<div class="grid"><div class="stat"><b id="stageCount">65</b><small>authored stages / war games</small></div><div class="stat"><b>18</b><small>Order + Chaos unit families</small></div><div class="stat"><b>108</b><small>expansion tech nodes</small></div><div class="stat"><b>250+</b><small>benchmark actor target</small></div></div>
+<div class="tabs"><button class="primary" id="play">Play V1</button><button data-tab="campaign">Campaign</button><button data-tab="lab">Battle Lab</button><button data-tab="perf">Performance</button></div>
+<p id="status" class="notice">Checking for <code>/assets/stick-war-complete-v1.swf</code>…</p></section>
+
+<section class="card panel active" id="campaign"><h2>Campaign</h2><p>Chapter I remasters the conquest; later chapters escalate into Chaos, northern wars, endgame and possession/benchmark trials.</p><div id="stageList">Loading campaign data…</div></section>
+
+<section class="card panel" id="lab"><h2>Battle Lab</h2><p>Scenario configuration stays separate from campaign saves. The share code is deterministic.</p><div class="form">
+<label>Player faction<select id="faction"><option>Order</option><option>Chaos</option><option>Hybrid</option></select></label>
+<label>Enemy faction<select id="enemy"><option>Chaos</option><option>Order</option><option>Mixed</option><option>Northern</option></select></label>
+<label>Starting gold<input id="gold" type="number" value="1000" min="0"></label>
+<label>Starting mana<input id="mana" type="number" value="500" min="0"></label>
+<label>Population cap<input id="pop" type="number" value="80" min="10" max="300"></label>
+<label>Preset<select id="preset"><option>Normal</option><option>Chaos</option><option>Massive Battle</option><option>Boss Rush</option><option>Time Attack</option><option>Possession</option><option>Benchmark</option></select></label>
+</div><p><button id="encode">Generate share code</button></p><textarea id="code" spellcheck="false" placeholder="SWC1:…"></textarea></section>
+
+<section class="card panel" id="perf"><h2>Performance contract</h2><p>Combat, movement, targeting, damage, cooldowns and projectile simulation never slow down. Under load, cosmetic cadence, health bars, UI redraws and transient effects degrade first.</p><div id="perfList">Loading performance targets…</div></section>
+</main>
+<section id="playerShell"><div id="player"></div><button class="float" id="close">Exit game</button></section>
+<script src="https://unpkg.com/@ruffle-rs/ruffle@0.5.0"></script>
+<script>
+(()=>{'use strict';
+const SWF='/assets/stick-war-complete-v1.swf?v=1-foundation';
+const status=document.getElementById('status'),shell=document.getElementById('playerShell'),host=document.getElementById('player');
+let hasSwf=false,player=null;
+async function exists(){try{const r=await fetch(SWF,{method:'HEAD',cache:'no-store'});hasSwf=r.ok}catch(_){hasSwf=false}
+status.innerHTML=hasSwf?'<span class="good"><b>Playable V1 asset found.</b></span> The Ruffle player can launch it now.':'<span class="bad"><b>Game baseline not installed yet.</b></span> The repository had no Stick War SWF, so this branch contains the expansion framework/data and does not fake a binary.'}
+async function play(){if(!hasSwf){status.scrollIntoView({behavior:'smooth'});return}shell.style.display='block';const api=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!api)return;player=api.createPlayer();host.replaceChildren(player);await player.ruffle().load({url:SWF,swfFileName:'stick-war-complete-v1.swf',autoplay:'on',menu:true,contextMenu:'on',allowFullscreen:true,scale:'showAll',quality:'high',backgroundColor:'#000000',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',compatibilityRules:true,warnOnUnsupportedContent:false,backgroundExecutionMode:'none'});try{player.focus({preventScroll:true})}catch(_){}}
+document.getElementById('play').onclick=play;document.getElementById('close').onclick=()=>{shell.style.display='none';host.replaceChildren();player=null};
+for(const b of document.querySelectorAll('[data-tab]'))b.onclick=()=>{for(const p of document.querySelectorAll('.panel'))p.classList.remove('active');document.getElementById(b.dataset.tab).classList.add('active');document.getElementById(b.dataset.tab).scrollIntoView({behavior:'smooth'})};
+
+fetch('/tools/stickwar/data/campaign.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{document.getElementById('stageCount').textContent=d.stage_count;let html='',id=1;for(const ch of d.chapters){html+=`<h3>Chapter ${ch.id} — ${ch.name}</h3>`;for(const s of ch.stages){const [title,objective,enemy,threat,mods,reward]=s;html+=`<div class="stage"><div class="badge">${id++}</div><div><b>${title}</b><div class="muted">${objective.replaceAll('_',' ')} · ${enemy} · ${reward}</div></div><div class="threat">${threat}</div></div>`}}document.getElementById('stageList').innerHTML=html}).catch(e=>document.getElementById('stageList').textContent=e);
+
+fetch('/tools/stickwar/data/performance.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{let h='<ul>';for(const x of d.principles)h+=`<li>${x}</li>`;h+='</ul><div class="grid">';for(const [name,v] of Object.entries(d.acceptance)){if(typeof v==='object')h+=`<div class="stat"><b>${v.target_fps} FPS</b><small>${name.replaceAll('_',' ')} · p95 ${v.p95_frame_ms}ms</small></div>`}h+='</div>';document.getElementById('perfList').innerHTML=h}).catch(e=>document.getElementById('perfList').textContent=e);
+
+document.getElementById('encode').onclick=()=>{const obj={v:1,f:document.getElementById('faction').value,e:document.getElementById('enemy').value,g:+document.getElementById('gold').value,m:+document.getElementById('mana').value,p:+document.getElementById('pop').value,r:document.getElementById('preset').value};const raw=JSON.stringify(obj);const b64=btoa(unescape(encodeURIComponent(raw))).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');document.getElementById('code').value='SWC1:'+b64};
+exists();
+})();
+</script></body></html>

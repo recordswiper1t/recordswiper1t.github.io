@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "principles": [
+    "Never reduce combat, movement, targeting, damage, cooldown, projectile, or AI simulation frequency.",
+    "Degrade cosmetics and diagnostics before simulation.",
+    "Use cached snapshots/spatial buckets instead of repeated full-display-list or full-army scans.",
+    "Pool high-churn transient objects and reuse arrays/vectors.",
+    "Batch UI invalidation and redraw on cadence rather than per-frame.",
+    "Apply spawn back-pressure only to sandbox/benchmark mass-spawn commands, never authored campaign waves."
+  ],
+  "profiles": {
+    "quality": {
+      "entity_soft": 90,
+      "entity_heavy": 150,
+      "entity_extreme": 240,
+      "ui_hz": 15,
+      "healthbar_hz": 20,
+      "particles_scale": 1.0,
+      "damage_text_cap": 50,
+      "blood_cap": 80,
+      "offscreen_fx": true
+    },
+    "balanced": {
+      "entity_soft": 70,
+      "entity_heavy": 120,
+      "entity_extreme": 190,
+      "ui_hz": 10,
+      "healthbar_hz": 15,
+      "particles_scale": 0.65,
+      "damage_text_cap": 30,
+      "blood_cap": 45,
+      "offscreen_fx": false
+    },
+    "performance": {
+      "entity_soft": 55,
+      "entity_heavy": 90,
+      "entity_extreme": 150,
+      "ui_hz": 6,
+      "healthbar_hz": 10,
+      "particles_scale": 0.35,
+      "damage_text_cap": 15,
+      "blood_cap": 24,
+      "offscreen_fx": false
+    },
+    "benchmark": {
+      "entity_soft": 120,
+      "entity_heavy": 220,
+      "entity_extreme": 400,
+      "ui_hz": 4,
+      "healthbar_hz": 5,
+      "particles_scale": 0.15,
+      "damage_text_cap": 0,
+      "blood_cap": 0,
+      "offscreen_fx": false
+    }
+  },
+  "low_level_targets": [
+    {
+      "name": "spatial_hash",
+      "priority": "critical",
+      "detail": "Bucket living units by x/y cell once per simulation tick; melee/ranged acquisition queries neighboring cells before exact distance/hit tests."
+    },
+    {
+      "name": "stable_active_vectors",
+      "priority": "critical",
+      "detail": "Maintain active units/projectiles/buildings in typed vectors; no getChildAt battlefield scans inside hot combat loops."
+    },
+    {
+      "name": "allocation_free_targeting",
+      "priority": "critical",
+      "detail": "Reuse candidate vectors and avoid temporary arrays/Points/Rectangles in attack/AI loops."
+    },
+    {
+      "name": "incremental_depth_order",
+      "priority": "high",
+      "detail": "Insert spawned actors at correct depth instead of sorting all battlefield children."
+    },
+    {
+      "name": "projectile_pool",
+      "priority": "high",
+      "detail": "Pool arrows, bolts, particles and impact sprites; reset fields on checkout/return."
+    },
+    {
+      "name": "effect_budget",
+      "priority": "high",
+      "detail": "Cull off-camera cosmetic effects and cap blood, dust, text, sparks and corpse fragments."
+    },
+    {
+      "name": "ui_dirty_flags",
+      "priority": "high",
+      "detail": "Gold/mana/population/selection/tech panels redraw only when dirty and at configured max Hz."
+    },
+    {
+      "name": "healthbar_stagger",
+      "priority": "high",
+      "detail": "Spread healthbar redraw across frames; HP simulation remains immediate."
+    },
+    {
+      "name": "path_cache",
+      "priority": "medium",
+      "detail": "Cache immutable path/node geometry and squared-distance helpers."
+    },
+    {
+      "name": "ai_decision_cadence",
+      "priority": "medium",
+      "detail": "Expensive strategic build/train choice runs at 4-8 Hz; unit tactical simulation remains full-rate."
+    },
+    {
+      "name": "corpse_retirement",
+      "priority": "medium",
+      "detail": "Detach dead bodies/effects after visible lifetime; never leave inactive clips in battlefield containers."
+    },
+    {
+      "name": "benchmark_counters",
+      "priority": "critical",
+      "detail": "Track FPS, frame time p50/p95/max, active units, projectiles, pooled objects, target checks and allocations where observable."
+    }
+  ],
+  "acceptance": {
+    "normal_60_units": {
+      "target_fps": 60,
+      "p95_frame_ms": 20
+    },
+    "large_120_units": {
+      "target_fps": 50,
+      "p95_frame_ms": 28
+    },
+    "extreme_200_units": {
+      "target_fps": 35,
+      "p95_frame_ms": 40
+    },
+    "benchmark_300_units": {
+      "target_fps": 24,
+      "p95_frame_ms": 55
+    },
+    "simulation_rule": "No reduced combat tick rate at any tier."
+  }
+}
