@@ -68,10 +68,6 @@ jobs:
             --kr1-scripts /tmp/u/kr1-src/scripts --krf-scripts /tmp/u/krf-src/scripts \
             --first 1 --last 19 --output /tmp/u/report/stage-api-matrix.json \
             --union-contract /tmp/u/report/union-level-adapter-contract.json
-          python3 tools/ultimate/build_level_adapter.py \
-            --contract /tmp/u/report/union-level-adapter-contract.json \
-            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
-            --output /tmp/u/KR1__Level.as --report /tmp/u/report/level-adapter-build.json
 
       - name: Build fully namespaced KR1 plus Frontiers binary
         run: |
@@ -84,12 +80,25 @@ jobs:
           java -Xmx9g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/u/merged.xml /tmp/u/merged.swf
           test -s /tmp/u/merged.swf
 
-      - name: Export merged binary and rebind KR1 content
+      - name: Export merged binary build semantic bridge and rebind KR1 content
         run: |
           set -euo pipefail
           mkdir -p /tmp/u/merged-export /tmp/u/import/scripts
           java -Xmx7g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 \
             -export script /tmp/u/merged-export /tmp/u/merged.swf >/tmp/u/export-merged.log 2>&1 || true
+          test -f /tmp/u/merged-export/scripts/KR1__Level.as
+          python3 tools/ultimate/build_level_adapter_from_namespaced_source.py \
+            --namespaced-kr1-level /tmp/u/merged-export/scripts/KR1__Level.as \
+            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
+            --contract /tmp/u/report/union-level-adapter-contract.json \
+            --output /tmp/u/KR1__Level.as \
+            --report /tmp/u/report/level-adapter-build.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/u/report/level-adapter-build.json',encoding='utf-8'))
+          assert d['copied_member_count']==37, d
+          assert not d['missing_members'], d
+          PY
           python3 tools/ultimate/rebind_namespaced_scripts.py \
             --scripts /tmp/u/merged-export/scripts --plan /tmp/u/port-plan.json \
             --exclude-rebind KR1__Level --output /tmp/u/rebind --report /tmp/u/report/rebind-report.json
@@ -134,7 +143,7 @@ jobs:
           cp "$S/§_-BQ§.as" '/tmp/u/import/scripts/§_-BQ§.as'
           cp "$S/§class const for§.as" '/tmp/u/import/scripts/§class const for§.as'
 
-      - name: Compile the single composed source-ready candidate
+      - name: Compile the single composed semantic source-ready candidate
         id: compile
         shell: bash
         run: |
@@ -157,6 +166,7 @@ jobs:
           java -Xmx8g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 \
             -export script /tmp/u/verify /tmp/u/ultimate-source-ready.swf >/tmp/u/verify.log 2>&1 || true
           S=/tmp/u/verify/scripts
+          grep -F 'class KR1__Level extends Level' "$S/KR1__Level.as"
           grep -F 'qolTowerClipboard' "$S/Level.as"
           grep -F 'ultimateStageId' "$S/§_-BQ§.as"
           grep -F 'KINGDOM RUSH ULTIMATE' "$S/§class const for§.as"
@@ -168,6 +178,7 @@ jobs:
           import json, pathlib, hashlib, os
           root=pathlib.Path('/tmp/u/verify/scripts')
           classes=json.load(open('/tmp/u/report/composed-class-set.json',encoding='utf-8'))
+          bridge=json.load(open('/tmp/u/report/level-adapter-build.json',encoding='utf-8'))
           missing=[]
           for group,names in classes.items():
               for name in names:
@@ -180,11 +191,13 @@ jobs:
               'stages_compiled': len(classes['stages']),
               'kr1_towers_compiled': len(classes['towers']),
               'kr1_heroes_compiled': len(classes['heroes']),
+              'semantic_level_members_copied': bridge['copied_member_count'],
+              'semantic_level_missing_members': bridge['missing_members'],
               'combined_router_selector_menu_compiled': True,
               'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
               'size': p.stat().st_size,
               'gameplay_ready': False,
-              'remaining_gate': 'semantic Level adapter replacements and runtime gameplay certification',
+              'remaining_gate': 'runtime gameplay certification plus missing later KR1/KRF source or reconstruction',
           }
           pathlib.Path('/tmp/u/report/composed-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
           print(json.dumps(out,indent=2))
@@ -200,7 +213,7 @@ jobs:
           pathlib.Path('/tmp/u/report/composed-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
           PY
 
-      - name: Upload composition reports
+      - name: Upload composition reports and candidate
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -209,6 +222,7 @@ jobs:
             /tmp/u/report
             /tmp/u/import-composed.log
             /tmp/u/verify.log
+            /tmp/u/ultimate-source-ready.swf
           retention-days: 30
 
       - name: Require composed candidate to compile
