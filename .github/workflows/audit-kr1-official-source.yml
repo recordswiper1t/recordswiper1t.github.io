@@ -68,6 +68,8 @@ jobs:
 
           base='assets/kingdom-rush-frontiers-v11.swf'
           if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then base='assets/kingdom-rush-frontiers-v12.swf'; fi
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then base='assets/kingdom-rush-frontiers-v12-1.swf'; fi
+          echo "Auditing Frontiers base: $base"
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
             -onerror ignore -timeout 90 -exportFileTimeout 180 \
             -export script /tmp/krf "$base" \
