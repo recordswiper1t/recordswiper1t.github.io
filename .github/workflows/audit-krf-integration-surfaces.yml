@@ -1,0 +1,92 @@
+name: Audit KRF integration surfaces for Ultimate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-krf-integration-surfaces.yml'
+      - 'tools/ultimate/**'
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - '.github/workflows/audit-krf-integration-surfaces.yml'
+      - 'tools/ultimate/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download FFDec and export enhanced Frontiers scripts
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ffdec /tmp/src /tmp/report/sources
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
+            -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          base='assets/kingdom-rush-frontiers-v12.swf'
+          [ -s "$base" ] || base='assets/kingdom-rush-frontiers-v11.swf'
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/src "$base" >/tmp/report/export.log 2>&1 || true
+          test -d /tmp/src/scripts
+
+      - name: Locate map, tower-upgrade and hero-selection surfaces
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,shutil
+          root=Path('/tmp/src/scripts')
+          groups={
+            'campaign': [r'Level15',r'Level1',r'levelSelect',r'selectLevel',r'gameLevel',r'campaign',r'MapLevel',r'Iron',r'Heroic'],
+            'tower_upgrade': [r'TowerArcherCrossbow',r'TowerArcherTotem',r'TowerMageArchMage',r'TowerMageNecromancer',r'TowerEngineerDwaarp',r'TowerEngineerMecha',r'TowerSoldierAssassin',r'TowerSoldierTemplar',r'upgradeTower'],
+            'hero_select': [r'SoldierHeroAlric',r'SoldierHeroMirage',r'heroRoom',r'HeroRoom',r'selectedHero',r'heroSelected',r'heroId'],
+          }
+          rows={k:[] for k in groups}
+          score={}
+          for p in root.rglob('*.as'):
+            text=p.read_text(encoding='utf-8-sig',errors='replace')
+            rel=str(p.relative_to(root))
+            for group, pats in groups.items():
+              hits=[pat for pat in pats if re.search(pat,text,re.I)]
+              if hits:
+                item={'file':rel,'hits':hits,'chars':len(text)}
+                rows[group].append(item)
+                score[rel]=score.get(rel,0)+len(hits)
+          for group in rows:
+            rows[group].sort(key=lambda x:(-len(x['hits']),x['file']))
+            rows[group]=rows[group][:30]
+          selected=[]
+          for rel,_ in sorted(score.items(), key=lambda kv:(-kv[1],kv[0]))[:18]:
+            src=root/rel
+            if src.stat().st_size > 180000:
+              continue
+            dst=Path('/tmp/report/sources')/rel
+            dst.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(src,dst)
+            selected.append(rel)
+          out={'groups':rows,'copied_source_files':selected}
+          Path('/tmp/report/integration-surfaces.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          print(json.dumps({k:[x['file'] for x in v[:10]] for k,v in rows.items()},indent=2))
+          PY
+
+      - name: Upload targeted integration audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: krf-ultimate-integration-surfaces
+          path: /tmp/report
+          retention-days: 14
