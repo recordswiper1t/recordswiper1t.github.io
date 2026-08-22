@@ -1,2 +1,3 @@
 Trigger expansion architecture analysis.
 Formation-page verifier refresh.
+Combined formation/equipment/reward verifier refresh.
