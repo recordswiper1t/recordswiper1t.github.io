@@ -41,12 +41,18 @@ jobs:
           set -euo pipefail
           python3 -m py_compile tools/ultimate/build_campaign_router.py tools/ultimate/build_campaign_selector.py
           mkdir -p /tmp/u /tmp/ffdec /tmp/u/report
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
             echo 'HAS_V12=1' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
             echo 'HAS_V12=0' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
@@ -103,6 +109,9 @@ jobs:
           grep -F 'qolTowerClipboard' "$level"
           if [ "$HAS_V12" = 1 ]; then
             grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          if [ "$HAS_V121" = 1 ]; then
+            grep -F 'qolPopupsEnabled' "$level"
           fi
           sha256sum /tmp/u/campaign-selector.swf >/tmp/u/report/campaign-selector-SHA256.txt
 
