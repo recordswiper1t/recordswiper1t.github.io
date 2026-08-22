@@ -1,0 +1,84 @@
+name: Promote verified Super Stick War V1 artifact
+
+on:
+  push:
+    branches: [stickwar-complete-v1-foundation]
+    paths:
+      - '.github/workflows/promote-super-stick-war-v1.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: stickwar-complete-v1-foundation
+          fetch-depth: 1
+
+      - name: Download exact verified artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/super-stick-war
+          curl -fL --retry 4 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            'https://api.github.com/repos/recordswiper1t/recordswiper1t.github.io/actions/artifacts/9478809703/zip' \
+            -o /tmp/super-stick-war/artifact.zip
+          unzip -q /tmp/super-stick-war/artifact.zip -d /tmp/super-stick-war/artifact
+          test -s /tmp/super-stick-war/artifact/out/stick-war-complete-v1.swf
+          test -s /tmp/super-stick-war/artifact/RELEASE-SHA256SUMS.txt
+
+      - name: Verify exact release binary
+        shell: bash
+        run: |
+          set -euxo pipefail
+          SWF=/tmp/super-stick-war/artifact/out/stick-war-complete-v1.swf
+          EXPECTED='2bd6dfa128473fdb12aad1fab8f975c3b2e08cb2408985e7ded4b910a35c4d85'
+          test "$(stat -c%s "$SWF")" = '18588647'
+          test "$(sha256sum "$SWF" | cut -d' ' -f1)" = "$EXPECTED"
+          test "$(cut -d' ' -f1 /tmp/super-stick-war/artifact/RELEASE-SHA256SUMS.txt)" = "$EXPECTED"
+          head -c 3 "$SWF" | grep -Eq 'FWS|CWS|ZWS'
+          grep -q 'Using the directory: /tmp/stickwar/import/scripts' /tmp/super-stick-war/artifact/import.log
+
+      - name: Publish verified release and retire one-shot promoter
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp /tmp/super-stick-war/artifact/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
+          sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          cat > assets/STICKWAR-COMPLETE-V1-BUILD.txt <<'TXT'
+          Super Stick War — V1 Complete Expansion
+          Release SWF SHA-256: 2bd6dfa128473fdb12aad1fab8f975c3b2e08cb2408985e7ded4b910a35c4d85
+          Release SWF size: 18588647 bytes
+          Verified workflow run: 32583548174
+          Verified artifact: 9478809703
+          Canonical SW2 baseline SHA-256: 03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5
+          SW1 reference baseline SHA-256: 9bff25416c98506ba01493b7e3fa523890632b4963e4f0ac33f5cbbb023c7c0b
+          Toolchain: FFDec 26.2.1
+
+          Verified release scope:
+          - 65-stage campaign: 12 SW1 remasters + all 14 canonical SW2 stages + 39 postgame stages.
+          - Playable Order and Chaos campaign progression with late-game hybrid slots.
+          - 108 persistent mastery nodes across 18 Order/Chaos unit families.
+          - Direct unit possession, authored objective framework and persistent Time Attack records.
+          - Battle Lab presets plus F2 sandbox and F1 live diagnostics.
+          - Performance patches for health bars, spatial queries, projectile/effect cleanup, selection/statue caching and adaptive cosmetic quality.
+          - Combat simulation, AI, movement, damage and cooldown cadence remain full-rate.
+          - Expansion saves are isolated in stickwarCompleteSaveV1.
+
+          This exact SWF passed FFDec import and a fresh re-decompile/marker verification in workflow run 32583548174 before publication.
+          TXT
+          git rm -- '.github/workflows/promote-super-stick-war-v1.yml'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-BUILD.txt assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          git commit -m 'Publish verified Super Stick War V1 [skip ci]'
+          git push origin HEAD:stickwar-complete-v1-foundation
