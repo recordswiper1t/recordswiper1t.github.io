@@ -59,19 +59,22 @@ $label = if ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V1
 $backend = if ($ForceVulkan) { 'vulkan' } elseif ($ForceGl) { 'gl' } else { 'dx12' }
 if ($ForceDx12) { $backend = 'dx12' }
 
+function Invoke-Ruffle([string]$GraphicsBackend) {
+    $env:WGPU_BACKEND = $GraphicsBackend
+    $ruffleArgs = @('--graphics', $GraphicsBackend, $Swf) + $ForwardArgs
+    $proc = Start-Process -FilePath $Exe -ArgumentList $ruffleArgs -Wait -PassThru -NoNewWindow
+    return [int]$proc.ExitCode
+}
+
 Write-Host "Launching Kingdom Rush Frontiers $label with native Ruffle"
 Write-Host "Game: $Swf"
 Write-Host "Graphics backend: $backend"
-$env:WGPU_BACKEND = $backend
-& $Exe '--graphics' $backend $Swf @ForwardArgs
-$code = $LASTEXITCODE
+$code = Invoke-Ruffle $backend
 
-# The wgpu Vulkan crash seen on Windows is a native renderer panic. Prefer DX12
-# and automatically retry OpenGL when the selected non-Vulkan backend still dies.
+# Prefer DX12 on Windows. Only retry OpenGL if the actual Ruffle process exits
+# with a non-zero code; do not treat a blank PowerShell $LASTEXITCODE as failure.
 if ($code -ne 0 -and -not $ForceVulkan -and $backend -ne 'gl') {
-    Write-Warning "Ruffle exited with code $code using $backend. Retrying with OpenGL to avoid wgpu/Vulkan/DX12 driver failures."
-    $env:WGPU_BACKEND = 'gl'
-    & $Exe '--graphics' 'gl' $Swf @ForwardArgs
-    $code = $LASTEXITCODE
+    Write-Warning "Ruffle exited with code $code using $backend. Retrying with OpenGL."
+    $code = Invoke-Ruffle 'gl'
 }
 exit $code
