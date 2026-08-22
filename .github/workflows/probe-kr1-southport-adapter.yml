@@ -45,10 +45,15 @@ jobs:
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
 
       - name: Export source scripts and build merge policy
@@ -151,22 +156,27 @@ jobs:
           grep -F 'class KR1__Level extends Level' /tmp/u/verify/scripts/KR1__Level.as
           grep -F 'extends KR1__Level' /tmp/u/verify/scripts/KR1__Level1.as
           grep -F 'qolTowerClipboard' /tmp/u/verify/scripts/Level.as
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ "$KRF_BASE" != 'assets/kingdom-rush-frontiers-v11.swf' ]; then
             grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
           fi
+          if [ "$HAS_V121" = '1' ]; then
+            grep -F 'qolPopupsEnabled' /tmp/u/verify/scripts/Level.as
+          fi
           python3 - <<'PY'
-          import json
+          import json, os
           from pathlib import Path
           api=json.load(open('/tmp/u/report/southport-level-api.json',encoding='utf-8'))
           build=json.load(open('/tmp/u/report/level-adapter-build.json',encoding='utf-8'))
           result={
               'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
               'missing_frontiers_level_members_bridged': len(api['stage_refs_missing_on_krf']),
               'generated_bridge_members': build['generated_member_count'],
               'frontiers_constructor_forwarding': build.get('frontiers_constructor',{}),
               'southport_extends_kr1_level_adapter': True,
               'kr1_level_adapter_extends_frontiers_level': True,
               'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': os.environ.get('HAS_V121') == '1',
               'semantic_status': 'compile bridge only; generated stubs still require explicit behavior adapters',
           }
           Path('/tmp/u/report/southport-adapter-result.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
