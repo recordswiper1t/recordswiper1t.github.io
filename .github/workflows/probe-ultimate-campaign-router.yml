@@ -1,0 +1,111 @@
+name: Probe Ultimate stable campaign router
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/build_campaign_router.py'
+      - 'tools/ultimate/campaign_registry.py'
+      - '.github/workflows/probe-ultimate-campaign-router.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/build_campaign_router.py'
+      - 'tools/ultimate/campaign_registry.py'
+      - '.github/workflows/probe-ultimate-campaign-router.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  campaign-router:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Select enhanced runtime and validate route manifests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/ultimate/build_campaign_router.py
+          python3 -m py_compile tools/ultimate/campaign_registry.py
+          python3 tools/ultimate/campaign_registry.py --json >/tmp/routes.json
+          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=1' >> "$GITHUB_ENV"
+          else
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V12=0' >> "$GITHUB_ENV"
+          fi
+          mkdir -p /tmp/u /tmp/ffdec
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export and patch game controller plus Level
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/export /tmp/u/import/scripts /tmp/u/report
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/export "$KRF_BASE" >/tmp/u/export.log 2>&1 || true
+          test -f '/tmp/u/export/scripts/§_-BQ§.as'
+          test -f /tmp/u/export/scripts/Level.as
+          python3 tools/ultimate/build_campaign_router.py /tmp/u/export/scripts \
+            --report /tmp/u/report/campaign-router-patch.json
+          cp '/tmp/u/export/scripts/§_-BQ§.as' '/tmp/u/import/scripts/§_-BQ§.as'
+          cp /tmp/u/export/scripts/Level.as /tmp/u/import/scripts/Level.as
+
+      - name: Compile patched controller into enhanced runtime
+        run: |
+          set -euo pipefail
+          java -Xmx7g -jar /tmp/ffdec/ffdec.jar -onerror abort \
+            -importScript "$KRF_BASE" /tmp/u/campaign-router.swf /tmp/u/import \
+            >/tmp/u/import.log 2>&1
+          test -s /tmp/u/campaign-router.swf
+          head -c 3 /tmp/u/campaign-router.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Re-export and verify stable routing invariants
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/verify
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/verify /tmp/u/campaign-router.swf >/tmp/u/verify.log 2>&1 || true
+          game='/tmp/u/verify/scripts/§_-BQ§.as'
+          level=/tmp/u/verify/scripts/Level.as
+          test -f "$game" && test -f "$level"
+          grep -F 'public var ultimateStageId:String' "$game"
+          grep -F 'public var ultimateStageGame:String' "$game"
+          grep -F 'public var ultimateSourceLevel:int' "$game"
+          grep -F 'function ultimateStartStage' "$game"
+          grep -F 'getDefinitionByName(param1)' "$game"
+          grep -F 'krf-hammerhold' "$game"
+          grep -F 'krf-emberspike-depths' "$game"
+          grep -F 'ultimateStageGame != "kr1"' "$level"
+          grep -F 'this.game.ultimateStageId' "$level"
+          grep -F 'qolTowerClipboard' "$level"
+          if [ "$HAS_V12" = 1 ]; then
+            grep -F 'qolV12PostBossActive' "$level"
+            grep -F ':postboss' "$level"
+            grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          sha256sum /tmp/u/campaign-router.swf >/tmp/u/report/campaign-router-SHA256.txt
+
+      - name: Upload structural verification only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-stable-campaign-router-probe
+          path: |
+            /tmp/u/report/campaign-router-patch.json
+            /tmp/u/report/campaign-router-SHA256.txt
+            /tmp/u/import.log
+            /tmp/u/verify.log
+          retention-days: 30
