@@ -38,19 +38,24 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           python3 tools/epicwar5/expansion/build_expansion_storage_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_formation_army_pages_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_equipment_slots_v3.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_battle_rewards_v3.py /tmp/ew5/export
       - name: Rebuild prototype
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
           test -s /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
-      - name: Re-decompile and verify expansion APIs and formation paging
+      - name: Re-decompile and verify expansion foundation
         shell: bash
         run: |
           set -euxo pipefail
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/verify /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf > /tmp/ew5/verify.log 2>&1 || true
           d=/tmp/ew5/verify/scripts/Game/Manager/DataManager.as
           f=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormation.as
+          a=/tmp/ew5/verify/scripts/Game/Interface/WorldMapFormationAcc.as
+          c=/tmp/ew5/verify/scripts/Game/System/StatDef/CharTotalStat.as
+          r=/tmp/ew5/verify/scripts/Game/Interface/BattleResult.as
           grep -F 'unit_equip12_id' "$d"
           grep -F 'stage_expansion_stat' "$d"
           grep -F 'case "item2"' "$d"
@@ -64,10 +69,19 @@ jobs:
           grep -F 'expansionInstallArmyPageButton' "$f"
           grep -F 'expansionGetUnitEquip(armyStart + 6)' "$f"
           grep -F 'no unlocked army slot available' "$f"
+          grep -F 'equipSlotPage:int = 1' "$a"
+          grep -F 'Equipment slot ' "$a"
+          grep -F 'return "item2"' "$a"
+          grep -F 'return "item3"' "$a"
+          grep -F 'unit_item2_ability_id' "$c"
+          grep -F 'unit_item3_ability_id' "$c"
+          grep -F 'itemAbility2.health' "$c"
+          grep -F 'itemAbility3.attack' "$c"
+          grep -F 'expansionGetUnitEquip(expansionSlot)' "$r"
       - name: Upload prototype verification artifact
         uses: actions/upload-artifact@v4
         with:
-          name: epicwar5-expansion-v3-formation-prototype
+          name: epicwar5-expansion-v3-foundation-prototype
           retention-days: 7
           path: |
             /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
