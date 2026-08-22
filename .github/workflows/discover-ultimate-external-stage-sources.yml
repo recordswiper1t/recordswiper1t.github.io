@@ -1,0 +1,84 @@
+name: Discover external KR/KRF stage source references
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - '.github/workflows/discover-ultimate-external-stage-sources.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch publisher KR1 and export both script trees
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u /tmp/ffdec /tmp/u/kr1 /tmp/u/krf /tmp/u/report
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then KRF=assets/kingdom-rush-frontiers-v12-1.swf; elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then KRF=assets/kingdom-rush-frontiers-v12.swf; else KRF=assets/kingdom-rush-frontiers-v11.swf; fi
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/u/kr1 /tmp/u/kr1.swf >/tmp/u/kr1.log 2>&1 || true
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/u/krf "$KRF" >/tmp/u/krf.log 2>&1 || true
+
+      - name: Extract loader and missing-stage references without source bodies
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          roots={'kr1':Path('/tmp/u/kr1/scripts'),'krf':Path('/tmp/u/krf/scripts')}
+          names=[
+            'fungal forest','pit of fire','pandaemonium','rotwick','ancient necropolis','nightfang','blackburn','rage valley',
+            'port tortuga','storm atoll','sunken citadel','bonesburg','desecrated grove','dusk chateau','darklight depths','nasde','nas\'de','temple of evil'
+          ]
+          str_re=re.compile(r'(["\'])(.*?)(?<!\\)\1')
+          out={}
+          for game,root in roots.items():
+            rows=[]
+            for p in root.rglob('*.as'):
+              text=p.read_text(encoding='utf-8-sig',errors='replace')
+              hits=[]
+              for _,s in str_re.findall(text):
+                low=s.lower()
+                interesting=(
+                  'http://' in low or 'https://' in low or '.swf' in low or
+                  any(n in low for n in names) or
+                  ('level' in low and any(x in low for x in ('load','asset','premium','campaign')))
+                )
+                if interesting and len(s) <= 500:
+                  hits.append(s)
+              if hits:
+                rows.append({'file':str(p.relative_to(root)),'strings':sorted(set(hits))})
+            out[game]=rows
+          Path('/tmp/u/report/external-stage-references.json').write_text(json.dumps(out,indent=2,ensure_ascii=False),encoding='utf-8')
+          for game,rows in out.items():
+            print('\n==',game,'==')
+            for row in rows:
+              print(row['file'])
+              for s in row['strings']:
+                print(' ',s)
+          PY
+
+      - name: Upload reference-only discovery report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-external-stage-source-references
+          path: /tmp/u/report/external-stage-references.json
+          retention-days: 30
