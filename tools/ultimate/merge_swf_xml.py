@@ -3,14 +3,20 @@
 
 Designed for FFDec `-swf2xml` output. The base timeline/document class remains
 untouched. Source definition tags, ABC and linkage metadata are imported with a
-character-ID offset and ActionScript/linkage namespace prefix.
+collision-free character-ID remap and ActionScript/linkage namespace prefix.
+
+SWF character IDs are UI16 but are not guaranteed to be dense. A simple
+`base_max + offset` strategy is therefore wrong: real files contain sparse IDs,
+65535 sentinels and linkage/reference fields whose numeric maxima do not describe
+available character namespace. This merger instead reserves every character-like
+ID used by the base and maps every source ID into unused UI16 slots.
 
 This is a structural merge primitive, not the final campaign integration layer.
 """
 from __future__ import annotations
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import json
 import mmap
 from pathlib import Path
@@ -19,20 +25,30 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 
-# FFDec uses several different names for SWF character-definition/reference
-# fields. `tagId` is deliberately NOT here: UnknownTag.tagId is the SWF tag code
-# (for example 255), not a character ID.
+# FFDec uses several names for SWF character-definition/reference fields.
 CHARACTER_ID_ATTRS = {
-    "characterId", "characterID", "spriteId", "shapeId", "bitmapId",
-    "fontId", "fontID", "textID", "soundId", "buttonId", "videoId",
+    "characterId", "characterID", "characterid",
+    "spriteId", "spriteID",
+    "shapeId", "shapeID",
+    "bitmapId", "bitmapID",
+    "fontId", "fontID",
+    "textId", "textID",
+    "soundId", "soundID",
+    "buttonId", "buttonID",
+    "videoId", "videoID",
+    "morphShapeId", "morphShapeID",
+    "binaryDataId", "binaryDataID",
 }
 
-# SWF bitmap fill styles use UI16 65535 as a sentinel meaning no bitmap. It is
-# not a real character ID and must survive remapping unchanged. The first merge
-# proof exposed this because a naive max scan falsely reported both SWFs as
-# already consuming character ID 65535.
+# `tagId` is context-sensitive in FFDec XML. UnknownTag.tagId is the SWF tag
+# code, not a character ID. In known tags/linkage entries (notably SymbolClass
+# and ExportAssets children) it is a character reference and must be remapped.
+CONTEXTUAL_CHARACTER_ID_ATTR = "tagId"
+
+# Bitmap fill styles use UI16 65535 as a sentinel meaning "no bitmap".
 CHARACTER_ID_SENTINELS = {
     "bitmapId": {65535},
+    "bitmapID": {65535},
 }
 
 EXACT_IMPORT_TYPES = {
@@ -41,6 +57,9 @@ EXACT_IMPORT_TYPES = {
 }
 IMPORT_PREFIXES = ("Define",)
 MAX_SWF_CHARACTER_ID = 65535
+# Avoid allocating 65535 even though it can be a numeric UI16 value because
+# several SWF structures reserve it as a sentinel.
+MAX_ALLOCATED_CHARACTER_ID = 65534
 
 
 def local(tag: str) -> str:
@@ -57,6 +76,17 @@ def should_import(tag_type: str) -> bool:
 
 def is_character_sentinel(key: str, number: int) -> bool:
     return number in CHARACTER_ID_SENTINELS.get(key, set())
+
+
+def is_character_id_field(elem: ET.Element, key: str) -> bool:
+    if key in CHARACTER_ID_ATTRS:
+        return True
+    if key != CONTEXTUAL_CHARACTER_ID_ATTR:
+        return False
+    # UnknownTag.tagId is the numeric SWF tag code. Do not reinterpret it.
+    if elem.attrib.get("type") == "UnknownTag":
+        return False
+    return True
 
 
 def iter_top_level_tag_elements(path: Path):
@@ -83,15 +113,27 @@ def iter_top_level_tag_elements(path: Path):
             stack.pop()
 
 
-def character_id_extents(path: Path) -> dict:
-    maximum = 0
-    max_attr = None
-    max_element = None
-    by_attr: dict[str, int] = {}
+def character_id_inventory(path: Path) -> dict:
+    """Collect all character-like IDs/references without assuming density.
+
+    Over-reserving a harmless reference is safe; failing to reserve a real base
+    reference is not. The inventory therefore scans all known character fields
+    plus contextual tagId values, excluding documented sentinels/tag codes.
+    """
+    ids: set[int] = set()
+    by_attr: dict[str, set[int]] = defaultdict(set)
     sentinel_counts: Counter = Counter()
+    unknown_tag_codes: Counter = Counter()
+
     for _event, elem in ET.iterparse(path, events=("start",)):
         for key, value in elem.attrib.items():
-            if key not in CHARACTER_ID_ATTRS:
+            if key == CONTEXTUAL_CHARACTER_ID_ATTR and elem.attrib.get("type") == "UnknownTag":
+                try:
+                    unknown_tag_codes[int(value)] += 1
+                except ValueError:
+                    pass
+                continue
+            if not is_character_id_field(elem, key):
                 continue
             try:
                 number = int(value)
@@ -102,23 +144,43 @@ def character_id_extents(path: Path) -> dict:
                 continue
             if number <= 0:
                 continue
-            if number > by_attr.get(key, 0):
-                by_attr[key] = number
-            if number > maximum:
-                maximum = number
-                max_attr = key
-                max_element = local(elem.tag)
+            if number > MAX_SWF_CHARACTER_ID:
+                # A value larger than UI16 cannot be a valid SWF character ID.
+                continue
+            ids.add(number)
+            by_attr[key].add(number)
+
     return {
-        "max": maximum,
-        "max_attribute": max_attr,
-        "max_element": max_element,
-        "max_by_attribute": dict(sorted(by_attr.items())),
+        "ids": ids,
+        "count": len(ids),
+        "min": min(ids) if ids else None,
+        "max": max(ids) if ids else None,
+        "unique_by_attribute": {k: len(v) for k, v in sorted(by_attr.items())},
+        "max_by_attribute": {k: max(v) for k, v in sorted(by_attr.items()) if v},
         "sentinels_ignored": dict(sentinel_counts),
+        "unknown_tag_codes_ignored": dict(unknown_tag_codes),
     }
 
 
-def max_character_id(path: Path) -> int:
-    return int(character_id_extents(path)["max"])
+def inventory_report(inv: dict) -> dict:
+    return {k: v for k, v in inv.items() if k != "ids"}
+
+
+def allocate_character_id_map(base_ids: set[int], source_ids: set[int]) -> dict[int, int]:
+    """Map every source ID to an unused base slot, compactly and deterministically."""
+    reserved = {x for x in base_ids if 0 < x <= MAX_ALLOCATED_CHARACTER_ID}
+    available = (x for x in range(1, MAX_ALLOCATED_CHARACTER_ID + 1) if x not in reserved)
+    mapping: dict[int, int] = {}
+    try:
+        for old in sorted(source_ids):
+            mapping[old] = next(available)
+    except StopIteration:
+        free = MAX_ALLOCATED_CHARACTER_ID - len(reserved)
+        raise SystemExit(
+            f"character-ID namespaces do not fit UI16: base reserves {len(reserved)} IDs, "
+            f"source uses {len(source_ids)} IDs, only {free} safe slots remain"
+        )
+    return mapping
 
 
 def load_class_map(path: Path) -> dict[str, str]:
@@ -140,8 +202,6 @@ class ClassRenamer:
     def replace(self, value: str) -> tuple[str, int]:
         if value in self.mapping:
             return self.mapping[value], 1
-        # Binary/base64 payloads are opaque and cannot contain meaningful XML
-        # class tokens. Avoid regex-scanning megabyte-sized image/audio attrs.
         if len(value) > 8192:
             return value, 0
         count = 0
@@ -154,20 +214,20 @@ class ClassRenamer:
         return self.pattern.sub(sub, value), count
 
 
-def transform_tree(elem: ET.Element, offset: int, renamer: ClassRenamer, stats: Counter) -> None:
+def transform_tree(elem: ET.Element, id_map: dict[int, int], renamer: ClassRenamer, stats: Counter) -> None:
     for node in elem.iter():
         for key, value in list(node.attrib.items()):
-            if key in CHARACTER_ID_ATTRS:
+            if is_character_id_field(node, key):
                 try:
                     number = int(value)
                 except ValueError:
                     number = 0
-                if number > 0 and not is_character_sentinel(key, number):
-                    node.attrib[key] = str(number + offset)
-                    stats["id_references_shifted"] += 1
-                    continue
                 if is_character_sentinel(key, number):
                     stats["id_sentinels_preserved"] += 1
+                elif number > 0 and number in id_map:
+                    node.attrib[key] = str(id_map[number])
+                    stats["id_values_remapped"] += 1
+                    continue
             new_value, count = renamer.replace(value)
             if count:
                 node.attrib[key] = new_value
@@ -247,6 +307,8 @@ def main() -> None:
     parser.add_argument("--class-map", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--report", required=True)
+    # Retained for CLI compatibility with early probes. Compact mapping no longer
+    # needs or uses a numeric gap.
     parser.add_argument("--gap", type=int, default=64)
     args = parser.parse_args()
 
@@ -257,18 +319,10 @@ def main() -> None:
     class_map = load_class_map(Path(args.class_map))
     renamer = ClassRenamer(class_map)
 
-    base_extents = character_id_extents(base)
-    source_extents = character_id_extents(source)
-    base_max = int(base_extents["max"])
-    source_max = int(source_extents["max"])
-    offset = base_max + max(1, args.gap)
-    imported_max = offset + source_max
-    if imported_max > MAX_SWF_CHARACTER_ID:
-        raise SystemExit(
-            f"character-ID namespaces do not fit UI16: base max {base_max} "
-            f"({base_extents['max_attribute']}), source max {source_max} "
-            f"({source_extents['max_attribute']}), offset {offset}, imported max {imported_max}"
-        )
+    base_inv = character_id_inventory(base)
+    source_inv = character_id_inventory(source)
+    id_map = allocate_character_id_map(base_inv["ids"], source_inv["ids"])
+    allocated_values = sorted(id_map.values())
 
     stats: Counter = Counter()
     imported_types: Counter = Counter()
@@ -282,7 +336,7 @@ def main() -> None:
                 continue
             if tag_type == "SymbolClassTag":
                 drop_source_document_class(elem, stats)
-            transform_tree(elem, offset, renamer, stats)
+            transform_tree(elem, id_map, renamer, stats)
             tf.write(serialize_fragment(elem))
             tf.write(b"\n")
             stats["top_level_tags_imported"] += 1
@@ -292,13 +346,26 @@ def main() -> None:
     copy_with_insert(base, output, fragment_path)
     fragment_path.unlink(missing_ok=True)
 
+    overlap = set(id_map.values()) & base_inv["ids"]
+    if overlap:
+        raise SystemExit(f"internal error: allocated character IDs collide with base: {sorted(overlap)[:20]}")
+
     report = {
-        "base_character_id_extents": base_extents,
-        "source_character_id_extents": source_extents,
-        "base_max_character_id": base_max,
-        "source_max_character_id": source_max,
-        "character_id_offset": offset,
-        "imported_character_id_range": [offset + 1, imported_max],
+        "base_character_id_inventory": inventory_report(base_inv),
+        "source_character_id_inventory": inventory_report(source_inv),
+        # Compatibility summary fields retained for older report readers.
+        "base_max_character_id": base_inv["max"],
+        "source_max_character_id": source_inv["max"],
+        "character_id_offset": None,
+        "character_id_mapping_count": len(id_map),
+        "imported_character_id_range": [
+            allocated_values[0] if allocated_values else None,
+            allocated_values[-1] if allocated_values else None,
+        ],
+        "character_id_mapping_sample": [
+            {"source": old, "target": id_map[old]}
+            for old in sorted(id_map)[:100]
+        ],
         "source_class_count": len(class_map),
         "stats": dict(stats),
         "imported_tag_types": dict(imported_types.most_common()),
@@ -308,12 +375,22 @@ def main() -> None:
             "inserted_before_base_end_tag": True,
             "top_level_source_timeline_control_imported": False,
             "nested_define_sprite_timeline_control_retained": True,
+            "compact_collision_free_character_id_mapping": True,
             "bitmap_id_65535_sentinel_preserved": True,
             "unknown_tag_code_not_treated_as_character_id": True,
+            "known_tag_and_linkage_tagId_references_remapped": True,
+            "never_allocates_character_id_65535": True,
         },
     }
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
-    print(json.dumps(report, indent=2))
+    print(json.dumps({
+        "base_reserved_ids": base_inv["count"],
+        "source_ids_remapped": source_inv["count"],
+        "allocated_range": report["imported_character_id_range"],
+        "top_level_tags_imported": stats["top_level_tags_imported"],
+        "id_values_remapped": stats["id_values_remapped"],
+        "class_tokens_renamed": stats["class_tokens_renamed"],
+    }, indent=2))
 
 
 if __name__ == "__main__":
