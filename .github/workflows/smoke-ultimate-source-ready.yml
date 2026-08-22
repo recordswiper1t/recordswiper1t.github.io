@@ -1,6 +1,10 @@
 name: Smoke boot verified Ultimate source-ready candidate
 
 on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - '.github/workflows/smoke-ultimate-source-ready.yml'
   pull_request:
     branches: [main]
     paths:
