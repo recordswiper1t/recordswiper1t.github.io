@@ -61,7 +61,9 @@ jobs:
           python3 tools/epicwar5/expansion/patch_campaign_newline_compat_v3.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_compat_v31.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_v31.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_compat_v32.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_polish_v32.py /tmp/ew5/export
+          python3 tools/epicwar5/expansion/patch_polish_cleanup_v32.py /tmp/ew5/export
           python3 tools/epicwar5/expansion/patch_advanced_identity_v32.py /tmp/ew5/export
       - name: Rebuild V3.2 SWF
         shell: bash
@@ -102,6 +104,7 @@ jobs:
           grep -F 'return [15,25,71,36,72,73,38,74,77]' "$c"
           grep -F 'return [20,25,35,36,38,39,40,41,43]' "$c"
           if grep -Fq 'expansionPolishTree' "$c"; then echo 'generic tree helper unexpectedly survived' >&2; exit 1; fi
+          if grep -Fq '__v32_sentinel' "$ca"; then echo 'compatibility sentinel unexpectedly survived' >&2; exit 1; fi
           grep -F 'Health +35%, defense +12%' "$ca"
           grep -F 'All resistance, health +10%, damage -15%' "$ca"
           grep -F 'Damage +25%, health +25%, defense +15%, regen +75' "$ca"
