@@ -111,7 +111,7 @@ def main() -> int:
         temp = Path(temp_ctx.name)
 
     merged_export = export_scripts(ffdec, merged, temp / "merged-export")
-    merged_level1 = locate(merged_export, "KR1__Level1.as")
+    locate(merged_export, "KR1__Level1.as")
     locate(merged_export, "KR1__Level.as")
     locate(merged_export, "Level.as")
 
@@ -138,6 +138,7 @@ def main() -> int:
     adapter_code = run([
         sys.executable, str(HERE / "build_level_adapter.py"),
         "--contract", str(api_contract),
+        "--frontiers-level", str(krf_level),
         "--output", str(adapter),
         "--report", str(adapter_report),
     ], allow_fail=True)
@@ -208,6 +209,7 @@ def main() -> int:
         "candidate_sha256": sha256(candidate),
         "candidate_size": candidate.stat().st_size,
         "checks": checks,
+        "frontiers_constructor_forwarding": adapter_data.get("frontiers_constructor", {}),
         "missing_frontiers_level_members_bridged": len(api.get("stage_refs_missing_on_krf", [])),
         "generated_compile_stub_count": adapter_data.get("generated_member_count", 0),
         "semantic_adapter_todos": [x.get("name") for x in adapter_data.get("generated_members", [])],
