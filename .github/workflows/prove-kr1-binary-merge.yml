@@ -2,7 +2,7 @@ name: Prove KR1 into Frontiers binary merge
 
 on:
   push:
-    branches: [agent/v13-kingdom-rush-ultimate]
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
     paths:
       - 'tools/ultimate/merge_swf_xml.py'
       - 'tools/ultimate/extract_class_names.py'
@@ -46,7 +46,10 @@ jobs:
             -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
           head -c 3 /tmp/ultimate/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V12.1 audio/pop-up polish' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
             echo 'KRF_BASE_LABEL=V12 Last Rift' >> "$GITHUB_ENV"
           else
@@ -113,8 +116,11 @@ jobs:
           test -f "$root/Level15.as"
           test -f "$root/TowerArcherCrossbow.as"
           grep -R -F -q 'qolTowerClipboard' "$root/Level.as"
-          if [ "$KRF_BASE_LABEL" = 'V12 Last Rift' ]; then
+          if [ "$KRF_BASE_LABEL" != 'V11 sandbox' ]; then
             grep -R -F -q 'THE LAST RIFT' "$root/Level15.as"
+          fi
+          if [ "$KRF_BASE_LABEL" = 'V12.1 audio/pop-up polish' ]; then
+            grep -R -F -q 'qolPopupsEnabled' "$root/Level.as"
           fi
           test -f "$root/KR1__Level1.as"
           test -f "$root/KR1__Level13.as"
@@ -127,12 +133,14 @@ jobs:
           p=Path('/tmp/ultimate/merged.swf')
           h=hashlib.sha256(p.read_bytes()).hexdigest()
           roots=Path('/tmp/merged-scripts/scripts')
+          label=os.environ.get('KRF_BASE_LABEL')
           report={
               'frontiers_base': os.environ.get('KRF_BASE'),
-              'frontiers_base_label': os.environ.get('KRF_BASE_LABEL'),
+              'frontiers_base_label': label,
               'merged_swf_size': p.stat().st_size,
               'merged_swf_sha256': h,
               'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': label == 'V12.1 audio/pop-up polish',
               'verified_classes': [
                   'Level1','Level15','TowerArcherCrossbow',
                   'KR1__Level1','KR1__Level13','KR1__Level19',
