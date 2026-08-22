@@ -1,0 +1,98 @@
+name: Analyze Stick War Official Baselines
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - stickwar-complete-v1-foundation
+    paths:
+      - '.github/workflows/analyze-stickwar-baselines.yml'
+      - 'tools/stickwar/**'
+  pull_request:
+    paths:
+      - '.github/workflows/analyze-stickwar-baselines.yml'
+      - 'tools/stickwar/**'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            tools/stickwar
+            .github/workflows/analyze-stickwar-baselines.yml
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Fetch official Stick War 1/2 SWFs and FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stickwar/sw1 /tmp/stickwar/sw2 /tmp/ffdec
+          curl -fL --retry 4 --connect-timeout 20 'https://cache.armorgames.com/files/games/stick-war-4405.swf' -o /tmp/stickwar/sw1/original.swf
+          curl -fL --retry 4 --connect-timeout 20 'https://cache.armorgames.com/files/games/stick-war-2-14346.swf' -o /tmp/stickwar/sw2/original.swf
+          test "$(stat -c%s /tmp/stickwar/sw1/original.swf)" = '7003484'
+          test "$(stat -c%s /tmp/stickwar/sw2/original.swf)" = '18886237'
+          python - <<'PY'
+          from pathlib import Path
+          for p in [Path('/tmp/stickwar/sw1/original.swf'),Path('/tmp/stickwar/sw2/original.swf')]:
+              magic=p.read_bytes()[:3]
+              assert magic in (b'FWS',b'CWS',b'ZWS'), (p,magic)
+          PY
+          sha256sum /tmp/stickwar/sw1/original.swf /tmp/stickwar/sw2/original.swf | tee /tmp/stickwar/SHA256SUMS.txt
+          {
+            echo 'Stick War baseline sources'
+            echo 'SW1: https://cache.armorgames.com/files/games/stick-war-4405.swf'
+            echo 'SW2: https://cache.armorgames.com/files/games/stick-war-2-14346.swf'
+            echo 'Historical publisher mirrors also expose official Download SWF links on MaxGames.'
+            echo "SW1 bytes: $(stat -c%s /tmp/stickwar/sw1/original.swf)"
+            echo "SW2 bytes: $(stat -c%s /tmp/stickwar/sw2/original.swf)"
+          } > /tmp/stickwar/BASELINES.txt
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export both ActionScript trees
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/stickwar/sw1/export /tmp/stickwar/sw2/export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 -export script /tmp/stickwar/sw1/export /tmp/stickwar/sw1/original.swf > /tmp/stickwar/sw1/export.log 2>&1 || true
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 180 -exportFileTimeout 300 -export script /tmp/stickwar/sw2/export /tmp/stickwar/sw2/original.swf > /tmp/stickwar/sw2/export.log 2>&1 || true
+          test -d /tmp/stickwar/sw1/export/scripts
+          test -d /tmp/stickwar/sw2/export/scripts
+      - name: Build engine maps and hot-path inventory
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python tools/stickwar/analyze_baseline.py --baseline /tmp/stickwar/sw2/original.swf --exported /tmp/stickwar/sw2/export/scripts --out /tmp/stickwar/sw2-analysis.json
+          {
+            echo '=== SW1 classes ==='
+            find /tmp/stickwar/sw1/export/scripts -type f -name '*.as' | sed 's#^.*/scripts/##' | sort
+            echo '=== SW2 classes ==='
+            find /tmp/stickwar/sw2/export/scripts -type f -name '*.as' | sed 's#^.*/scripts/##' | sort
+          } > /tmp/stickwar/class-list.txt
+          grep -RniE 'unit|army|miner|sword|archidon|spearton|magikill|giant|shadow|meric|albow|crawler|bomber|jugger|eclips|marrow|medusa|projectile|bullet|target|collision|hitTest|SharedObject|campaign|level|statue|population|mana|gold|path|update|enterFrame' /tmp/stickwar/sw2/export/scripts | head -n 12000 > /tmp/stickwar/sw2-hotpaths.txt || true
+          grep -RniE 'miner|archidon|sword|spearton|magikill|giant|possess|control|upgrade|statue|campaign|level|gold|target|collision|hitTest|update|enterFrame' /tmp/stickwar/sw1/export/scripts | head -n 8000 > /tmp/stickwar/sw1-map.txt || true
+      - name: Upload decompiled source analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stickwar-baseline-analysis
+          retention-days: 14
+          path: |
+            /tmp/stickwar/BASELINES.txt
+            /tmp/stickwar/SHA256SUMS.txt
+            /tmp/stickwar/class-list.txt
+            /tmp/stickwar/sw1-map.txt
+            /tmp/stickwar/sw2-hotpaths.txt
+            /tmp/stickwar/sw2-analysis.json
+            /tmp/stickwar/sw1/export/scripts
+            /tmp/stickwar/sw2/export/scripts
+            /tmp/stickwar/sw1/export.log
+            /tmp/stickwar/sw2/export.log

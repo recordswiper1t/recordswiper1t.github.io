@@ -1,0 +1,16 @@
+{
+  "baseline_sha256": null,
+  "roles": {
+    "battle_loop": null,
+    "unit_base": null,
+    "projectile_base": null,
+    "selection": null,
+    "production": null,
+    "technology": null,
+    "save": null,
+    "campaign": null,
+    "ai": null,
+    "hud": null
+  },
+  "notes": "Generated/updated by analyze_baseline.py after a canonical SW2 baseline is added."
+}
