@@ -75,7 +75,8 @@ new_top='''         this.unitEquipParsing(this.hero,this.mGF.datMgr.hero_select_
 '''
 one(old_top,new_top,'paged equipped slots')
 
-# Locked army sockets stay visible but dim and noninteractive.
+# Locked army sockets stay visible but dim and noninteractive. The existing
+# learn reset later in unitEquipParsing remains intact.
 one('''         CLIP.item.visible = false;
          if(ID > 0)
 ''','''         CLIP.item.visible = false;
@@ -88,10 +89,6 @@ one('''         CLIP.item.visible = false;
          }
          if(ID > 0)
 ''','locked equipped slots')
-one('''         CLIP.learn.visible = false;
-         if(this.testSurplusExp(ID))
-''','''         if(this.testSurplusExp(ID))
-''','dedupe learn visibility')
 
 helpers='''      private function expansionInstallArmyPageButton() : void
       {
