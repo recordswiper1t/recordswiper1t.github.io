@@ -1,0 +1,36 @@
+name: Export V12 design sources
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/export-v12-design-sources.yml']
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec
+        run: |
+          set -euo pipefail
+          curl -fL 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Build temporary verified V11 base and export all sources
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v11src /tmp/import /tmp/v11out /tmp/v12src
+          mkdir -p /tmp/v11src /tmp/import/scripts /tmp/v11out /tmp/v12src
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v11src assets/kingdom-rush-frontiers-v10.swf >/tmp/export-v10.log 2>&1 || true
+          python3 tools/v11/blueprints.py /tmp/v11src/scripts
+          python3 tools/v11/level_core.py /tmp/v11src/scripts
+          python3 tools/v11/ui_perf.py /tmp/v11src/scripts
+          for f in 'Level.as' 'TowerArcherCrossbow.as' 'TowerArcherTotem.as' 'TowerMageArchmage.as' 'TowerMageNecromancer.as' 'TowerEngineerDwaarp.as' 'TowerEngineerMech.as' 'TowerSoldierAssassin.as' 'TowerSoldierTemplar.as' 'TowerDwarfRiflemen.as' '§_-Zs§.as'; do cp "/tmp/v11src/scripts/$f" "/tmp/import/scripts/$f"; done
+          [ -d /tmp/v11src/_assets ] && cp -a /tmp/v11src/_assets /tmp/import/_assets || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v10.swf /tmp/v11out/v11.swf /tmp/import >/tmp/import-v11.log 2>&1
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v12src /tmp/v11out/v11.swf >/tmp/export-v11.log 2>&1 || true
+          test -f /tmp/v12src/scripts/Level15.as
+          test -f /tmp/v12src/scripts/MainMenu.as
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v12-design-sources
+          path: /tmp/v12src/scripts
