@@ -1,4 +1,4 @@
-name: Probe Ultimate KR1 tower menu on V12
+name: Probe Ultimate KR1 tower menu on V12.1
 
 on:
   push:
@@ -35,10 +35,15 @@ jobs:
           set -euo pipefail
           python3 -m py_compile tools/ultimate/build_ultimate_tower_menu.py
           mkdir -p /tmp/u /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           else
             echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
           fi
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
@@ -57,7 +62,7 @@ jobs:
           cp /tmp/u/export/scripts/Level.as /tmp/u/import/scripts/Level.as
           cp /tmp/u/export/scripts/TowerHolder.as /tmp/u/import/scripts/TowerHolder.as
 
-      - name: Import patched V12 classes
+      - name: Import patched current-release classes
         run: |
           set -euo pipefail
           java -Xmx7g -jar /tmp/ffdec/ffdec.jar -onerror abort \
@@ -91,8 +96,11 @@ jobs:
             grep -F "$action" "$holder"
             grep -F "$action" "$level"
           done
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ "$KRF_BASE" != 'assets/kingdom-rush-frontiers-v11.swf' ]; then
             grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          if [ "$HAS_V121" = 1 ]; then
+            grep -F 'qolPopupsEnabled' "$level"
           fi
           sha256sum /tmp/u/tower-menu.swf >/tmp/u/report/tower-menu-SHA256.txt
 
