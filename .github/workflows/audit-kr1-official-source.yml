@@ -1,0 +1,118 @@
+name: Audit original KR1 publisher source
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - '.github/workflows/audit-kr1-official-source.yml'
+      - 'tools/ultimate/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-kr1-official-source.yml'
+      - 'tools/ultimate/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch original Armor Games KR1 web build for source audit only
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ultimate
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' \
+            -o /tmp/ultimate/kingdom-rush-12141.swf
+          test -s /tmp/ultimate/kingdom-rush-12141.swf
+          head -c 3 /tmp/ultimate/kingdom-rush-12141.swf | grep -Eq 'FWS|CWS|ZWS'
+          sha256sum /tmp/ultimate/kingdom-rush-12141.swf | tee /tmp/ultimate/KR1-SOURCE-SHA256.txt
+
+      - name: Download FFDec 26.2.1
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
+            -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export KR1 and Frontiers ActionScript inventories
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/kr1 /tmp/krf
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/kr1 /tmp/ultimate/kingdom-rush-12141.swf \
+            >/tmp/ultimate/export-kr1.log 2>&1 || true
+          test -d /tmp/kr1/scripts
+          test -n "$(find /tmp/kr1/scripts -name '*.as' -print -quit)"
+
+          base='assets/kingdom-rush-frontiers-v11.swf'
+          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then base='assets/kingdom-rush-frontiers-v12.swf'; fi
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/krf "$base" \
+            >/tmp/ultimate/export-krf.log 2>&1 || true
+          test -d /tmp/krf/scripts
+          test -n "$(find /tmp/krf/scripts -name '*.as' -print -quit)"
+
+      - name: Build class collision, namespace and port-policy reports
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/audit_exports.py \
+            --kr1 /tmp/kr1/scripts \
+            --krf /tmp/krf/scripts \
+            --output /tmp/ultimate/ultimate-inventory.json
+          python3 tools/ultimate/port_plan.py \
+            --kr1 /tmp/kr1/scripts \
+            --krf /tmp/krf/scripts \
+            --output /tmp/ultimate/kr1-port-plan.json
+          python3 - <<'PY'
+          import json
+          inv=json.load(open('/tmp/ultimate/ultimate-inventory.json', encoding='utf-8'))
+          plan=json.load(open('/tmp/ultimate/kr1-port-plan.json', encoding='utf-8'))
+          print('KR1 class count:', inv['kr1']['class_count'])
+          print('KRF class count:', inv['krf']['class_count'])
+          print('Collision count:', inv['collision_count'])
+          print('KR1 detected levels:', len(inv['kr1']['groups']['level']))
+          print('KR1 tower candidates:', len(inv['kr1']['groups']['tower']))
+          print('KR1 hero candidates:', len(inv['kr1']['groups']['hero']))
+          print('KR1 enemy candidates:', len(inv['kr1']['groups']['enemy']))
+          print('Port policy counts:', plan['counts'])
+          assert plan['collision_count'] == inv['collision_count']
+          assert any(x['target']=='KR1_Level1' for x in plan['stage_logic'])
+          PY
+
+      - name: Record audit provenance
+        run: |
+          cat > /tmp/ultimate/README.txt <<'TXT'
+          Source audit only. The KR1 SWF itself and decompiled scripts are NOT uploaded.
+          Source URL is the historical Armor Games publisher game-file endpoint:
+          https://cache.armorgames.com/files/games/kingdom-rush-12141.swf
+          FFDec: 26.2.1
+          Output contains hashes, structural class inventories and a generated import policy only.
+          TXT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kr1-frontiers-structural-audit
+          path: |
+            /tmp/ultimate/ultimate-inventory.json
+            /tmp/ultimate/kr1-port-plan.json
+            /tmp/ultimate/KR1-SOURCE-SHA256.txt
+            /tmp/ultimate/README.txt
