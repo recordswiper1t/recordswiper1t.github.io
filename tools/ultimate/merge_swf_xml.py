@@ -19,10 +19,20 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 
+# FFDec uses several different names for SWF character-definition/reference
+# fields. `tagId` is deliberately NOT here: UnknownTag.tagId is the SWF tag code
+# (for example 255), not a character ID.
 CHARACTER_ID_ATTRS = {
     "characterId", "characterID", "spriteId", "shapeId", "bitmapId",
-    "fontId", "fontID", "textID", "soundId", "tagId", "buttonId",
-    "videoId",
+    "fontId", "fontID", "textID", "soundId", "buttonId", "videoId",
+}
+
+# SWF bitmap fill styles use UI16 65535 as a sentinel meaning no bitmap. It is
+# not a real character ID and must survive remapping unchanged. The first merge
+# proof exposed this because a naive max scan falsely reported both SWFs as
+# already consuming character ID 65535.
+CHARACTER_ID_SENTINELS = {
+    "bitmapId": {65535},
 }
 
 EXACT_IMPORT_TYPES = {
@@ -43,6 +53,10 @@ def is_swf_tag_item(elem: ET.Element) -> bool:
 
 def should_import(tag_type: str) -> bool:
     return tag_type in EXACT_IMPORT_TYPES or tag_type.startswith(IMPORT_PREFIXES)
+
+
+def is_character_sentinel(key: str, number: int) -> bool:
+    return number in CHARACTER_ID_SENTINELS.get(key, set())
 
 
 def iter_top_level_tag_elements(path: Path):
@@ -69,8 +83,12 @@ def iter_top_level_tag_elements(path: Path):
             stack.pop()
 
 
-def max_character_id(path: Path) -> int:
+def character_id_extents(path: Path) -> dict:
     maximum = 0
+    max_attr = None
+    max_element = None
+    by_attr: dict[str, int] = {}
+    sentinel_counts: Counter = Counter()
     for _event, elem in ET.iterparse(path, events=("start",)):
         for key, value in elem.attrib.items():
             if key not in CHARACTER_ID_ATTRS:
@@ -79,9 +97,28 @@ def max_character_id(path: Path) -> int:
                 number = int(value)
             except ValueError:
                 continue
+            if is_character_sentinel(key, number):
+                sentinel_counts[key] += 1
+                continue
+            if number <= 0:
+                continue
+            if number > by_attr.get(key, 0):
+                by_attr[key] = number
             if number > maximum:
                 maximum = number
-    return maximum
+                max_attr = key
+                max_element = local(elem.tag)
+    return {
+        "max": maximum,
+        "max_attribute": max_attr,
+        "max_element": max_element,
+        "max_by_attribute": dict(sorted(by_attr.items())),
+        "sentinels_ignored": dict(sentinel_counts),
+    }
+
+
+def max_character_id(path: Path) -> int:
+    return int(character_id_extents(path)["max"])
 
 
 def load_class_map(path: Path) -> dict[str, str]:
@@ -125,10 +162,12 @@ def transform_tree(elem: ET.Element, offset: int, renamer: ClassRenamer, stats: 
                     number = int(value)
                 except ValueError:
                     number = 0
-                if number > 0:
+                if number > 0 and not is_character_sentinel(key, number):
                     node.attrib[key] = str(number + offset)
                     stats["id_references_shifted"] += 1
                     continue
+                if is_character_sentinel(key, number):
+                    stats["id_sentinels_preserved"] += 1
             new_value, count = renamer.replace(value)
             if count:
                 node.attrib[key] = new_value
@@ -218,14 +257,17 @@ def main() -> None:
     class_map = load_class_map(Path(args.class_map))
     renamer = ClassRenamer(class_map)
 
-    base_max = max_character_id(base)
-    source_max = max_character_id(source)
+    base_extents = character_id_extents(base)
+    source_extents = character_id_extents(source)
+    base_max = int(base_extents["max"])
+    source_max = int(source_extents["max"])
     offset = base_max + max(1, args.gap)
     imported_max = offset + source_max
     if imported_max > MAX_SWF_CHARACTER_ID:
         raise SystemExit(
-            f"character-ID namespaces do not fit UI16: base max {base_max}, "
-            f"source max {source_max}, offset {offset}, imported max {imported_max}"
+            f"character-ID namespaces do not fit UI16: base max {base_max} "
+            f"({base_extents['max_attribute']}), source max {source_max} "
+            f"({source_extents['max_attribute']}), offset {offset}, imported max {imported_max}"
         )
 
     stats: Counter = Counter()
@@ -251,6 +293,8 @@ def main() -> None:
     fragment_path.unlink(missing_ok=True)
 
     report = {
+        "base_character_id_extents": base_extents,
+        "source_character_id_extents": source_extents,
         "base_max_character_id": base_max,
         "source_max_character_id": source_max,
         "character_id_offset": offset,
@@ -264,6 +308,8 @@ def main() -> None:
             "inserted_before_base_end_tag": True,
             "top_level_source_timeline_control_imported": False,
             "nested_define_sprite_timeline_control_retained": True,
+            "bitmap_id_65535_sentinel_preserved": True,
+            "unknown_tag_code_not_treated_as_character_id": True,
         },
     }
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
