@@ -1,0 +1,39 @@
+name: Build V11 release artifact
+on:
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/build-v11-release-artifact.yml']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      - name: Download FFDec
+        run: |
+          set -euo pipefail
+          curl -fL 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Build verified V11
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v11 /tmp/import /tmp/out /tmp/verify
+          mkdir -p /tmp/v11 /tmp/import/scripts /tmp/out /tmp/verify
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v11 assets/kingdom-rush-frontiers-v10.swf >/tmp/export.log 2>&1 || true
+          python3 tools/v11/blueprints.py /tmp/v11/scripts
+          python3 tools/v11/level_core.py /tmp/v11/scripts
+          python3 tools/v11/ui_perf.py /tmp/v11/scripts
+          for f in 'Level.as' 'TowerArcherCrossbow.as' 'TowerArcherTotem.as' 'TowerMageArchmage.as' 'TowerMageNecromancer.as' 'TowerEngineerDwaarp.as' 'TowerEngineerMech.as' 'TowerSoldierAssassin.as' 'TowerSoldierTemplar.as' 'TowerDwarfRiflemen.as' '§_-Zs§.as'; do cp "/tmp/v11/scripts/$f" "/tmp/import/scripts/$f"; done
+          [ -d /tmp/v11/_assets ] && cp -a /tmp/v11/_assets /tmp/import/_assets || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/kingdom-rush-frontiers-v10.swf /tmp/out/kingdom-rush-frontiers-v11.swf /tmp/import >/tmp/import.log 2>&1
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/verify /tmp/out/kingdom-rush-frontiers-v11.swf >/tmp/verify.log 2>&1 || true
+          grep -F 'V11 SANDBOX' /tmp/verify/scripts/Level.as
+          grep -F 'qolTowerBlueprintFor' /tmp/verify/scripts/Level.as
+          grep -F 'qolDiagnosticsFrame' /tmp/verify/scripts/Level.as
+          grep -F 'qolBlueprintActions' /tmp/verify/scripts/TowerSoldierTemplar.as
+          sha256sum /tmp/out/kingdom-rush-frontiers-v11.swf > /tmp/out/V11-SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-v11-release
+          path: /tmp/out
