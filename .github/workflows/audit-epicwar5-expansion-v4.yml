@@ -1,0 +1,84 @@
+name: Audit Epic War 5 Expansion V4 Legacy
+
+on:
+  push:
+    branches:
+      - epicwar5-expansion-v4-legacy
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-v4.yml'
+      - 'tools/epicwar5/expansion/V4-LEGACY-DESIGN.md'
+      - 'tools/epicwar5/expansion/v4/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-v4.yml'
+      - 'tools/epicwar5/expansion/V4-LEGACY-DESIGN.md'
+      - 'tools/epicwar5/expansion/v4/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-v4-legacy
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Freeze exact V3.3.1 release and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          EXPECTED='40712cc3685861ee93a97ad49cd4ff71c2ebc55c9959a1d9f160fcf39e8d6577'
+          test -s assets/epic-war-5-expansion-v331.swf
+          test "$(sha256sum assets/epic-war-5-expansion-v331.swf | cut -d' ' -f1)" = "$EXPECTED"
+          mkdir -p /tmp/ffdec /tmp/v4/export
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Decompile exact released V3.3.1
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4/export assets/epic-war-5-expansion-v331.swf > /tmp/v4/export.log 2>&1 || true
+          test -f /tmp/v4/export/scripts/Game/Manager/DataManager.as
+          test -f /tmp/v4/export/scripts/Game/System/Battle/BattleSystem.as
+          test -f /tmp/v4/export/scripts/Game/Interface/WorldMap.as
+      - name: Build V4 hook report
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd /tmp/v4/export/scripts
+          {
+            echo '=== settings / options / sound / quality ==='
+            grep -RniE 'option|setting|mute|sound|music|quality|saveData|SharedObject' Game/Interface Game/Manager Game/Main.as | head -n 3500 || true
+            echo '=== battle lifecycle / result / win / loss / hero death ==='
+            grep -RniE 'battle_result|BattleResult|hero.*dead|dead.*hero|gameover|victory|defeat|destroy\(|init\(|saveData' Game/System/Battle Game/Interface/BattleResult.as | head -n 4500 || true
+            echo '=== enemy wave / revenge / counter / difficulty candidates ==='
+            grep -RniE 'EnemyWave|createEnemy|wave|boss|difficulty|hard|epic|battle_stage|initExpansion' Game/System/Battle/BattleControlEnemy.as Game/System/Battle/EnemyWave.as | head -n 5000 || true
+            echo '=== world map dynamic UI hooks ==='
+            grep -RniE 'TextField|Sprite|MouseEvent|KeyboardEvent|addChild|button|btn|updateView|battle_input|gotoAndStop' Game/Interface/WorldMap*.as | head -n 4500 || true
+            echo '=== castle / building / player spell support ==='
+            grep -RniE 'castle|building|tower|mana|PlayerSpell|createPlayerBuilding|getTotalPlayerBuilding' Game/System/Battle Game/System/GameObject | head -n 4000 || true
+            echo '=== unit aliases and character names ==='
+            grep -RniE 'createPlayerUnit|createEnemyUnit|case "[A-Za-z0-9_]+"|char_name|name_str' Game/System/GameObject/CharacterMgr.as Game/System/StatDef/Char*.as | head -n 5000 || true
+            echo '=== input / commands / pause / retreat / charge ==='
+            grep -RniE 'KeyboardEvent|keyCode|retreat|charge|command|moveAll|selectAll|isPaused|pause' Game/System/Battle Game/Interface | head -n 4500 || true
+            echo '=== current V3.3.1 host hotfix ==='
+            grep -RniE 'recordswiper1t|github-pages|_block_site' Game/Manager/HostManager.as Game/Main.as || true
+          } > /tmp/v4/V4-HOOK-REPORT.txt
+      - name: Upload exact V3.3.1 source audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v4-source-audit
+          retention-days: 7
+          path: |
+            /tmp/v4/V4-HOOK-REPORT.txt
+            /tmp/v4/export/scripts/Game
+            /tmp/v4/export.log
