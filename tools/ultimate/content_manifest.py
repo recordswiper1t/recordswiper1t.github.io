@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Canonical content scope for Kingdom Rush Ultimate.
 
-This manifest is deliberately independent of obfuscated ActionScript class names.
-The import/audit tooling maps these stable IDs onto whatever classes/symbols are
-present in each source build.
+Stable stage IDs are separated from whatever obfuscated/native source names a
+particular release uses. `source_locator` records source material that has
+actually been structurally verified; missing later content stays fail-closed.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ class Stage:
     unlock_after: Optional[str] = None
     source_requirement: str = "embedded"
     aliases: tuple[str, ...] = ()
+    source_locator: Optional[str] = None
 
 
 KR_MAIN = [
@@ -49,51 +50,62 @@ def slug(value: str) -> str:
     return "".join(out).strip("-")
 
 
-def main_chain(game: str, titles: list[str]) -> list[Stage]:
+def main_chain(game: str, titles: list[str], source_requirement: str) -> list[Stage]:
     stages: list[Stage] = []
     previous = None
     for index, title in enumerate(titles, 1):
         sid = f"{game}-{slug(title)}"
-        stages.append(Stage(sid, game, title, "main", index, previous))
+        stages.append(Stage(
+            sid, game, title, "main", index, previous,
+            source_requirement=source_requirement,
+            source_locator=f"Level{index}",
+        ))
         previous = sid
     return stages
 
 
 STAGES: list[Stage] = []
-STAGES += main_chain("kr1", KR_MAIN)
+STAGES += main_chain("kr1", KR_MAIN, "publisher_flash")
 
-# KR1 post-campaign / elite content. Premium/mobile/modern builds may expose
-# these differently, but the combined game treats them all as normal stages.
+# The historical Armor Games publisher SWF was structurally audited with
+# FFDec 26.2.1. Besides Level1-Level12, it contains Level13-Level19. Enemy and
+# marker signatures identify those seven extra classes as the stages below.
+# Do not label later KR1 stages embedded: they are absent from this source.
 KR_DARK_TOWER = "kr1-the-dark-tower"
 KR_ELITE = [
-    ("Sarelgaz's Lair", KR_DARK_TOWER),
-    ("Ruins of Acaroth", KR_DARK_TOWER),
-    ("Rotten Forest", KR_DARK_TOWER),
-    ("Fungal Forest", "kr1-rotten-forest"),
-    ("Hushwood", KR_DARK_TOWER),
-    ("Bandit's Lair", "kr1-hushwood"),
-    ("Glacial Heights", KR_DARK_TOWER),
-    ("Ha'Kraj Plateau", "kr1-glacial-heights"),
-    ("Pit of Fire", KR_DARK_TOWER),
-    ("Pandaemonium", "kr1-pit-of-fire"),
-    ("Rotwick", KR_DARK_TOWER),
-    ("Ancient Necropolis", "kr1-rotwick"),
-    ("Nightfang Swale", "kr1-ancient-necropolis"),
-    ("Castle Blackburn", "kr1-nightfang-swale"),
+    # title, unlock_after, verified source class (None => external/reconstruct)
+    ("Sarelgaz's Lair", KR_DARK_TOWER, "Level13"),
+    ("Ruins of Acaroth", KR_DARK_TOWER, "Level14"),
+    ("Rotten Forest", KR_DARK_TOWER, "Level15"),
+    ("Fungal Forest", "kr1-rotten-forest", None),
+    ("Hushwood", KR_DARK_TOWER, "Level16"),
+    ("Bandit's Lair", "kr1-hushwood", "Level17"),
+    ("Glacial Heights", KR_DARK_TOWER, "Level18"),
+    ("Ha'Kraj Plateau", "kr1-glacial-heights", "Level19"),
+    ("Pit of Fire", KR_DARK_TOWER, None),
+    ("Pandaemonium", "kr1-pit-of-fire", None),
+    ("Rotwick", KR_DARK_TOWER, None),
+    ("Ancient Necropolis", "kr1-rotwick", None),
+    ("Nightfang Swale", "kr1-ancient-necropolis", None),
+    ("Castle Blackburn", "kr1-nightfang-swale", None),
 ]
-for i, (title, unlock) in enumerate(KR_ELITE, 1):
-    STAGES.append(Stage(f"kr1-{slug(title)}", "kr1", title, "post_campaign", i, unlock))
+for i, (title, unlock, locator) in enumerate(KR_ELITE, 1):
+    STAGES.append(Stage(
+        f"kr1-{slug(title)}", "kr1", title, "post_campaign", i, unlock,
+        source_requirement="publisher_flash" if locator else "non_flash_or_reconstruction",
+        source_locator=locator,
+    ))
 
 STAGES.append(Stage(
     "kr1-rage-valley", "kr1", "Rage Valley", "endless", 1,
     "kr1-the-citadel", source_requirement="non_flash_or_reconstruction",
 ))
 
-STAGES += main_chain("krf", KRF_MAIN)
+STAGES += main_chain("krf", KRF_MAIN, "frontiers_flash")
 
 # Frontiers' later post-campaign stages are not embedded in the Flash build
-# used by the existing V11/V12 mod. They therefore need a supplied compatible
-# source export or a reconstruction pass before they can be imported.
+# used by the existing V11/V12 mod. They need a compatible owned-source export
+# or reconstruction inside the Frontiers Flash runtime.
 KRF_FINAL = "krf-emberspike-depths"
 KRF_POST = [
     ("Port Tortuga", KRF_FINAL),
@@ -122,8 +134,6 @@ STAGES += [
     ),
 ]
 
-# Existing custom V12 content is retained as a bonus stage/mode, not counted as
-# an original-game campaign map.
 CUSTOM_STAGES = [
     Stage(
         "krf-v12-the-last-rift", "krf", "The Last Rift", "custom", 1,
@@ -153,6 +163,14 @@ def validate() -> None:
         if actual != count:
             raise SystemExit(f"{key}: expected {count}, got {actual}")
 
+    verified_kr_levels = {
+        int(s.source_locator.removeprefix("Level"))
+        for s in STAGES
+        if s.game == "kr1" and s.source_locator and s.source_locator.startswith("Level")
+    }
+    if verified_kr_levels != set(range(1, 20)):
+        raise SystemExit(f"KR1 publisher-source Level1-19 coverage mismatch: {sorted(verified_kr_levels)}")
+
 
 def summary() -> dict[str, int]:
     return {
@@ -164,6 +182,8 @@ def summary() -> dict[str, int]:
         "krf_endless": sum(s.game == "krf" and s.kind == "endless" for s in STAGES),
         "original_campaign_and_post": sum(s.kind in {"main", "post_campaign"} for s in STAGES),
         "original_all_including_endless": len(STAGES),
+        "verified_kr1_publisher_levels": sum(s.source_requirement == "publisher_flash" for s in STAGES),
+        "missing_or_reconstruction": sum(s.source_requirement == "non_flash_or_reconstruction" for s in STAGES),
         "custom_bonus": len(CUSTOM_STAGES),
     }
 
