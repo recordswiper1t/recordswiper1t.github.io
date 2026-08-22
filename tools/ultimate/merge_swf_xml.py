@@ -19,22 +19,18 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 
-# Character IDs/references used by FFDec's SWF XML model. Deliberately exclude
-# ABC/method indices (`id`, `slot_id`, `disp_id`, `name_index`, etc.).
 CHARACTER_ID_ATTRS = {
     "characterId", "characterID", "spriteId", "shapeId", "bitmapId",
     "fontId", "fontID", "textID", "soundId", "tagId", "buttonId",
     "videoId",
 }
 
-# Top-level source tags that define reusable assets/code. Timeline control tags
-# such as PlaceObject/ShowFrame/RemoveObject are intentionally excluded here;
-# they remain nested inside imported DefineSprite tags where appropriate.
 EXACT_IMPORT_TYPES = {
     "DoABC2Tag", "DoABCTag", "SymbolClassTag", "ExportAssetsTag",
-    "DefineScalingGridTag", "CSMTextSettingsTag", "DefineSceneAndFrameLabelDataTag",
+    "DefineScalingGridTag", "CSMTextSettingsTag", "JPEGTablesTag",
 }
 IMPORT_PREFIXES = ("Define",)
+MAX_SWF_CHARACTER_ID = 65535
 
 
 def local(tag: str) -> str:
@@ -96,26 +92,32 @@ def load_class_map(path: Path) -> dict[str, str]:
     return {str(k): str(v) for k, v in mapping.items()}
 
 
-def replace_class_tokens(value: str, class_map: dict[str, str]) -> tuple[str, int]:
-    """Rename exact/qualified class tokens while avoiding arbitrary substrings."""
-    if value in class_map:
-        return class_map[value], 1
-    # Most game classes are in the global package. Also cover reflection strings
-    # and qualified values while requiring identifier boundaries.
-    changed = 0
-    out = value
-    for old, new in class_map.items():
-        if old not in out:
-            continue
-        pattern = rf"(?<![A-Za-z0-9_$]){re.escape(old)}(?![A-Za-z0-9_$])"
-        out2, count = re.subn(pattern, new, out)
-        if count:
-            out = out2
-            changed += count
-    return out, changed
+class ClassRenamer:
+    """Fast identifier-boundary class rewriter for FFDec scalar XML values."""
+
+    def __init__(self, mapping: dict[str, str]):
+        self.mapping = mapping
+        alternatives = "|".join(re.escape(x) for x in sorted(mapping, key=len, reverse=True))
+        self.pattern = re.compile(rf"(?<![A-Za-z0-9_$])({alternatives})(?![A-Za-z0-9_$])")
+
+    def replace(self, value: str) -> tuple[str, int]:
+        if value in self.mapping:
+            return self.mapping[value], 1
+        # Binary/base64 payloads are opaque and cannot contain meaningful XML
+        # class tokens. Avoid regex-scanning megabyte-sized image/audio attrs.
+        if len(value) > 8192:
+            return value, 0
+        count = 0
+
+        def sub(match: re.Match[str]) -> str:
+            nonlocal count
+            count += 1
+            return self.mapping[match.group(1)]
+
+        return self.pattern.sub(sub, value), count
 
 
-def transform_tree(elem: ET.Element, offset: int, class_map: dict[str, str], stats: Counter) -> None:
+def transform_tree(elem: ET.Element, offset: int, renamer: ClassRenamer, stats: Counter) -> None:
     for node in elem.iter():
         for key, value in list(node.attrib.items()):
             if key in CHARACTER_ID_ATTRS:
@@ -127,17 +129,17 @@ def transform_tree(elem: ET.Element, offset: int, class_map: dict[str, str], sta
                     node.attrib[key] = str(number + offset)
                     stats["id_references_shifted"] += 1
                     continue
-            new_value, count = replace_class_tokens(value, class_map)
+            new_value, count = renamer.replace(value)
             if count:
                 node.attrib[key] = new_value
                 stats["class_tokens_renamed"] += count
-        if node.text:
-            new_text, count = replace_class_tokens(node.text, class_map)
+        if node.text and len(node.text) <= 8192:
+            new_text, count = renamer.replace(node.text)
             if count:
                 node.text = new_text
                 stats["class_tokens_renamed"] += count
-        if node.tail:
-            new_tail, count = replace_class_tokens(node.tail, class_map)
+        if node.tail and len(node.tail) <= 8192:
+            new_tail, count = renamer.replace(node.tail)
             if count:
                 node.tail = new_tail
                 stats["class_tokens_renamed"] += count
@@ -157,18 +159,24 @@ def serialize_fragment(elem: ET.Element) -> bytes:
     return ET.tostring(elem, encoding="utf-8", short_empty_elements=True)
 
 
-def find_tags_close(path: Path) -> int:
-    needle = b"</tags>"
+def find_insertion_point(path: Path) -> int:
+    """Insert before the base SWF EndTag; tags after EndTag are not executable."""
     with path.open("rb") as fh:
         with mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-            pos = mm.rfind(needle)
-            if pos < 0:
-                raise SystemExit(f"could not find </tags> in {path}")
-            return pos
+            marker = b'type="EndTag"'
+            hit = mm.rfind(marker)
+            if hit >= 0:
+                start = mm.rfind(b"<item", 0, hit)
+                if start >= 0:
+                    return start
+            close = mm.rfind(b"</tags>")
+            if close < 0:
+                raise SystemExit(f"could not find EndTag or </tags> in {path}")
+            return close
 
 
-def copy_prefix_and_suffix(base: Path, output: Path, insert_file: Path) -> None:
-    pos = find_tags_close(base)
+def copy_with_insert(base: Path, output: Path, insert_file: Path) -> None:
+    pos = find_insertion_point(base)
     with base.open("rb") as src, output.open("wb") as dst:
         remaining = pos
         while remaining:
@@ -200,7 +208,7 @@ def main() -> None:
     parser.add_argument("--class-map", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--report", required=True)
-    parser.add_argument("--gap", type=int, default=1000)
+    parser.add_argument("--gap", type=int, default=64)
     args = parser.parse_args()
 
     base = Path(args.base)
@@ -208,12 +216,18 @@ def main() -> None:
     output = Path(args.output)
     report_path = Path(args.report)
     class_map = load_class_map(Path(args.class_map))
+    renamer = ClassRenamer(class_map)
 
     base_max = max_character_id(base)
     source_max = max_character_id(source)
-    # Offset every positive KR1 character ID above Frontiers' namespace. A gap
-    # keeps room for future Frontiers-only generated definitions.
     offset = base_max + max(1, args.gap)
+    imported_max = offset + source_max
+    if imported_max > MAX_SWF_CHARACTER_ID:
+        raise SystemExit(
+            f"character-ID namespaces do not fit UI16: base max {base_max}, "
+            f"source max {source_max}, offset {offset}, imported max {imported_max}"
+        )
+
     stats: Counter = Counter()
     imported_types: Counter = Counter()
 
@@ -226,27 +240,28 @@ def main() -> None:
                 continue
             if tag_type == "SymbolClassTag":
                 drop_source_document_class(elem, stats)
-            transform_tree(elem, offset, class_map, stats)
+            transform_tree(elem, offset, renamer, stats)
             tf.write(serialize_fragment(elem))
             tf.write(b"\n")
             stats["top_level_tags_imported"] += 1
             imported_types[tag_type] += 1
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    copy_prefix_and_suffix(base, output, fragment_path)
+    copy_with_insert(base, output, fragment_path)
     fragment_path.unlink(missing_ok=True)
 
     report = {
         "base_max_character_id": base_max,
         "source_max_character_id": source_max,
         "character_id_offset": offset,
-        "imported_character_id_range": [offset + 1, offset + source_max],
+        "imported_character_id_range": [offset + 1, imported_max],
         "source_class_count": len(class_map),
         "stats": dict(stats),
         "imported_tag_types": dict(imported_types.most_common()),
         "policy": {
             "base_document_class_retained": True,
             "source_document_class_binding_removed": True,
+            "inserted_before_base_end_tag": True,
             "top_level_source_timeline_control_imported": False,
             "nested_define_sprite_timeline_control_retained": True,
         },
