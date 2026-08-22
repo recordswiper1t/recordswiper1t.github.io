@@ -42,7 +42,9 @@ jobs:
           curl -fL --retry 4 \
             'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
           unzip -q /tmp/ffdec.zip -d /tmp/ffdec
-          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            cp assets/kingdom-rush-frontiers-v12-1.swf /tmp/u/krf.swf
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
             cp assets/kingdom-rush-frontiers-v12.swf /tmp/u/krf.swf
           else
             cp assets/kingdom-rush-frontiers-v11.swf /tmp/u/krf.swf
