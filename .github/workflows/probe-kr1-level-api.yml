@@ -1,0 +1,85 @@
+name: Probe KR1 Level API compatibility
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate]
+    paths:
+      - 'tools/ultimate/level_api_diff.py'
+      - '.github/workflows/probe-kr1-level-api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/level_api_diff.py'
+      - '.github/workflows/probe-kr1-level-api.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile analyser
+        run: python3 -m py_compile tools/ultimate/level_api_diff.py
+
+      - name: Fetch publisher KR1 and FFDec
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u /tmp/ffdec
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          if [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            cp assets/kingdom-rush-frontiers-v12.swf /tmp/u/krf.swf
+          else
+            cp assets/kingdom-rush-frontiers-v11.swf /tmp/u/krf.swf
+          fi
+
+      - name: Export only Level and Level1 source surfaces
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/kr1-export /tmp/u/krf-export
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -selectclass 'Level,Level1' -export script /tmp/u/kr1-export /tmp/u/kr1.swf >/tmp/u/kr1-export.log 2>&1 || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -selectclass 'Level,Level1' -export script /tmp/u/krf-export /tmp/u/krf.swf >/tmp/u/krf-export.log 2>&1 || true
+          test -f /tmp/u/kr1-export/scripts/Level.as
+          test -f /tmp/u/kr1-export/scripts/Level1.as
+          test -f /tmp/u/krf-export/scripts/Level.as
+
+      - name: Generate Southport adapter contract
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/report
+          python3 tools/ultimate/level_api_diff.py \
+            --kr1-level /tmp/u/kr1-export/scripts/Level.as \
+            --krf-level /tmp/u/krf-export/scripts/Level.as \
+            --kr1-stage /tmp/u/kr1-export/scripts/Level1.as \
+            --output /tmp/u/report/southport-level-api.json \
+            --skeleton /tmp/u/report/KR1__Level-adapter-skeleton.as
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/u/report/southport-level-api.json',encoding='utf-8'))
+          print('Southport inherited refs already on Frontiers:', len(d['stage_refs_already_available_on_krf']))
+          print('Southport inherited refs missing on Frontiers:', len(d['stage_refs_missing_on_krf']))
+          print('Missing:', d['stage_refs_missing_on_krf'])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: southport-level-api-contract
+          path: /tmp/u/report
+          retention-days: 30
