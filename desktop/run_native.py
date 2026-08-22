@@ -23,7 +23,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 V8_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v8.swf"
 V7_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"
-SWF = V8_SWF if V8_SWF.exists() else V7_SWF
+SWF = V9_SWF if V9_SWF.exists() else (V8_SWF if V8_SWF.exists() else V7_SWF)
 CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
