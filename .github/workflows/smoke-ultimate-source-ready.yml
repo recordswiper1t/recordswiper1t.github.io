@@ -1,0 +1,108 @@
+name: Smoke boot verified Ultimate source-ready candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/smoke-ultimate-source-ready.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ruffle-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CANDIDATE_ARTIFACT_ID: '9483290055'
+      CANDIDATE_SHA256: '647b9f9af5393ef72d2bebb8d02346ce58c99dfd5952fe68491ca864e2e480f0'
+      RUFFLE_TAG: 'nightly-2026-08-22'
+      RUFFLE_ARCHIVE: 'ruffle-nightly-2026_08_22-linux-x86_64.tar.gz'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download exact green composed candidate artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ultimate-smoke/artifact
+          curl -fL --retry 4 --retry-all-errors \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip" \
+            -o /tmp/ultimate-smoke/candidate.zip
+          unzip -q /tmp/ultimate-smoke/candidate.zip -d /tmp/ultimate-smoke/artifact
+          test -s /tmp/ultimate-smoke/artifact/ultimate-source-ready.swf
+          actual=$(sha256sum /tmp/ultimate-smoke/artifact/ultimate-source-ready.swf | awk '{print $1}')
+          test "$actual" = "$CANDIDATE_SHA256"
+          echo "Verified candidate SHA-256: $actual"
+
+      - name: Download pinned native Ruffle nightly
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ultimate-smoke/ruffle
+          curl -fL --retry 4 --retry-all-errors \
+            "https://github.com/ruffle-rs/ruffle/releases/download/${RUFFLE_TAG}/${RUFFLE_ARCHIVE}" \
+            -o /tmp/ultimate-smoke/ruffle.tar.gz
+          tar -xzf /tmp/ultimate-smoke/ruffle.tar.gz -C /tmp/ultimate-smoke/ruffle
+          RUFFLE=$(find /tmp/ultimate-smoke/ruffle -type f -name ruffle -print -quit)
+          test -n "$RUFFLE"
+          chmod +x "$RUFFLE"
+          echo "RUFFLE_EXE=$RUFFLE" >> "$GITHUB_ENV"
+          "$RUFFLE" --version
+
+      - name: Ensure virtual display dependencies
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq xvfb
+          fi
+
+      - name: Keep composed candidate alive through native Ruffle startup
+        id: smoke
+        shell: bash
+        run: |
+          set +e
+          export WGPU_BACKEND=gl
+          export LIBGL_ALWAYS_SOFTWARE=1
+          timeout --signal=TERM 20s xvfb-run -a "$RUFFLE_EXE" --graphics gl \
+            /tmp/ultimate-smoke/artifact/ultimate-source-ready.swf \
+            >/tmp/ultimate-smoke/ruffle-smoke.log 2>&1
+          code=$?
+          set -e
+          cat /tmp/ultimate-smoke/ruffle-smoke.log
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+          # timeout(1) returns 124 only when Ruffle stayed alive for the whole
+          # smoke window. An immediate clean exit is suspicious for this game.
+          test "$code" = '124'
+          ! grep -Eiq 'thread .* panicked|panicked at|fatal error|error running (avm2|movie)|uncaught error' \
+            /tmp/ultimate-smoke/ruffle-smoke.log
+
+          python3 - <<'PY'
+          import json, pathlib, os
+          out={
+            'candidate_sha256': os.environ['CANDIDATE_SHA256'],
+            'ruffle_tag': os.environ['RUFFLE_TAG'],
+            'startup_window_seconds': 20,
+            'stayed_alive_for_full_window': True,
+            'timeout_exit_code': 124,
+            'scope': 'document-class/native-player startup smoke only; not stage gameplay certification',
+          }
+          pathlib.Path('/tmp/ultimate-smoke/runtime-smoke.json').write_text(json.dumps(out,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Upload runtime smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-source-ready-ruffle-smoke
+          path: |
+            /tmp/ultimate-smoke/runtime-smoke.json
+            /tmp/ultimate-smoke/ruffle-smoke.log
+          retention-days: 30
