@@ -1,0 +1,62 @@
+name: Deploy 3-game iPhone site to Pages
+
+on:
+  push:
+    branches: [agent/v12-postboss-expansion]
+    paths:
+      - 'index.html'
+      - 'games/**'
+      - 'iphone/**'
+      - 'assets/kingdom-rush-frontiers-v12-1.swf'
+      - 'assets/stick-war-complete-v1.swf'
+      - 'assets/epic-war-5-expansion-v331.swf'
+      - '.github/workflows/deploy-3-games-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Pages source branch
+        uses: actions/checkout@v4
+
+      - name: Stage minimal three-game site
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site/games _site/iphone _site/assets
+          cp index.html _site/index.html
+          cp games/index.html _site/games/index.html
+          cp iphone/krf.html _site/iphone/krf.html
+          cp iphone/stickwar.html _site/iphone/stickwar.html
+          cp iphone/epicwar5.html _site/iphone/epicwar5.html
+          cp assets/kingdom-rush-frontiers-v12-1.swf _site/assets/
+          cp assets/stick-war-complete-v1.swf _site/assets/
+          cp assets/epic-war-5-expansion-v331.swf _site/assets/
+          touch _site/.nojekyll
+          printf 'three-game-pages %s\n' "${GITHUB_SHA}" > _site/DEPLOYED.txt
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
