@@ -1,0 +1,9 @@
+Kingdom Rush Frontiers — V9 Menu Completeness + Pause Fixes
+- Mod menu fully pauses gameplay; queued Send All work does not advance while it is open.
+- Time Attack arms inside the menu and launches waves only after the menu closes.
+- Timer moved to the top UI overlay so it remains visible.
+- One-click all-heroes ON/OFF plus all 9 hero implementation classes present in this SWF.
+- Enemy menu exposes all 47 enemy classes in a six-page direct-selection grid.
+- Special tower menu exposes Assassin and Templar in addition to all previously exposed normal specialization/map-special classes.
+- Retains V8 native desktop, swarm performance, Time Attack, recycling and tower clipboard optimizations.
+Built, re-exported, and structurally verified with FFDec 26.2.1.

@@ -2,9 +2,10 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
 $Root = (Get-Location).Path
+$V9 = Join-Path $Root 'assets\kingdom-rush-frontiers-v9.swf'
 $V8 = Join-Path $Root 'assets\kingdom-rush-frontiers-v8.swf'
 $V7 = Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf'
-$Swf = if (Test-Path $V8) { $V8 } else { $V7 }
+$Swf = if (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
 if (-not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
 
 $Cache = Join-Path $Root '.native\ruffle'
@@ -47,7 +48,7 @@ if (-not (Test-Path $Exe)) {
     }
 }
 
-$label = if ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
+$label = if ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
 Write-Host "Launching Kingdom Rush Frontiers $label with native Ruffle"
 Write-Host "Game: $Swf"
 & $Exe $Swf
