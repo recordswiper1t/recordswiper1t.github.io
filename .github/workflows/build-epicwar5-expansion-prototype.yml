@@ -51,7 +51,11 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/ew5/original.swf /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf /tmp/ew5/export > /tmp/ew5/import.log 2>&1; then
+            echo '===== FFDec import diagnostics ====='
+            cat /tmp/ew5/import.log
+            exit 1
+          fi
           test -s /tmp/ew5/out/epic-war-5-expansion-v3-prototype.swf
       - name: Re-decompile and verify full expansion slice
         shell: bash
