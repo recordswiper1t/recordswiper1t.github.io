@@ -1,0 +1,10 @@
+Kingdom Rush Frontiers — V12: The Last Rift
+- Adds a 30-wave post-final-boss second act to Level 15 with three new runtime-built routes and 15 extra tower sites.
+- Adds seven post-boss enemy archetypes through new stats, colors and mechanics on safe embedded animations: Riftlings, Obsidian Guards, Void Stalkers, Ember Drakes, Shardwings, Rift Conductors and Titan Husks.
+- Adds Vorak, the Rift Sovereign: a wave-30 boss with massive durability, healing and fracture-pulse reinforcements.
+- Adds map-only allies Nyra the Riftwarden and the Rift Beacon, both with periodic area attacks.
+- Infinite/recycle mode now tracks virtual lives lost without ending the run. Records fastest time, fewest virtual lives lost and a combined score (seconds + 15s per virtual life).
+- Adds a Bank Current Loop Run control and separate post-boss score records.
+- Adds adaptive render quality under heavy/extreme/ultra loads while combat targeting, attacks and movement remain full-rate.
+- Retains all V11 sandbox/blueprint/performance features and the V10/V9/V8 fixes beneath them.
+Built, re-exported and structurally verified with FFDec 26.2.1.

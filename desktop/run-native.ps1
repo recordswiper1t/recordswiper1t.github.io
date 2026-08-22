@@ -2,12 +2,13 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
 $Root = (Get-Location).Path
+$V12 = Join-Path $Root 'assets\kingdom-rush-frontiers-v12.swf'
 $V11 = Join-Path $Root 'assets\kingdom-rush-frontiers-v11.swf'
 $V10 = Join-Path $Root 'assets\kingdom-rush-frontiers-v10.swf'
 $V9 = Join-Path $Root 'assets\kingdom-rush-frontiers-v9.swf'
 $V8 = Join-Path $Root 'assets\kingdom-rush-frontiers-v8.swf'
 $V7 = Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf'
-$Swf = if (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
+$Swf = if (Test-Path $V12) { $V12 } elseif (Test-Path $V11) { $V11 } elseif (Test-Path $V10) { $V10 } elseif (Test-Path $V9) { $V9 } elseif (Test-Path $V8) { $V8 } else { $V7 }
 if (-not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
 
 $Cache = Join-Path $Root '.native\ruffle'
@@ -54,7 +55,7 @@ if (-not (Test-Path $Exe)) {
     }
 }
 
-$label = if ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
+$label = if ($Swf -eq $V12) { 'V12 The Last Rift' } elseif ($Swf -eq $V11) { 'V11 sandbox' } elseif ($Swf -eq $V10) { 'V10 complete' } elseif ($Swf -eq $V9) { 'V9 complete' } elseif ($Swf -eq $V8) { 'V8 optimized' } else { 'V7 fallback' }
 $backend = if ($ForceVulkan) { 'vulkan' } elseif ($ForceGl) { 'gl' } else { 'dx12' }
 if ($ForceDx12) { $backend = 'dx12' }
 
