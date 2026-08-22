@@ -103,31 +103,28 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/u/import/scripts
           python3 - <<'PY'
-          import json, pathlib, shutil
+          import json, pathlib, re, shutil
           reg=json.load(open('/tmp/u/report/tower-registry.json',encoding='utf-8'))
           root=pathlib.Path('/tmp/u/rebind/scripts')
           out=pathlib.Path('/tmp/u/import/scripts')
           copied=[]
+          inheritance={}
           for row in reg['routes']:
               if row['game']!='kr1': continue
               name=row['runtime_class']+'.as'
               hits=list(root.rglob(name))
               if len(hits)!=1:
                   raise SystemExit(f'{name}: expected one rebound source, got {len(hits)}')
+              text=hits[0].read_text(encoding='utf-8-sig',errors='replace')
+              m=re.search(r'\bclass\s+[^\s{]+(?:\s+extends\s+([^\s{]+))?',text)
+              inheritance[row['runtime_class']]=m.group(1) if m and m.group(1) else None
               shutil.copy2(hits[0], out/name)
               copied.append(row['runtime_class'])
           if len(copied)!=8: raise SystemExit(f'expected 8 towers, got {len(copied)}')
           pathlib.Path('/tmp/u/report/tower-compile-classes.json').write_text(json.dumps(copied,indent=2),encoding='utf-8')
-          print('\n'.join(copied))
+          pathlib.Path('/tmp/u/report/tower-inheritance.json').write_text(json.dumps(inheritance,indent=2),encoding='utf-8')
+          print(json.dumps(inheritance,indent=2))
           PY
-          grep -F 'extends TowerArcher' /tmp/u/import/scripts/KR1__TowerArcherRanger.as
-          grep -F 'extends TowerArcher' /tmp/u/import/scripts/KR1__TowerArcherMusketeer.as
-          grep -F 'extends TowerMage' /tmp/u/import/scripts/KR1__TowerMageArcane.as
-          grep -F 'extends TowerMage' /tmp/u/import/scripts/KR1__TowerMageSorcerer.as
-          grep -F 'extends TowerEngineer' /tmp/u/import/scripts/KR1__TowerEngineerTesla.as
-          grep -F 'extends TowerEngineer' /tmp/u/import/scripts/KR1__TowerEngineerBfg.as
-          grep -F 'extends TowerSoldier' /tmp/u/import/scripts/KR1__TowerSoldierPaladin.as
-          grep -F 'extends TowerSoldier' /tmp/u/import/scripts/KR1__TowerSoldierBarbarian.as
 
       - name: Compile all eight tower classes into merged SWF
         id: compile
@@ -177,10 +174,12 @@ jobs:
           python3 - <<'PY'
           import json, pathlib
           log=pathlib.Path('/tmp/u/import-towers.log').read_text(encoding='utf-8',errors='replace')
+          inheritance=json.loads(pathlib.Path('/tmp/u/report/tower-inheritance.json').read_text())
           out={
               'compile_success': False,
               'exit_code': int(pathlib.Path('/tmp/u/import.exit').read_text().strip()),
-              'meaning': 'KR1 tier-4 classes need explicit KRF tower-core adapters before menu exposure.',
+              'inheritance_after_rebind': inheritance,
+              'meaning': 'FFDec reached the real compile gate; use the compiler errors plus inheritance map to implement only the adapters actually required.',
               'log_tail': '\n'.join(log.splitlines()[-200:]),
           }
           pathlib.Path('/tmp/u/report/tower-rebind-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
@@ -194,6 +193,7 @@ jobs:
           path: |
             /tmp/u/report/tower-registry.json
             /tmp/u/report/tower-compile-classes.json
+            /tmp/u/report/tower-inheritance.json
             /tmp/u/report/rebind-report.json
             /tmp/u/report/tower-rebind-result.json
             /tmp/u/import-towers.log
