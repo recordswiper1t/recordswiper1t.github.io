@@ -43,10 +43,16 @@ def patch_ui():
             this.equipSlotText = null;
          }
          this.slot1.removeEventListener''','acc destroy page button')
-    one('''         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,"item"));
-''','''         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,this.expansionEquipField()));
+    one('''         this.equip1.select.visible = false;
+         this.equip1.buttonMode = false;
+         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,"item"));
+         if(itemEquip > 0)
+''','''         this.equip1.select.visible = false;
+         this.equip1.buttonMode = false;
+         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,this.expansionEquipField()));
          this.expansionUpdateEquipSlotLabel();
-''','acc current equip field')
+         if(itemEquip > 0)
+''','acc updateView current equip field')
     helpers='''      private function expansionEquipField() : String
       {
          if(this.equipSlotPage == 2) return "item2";
@@ -102,9 +108,13 @@ def patch_ui():
     one('''      private function selectEQUIP(CLIP:*) : *
 ''',helpers+'''      private function selectEQUIP(CLIP:*) : *
 ''','acc page helpers')
-    one('''         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,"item"));
+    one('''      private function selectEQUIP(CLIP:*) : *
+      {
+         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,"item"));
          this.selectEquipID = 0;
-''','''         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,this.expansionEquipField()));
+''','''      private function selectEQUIP(CLIP:*) : *
+      {
+         var itemEquip:int = int(this.mGF.datMgr.unitGetValue(this.unitID,this.expansionEquipField()));
          this.selectEquipID = 0;
 ''','acc select current field')
     one('''            itemEquip = int(this.mGF.datMgr.unitGetValue(this.unitID,"item"));
@@ -147,13 +157,11 @@ def patch_stats():
          var itemAbility2:* = new CharAbilityStat(this.unit_item2_ability_id);
          var itemAbility3:* = new CharAbilityStat(this.unit_item3_ability_id);
 ''','item ability locals')
-    # Numeric additive/multiplier stats.
     for prop in ['pop','health','health_boost','health_regen','attack','damage_mult','attack_building','defense_mult','speed']:
         old=' + itemAbility.'+prop
         new=old+' + itemAbility2.'+prop+' + itemAbility3.'+prop
         if old not in t: raise SystemExit('missing item numeric property '+prop)
         t=t.replace(old,new)
-    # Elemental override priority: slot 1, then 2, then 3.
     one('''         if(itemAbility.attack_elemental != "")
          {
             this.attack_elemental = itemAbility.attack_elemental;
