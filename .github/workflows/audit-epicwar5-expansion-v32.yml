@@ -7,6 +7,13 @@ on:
     paths:
       - '.github/workflows/audit-epicwar5-expansion-v32.yml'
       - 'tools/epicwar5/expansion/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-v32.yml'
+      - 'tools/epicwar5/expansion/**'
+      - 'epicwar5-expansion/**'
   workflow_dispatch:
 
 permissions:
