@@ -1,0 +1,137 @@
+name: Verify Epic War 5 Expansion V4 Legacy Prototype
+
+on:
+  push:
+    branches:
+      - epicwar5-expansion-v4-legacy
+    paths:
+      - '.github/workflows/verify-epicwar5-expansion-v4.yml'
+      - 'tools/epicwar5/expansion/v4/**'
+      - 'tools/epicwar5/expansion/V4-LEGACY-DESIGN.md'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/verify-epicwar5-expansion-v4.yml'
+      - 'tools/epicwar5/expansion/v4/**'
+      - 'tools/epicwar5/expansion/V4-LEGACY-DESIGN.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-v4-legacy
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Freeze exact V3.3.1 baseline and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          EXPECTED='40712cc3685861ee93a97ad49cd4ff71c2ebc55c9959a1d9f160fcf39e8d6577'
+          test -s assets/epic-war-5-expansion-v331.swf
+          test "$(sha256sum assets/epic-war-5-expansion-v331.swf | cut -d' ' -f1)" = "$EXPECTED"
+          mkdir -p /tmp/ffdec /tmp/v4/src /tmp/v4/out /tmp/v4/verify
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Decompile V3.3.1 and apply V4 foundation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4/src assets/epic-war-5-expansion-v331.swf > /tmp/v4/export.log 2>&1 || true
+          test -f /tmp/v4/src/scripts/Game/Manager/DataManager.as
+          python3 tools/epicwar5/expansion/v4/patch_v4_foundation.py /tmp/v4/src
+      - name: Rebuild V4 prototype
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v331.swf /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf /tmp/v4/src > /tmp/v4/import.log 2>&1; then
+            echo '===== FFDec V4 import diagnostics ====='
+            cat /tmp/v4/import.log
+            exit 1
+          fi
+          test -s /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf
+      - name: Re-decompile and verify V4 foundation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v4/verify /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf > /tmp/v4/verify.log 2>&1 || true
+          game=/tmp/v4/verify/scripts/Game
+          dm=$game/Manager/DataManager.as
+          opt=$game/Interface/WorldMapOption.as
+          ach=$game/Interface/WorldMapAchievement.as
+          bs=$game/System/Battle/BattleSystem.as
+          cm=$game/System/GameObject/CharacterMgr.as
+          ew=$game/System/Battle/EnemyWave.as
+          be=$game/System/Battle/BattleControlEnemy.as
+          br=$game/Interface/BattleResult.as
+          ps=$game/System/Battle/PlayerSpell.as
+          pu=$game/System/Battle/PlayerUnit.as
+          hm=$game/Manager/HostManager.as
+          cb=$game/System/GameObject/Character/CharacterBase.as
+
+          # Persistent V4 settings and achievement foundation.
+          grep -F 'v4_sandbox_enabled:int = 0' "$dm"
+          grep -F 'v4_difficulty:int = 0' "$dm"
+          grep -F 'v4_doctrine:int = 0' "$dm"
+          grep -F 'v4AchievementName' "$dm"
+          grep -F 'case 48:' "$dm"
+          grep -F 'v4_hard_stage_stat' "$dm"
+          grep -F 'v4_epic_stage_stat' "$dm"
+          grep -F 'sandboxMaxAll()' "$dm"
+          grep -F 'if(this.v4_sandbox_enabled != 0) return ""' "$dm"
+
+          # Player-facing settings / achievement surfaces.
+          grep -F 'V4 LEGACY SETTINGS' "$opt"
+          grep -F 'Sandbox Tools:' "$opt"
+          grep -F 'Difficulty:' "$opt"
+          grep -F 'Doctrine:' "$opt"
+          grep -F 'V4 LEGACY ACHIEVEMENTS' "$ach"
+          grep -F '48 ACHIEVEMENTS' "$ach" || grep -F '/48' "$ach"
+
+          # Sandbox is present but only installs when persistent master is enabled.
+          grep -F 'v4SandboxBattle:Boolean = false' "$bs"
+          grep -F 'this.v4SandboxBattle = this.mGF.datMgr.v4_sandbox_enabled != 0' "$bs"
+          grep -F 'if(!this.v4SandboxBattle) return' "$bs"
+          grep -F 'F1 mana | F2/F3 unit | F4 ally | F5 enemy' "$bs"
+          grep -F 'sandboxFreeSpells' "$ps"
+          grep -F 'sandboxFastUnits' "$pu"
+
+          # Legacy doctrine and difficulty gameplay hooks.
+          grep -F 'v4ApplyAllyDoctrine' "$cm"
+          grep -F 'v4ScaleEnemy' "$cm"
+          grep -F 'this.mGF.datMgr.v4_doctrine == 2' "$pu"
+          grep -F 'triggerBurst(COUNT:int = 3)' "$ew"
+          grep -F 'REVENGE WAVE!' "$be"
+          grep -F 'EPIC COUNTER WAVE!' "$be"
+          grep -F 'V4 ACHIEVEMENT:' "$br"
+
+          # V3.3.1 baseline and performance regression guards.
+          grep -F 'recordswiper1t.github.io' "$hm"
+          grep -F 'if(CLEARS >= 45)' "$dm"
+          grep -F 'dat_item_inv.length < 57' "$dm"
+          grep -F 'Math.abs(myClip.x - child.x) <= 900' "$cb"
+          grep -F 'var myDepth:int = this.getZDepth()' "$cb"
+          if grep -Fq 'children.sort(this.zSorting)' "$cb"; then
+            echo 'V4 regression: legacy full battlefield sort returned' >&2
+            exit 1
+          fi
+          grep -F 'load >= 175' "$bs"
+          grep -F 'firstClear:Boolean' "$be"
+      - name: Upload verified V4 prototype
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v4-foundation-verified
+          retention-days: 7
+          path: |
+            /tmp/v4/out/epic-war-5-expansion-v4-prototype.swf
+            /tmp/v4/import.log
+            /tmp/v4/verify.log
