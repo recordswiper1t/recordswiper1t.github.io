@@ -1,4 +1,4 @@
-name: Build Stick War Complete V1 performance foundation
+name: Build Stick War Complete V1 combined campaign
 
 on:
   workflow_dispatch:
@@ -51,11 +51,13 @@ jobs:
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/StickWar.as
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/SpatialHash.as
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/units/Unit.as
-      - name: Apply low-level V1 performance patches
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/Campaign.as
+      - name: Apply V1 campaign and low-level performance patches
         shell: bash
         run: |
           set -euxo pipefail
           python3 tools/stickwar/patches/patch_performance_v1.py /tmp/stickwar/export/scripts
+          python3 tools/stickwar/patches/patch_campaign_v1.py /tmp/stickwar/export/scripts
           cd /tmp/stickwar/export/scripts
           for f in \
             'com/brockw/stickwar/engine/HealthBar.as' \
@@ -64,7 +66,8 @@ jobs:
             'com/brockw/stickwar/engine/projectile/ProjectileManager.as' \
             'com/brockw/stickwar/engine/Team/Team.as' \
             'com/brockw/stickwar/engine/units/Unit.as' \
-            'com/brockw/stickwar/engine/BloodManager.as'; do
+            'com/brockw/stickwar/engine/BloodManager.as' \
+            'com/brockw/stickwar/campaign/Campaign.as'; do
             mkdir -p "/tmp/stickwar/import/scripts/$(dirname "$f")"
             cp "$f" "/tmp/stickwar/import/scripts/$f"
           done
@@ -75,7 +78,7 @@ jobs:
           java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript /tmp/stickwar/original.swf /tmp/stickwar/out/stick-war-complete-v1.swf /tmp/stickwar/import > /tmp/stickwar/import.log 2>&1
           test -s /tmp/stickwar/out/stick-war-complete-v1.swf
           head -c 3 /tmp/stickwar/out/stick-war-complete-v1.swf | grep -Eq 'FWS|CWS|ZWS'
-      - name: Re-decompile and verify patch markers
+      - name: Re-decompile and verify V1
         shell: bash
         run: |
           set -euxo pipefail
@@ -94,15 +97,19 @@ jobs:
           grep -F 'this._waitingToBeCleaned[i] = this._waitingToBeCleaned[last];' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
           grep -F 'private var _lastStatueType:String;' "$S/com/brockw/stickwar/engine/Team/Team.as"
           grep -F 'var u:UnitMove = null;' "$S/com/brockw/stickwar/engine/Team/Team.as"
+          grep -F 'Math.max(int(game.xml.xml.populationLimit),120)' "$S/com/brockw/stickwar/engine/Team/Team.as"
           grep -F 'private var _selectionVisualState:int = -99;' "$S/com/brockw/stickwar/engine/units/Unit.as"
           grep -F 'return xDiff * xDiff + yDiff * yDiff;' "$S/com/brockw/stickwar/engine/units/Unit.as"
           grep -F 'private var bloodCursor:int = 0;' "$S/com/brockw/stickwar/engine/BloodManager.as"
+          grep -F 'stickwarCompleteSaveV1' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'Archidon Border' "$S/com/brockw/stickwar/campaign/Campaign.as"
+          grep -F 'Inamorta Benchmark' "$S/com/brockw/stickwar/campaign/Campaign.as"
           ! grep -F 'this.projectiles.splice(i,1)[0]' "$S/com/brockw/stickwar/engine/projectile/ProjectileManager.as"
           sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
       - name: Upload verified build
         uses: actions/upload-artifact@v4
         with:
-          name: stick-war-complete-v1-performance-foundation
+          name: stick-war-complete-v1
           retention-days: 14
           path: |
             /tmp/stickwar/out/stick-war-complete-v1.swf
@@ -117,22 +124,28 @@ jobs:
           cp /tmp/stickwar/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
           sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
           cat > assets/STICKWAR-COMPLETE-V1-BUILD.txt <<'TXT'
-          Stick War Complete — V1 Performance Foundation
+          Stick War Complete — V1 Combined Campaign + Performance
           Canonical SW2 baseline SHA-256: 03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5
           Toolchain: FFDec 26.2.1
 
+          Campaign foundation:
+          - 65 total stages: 12 SW1 remaster battles + all 14 original SW2 authored stages + 39 new postgame battles.
+          - Original SW2 campaign stages/controllers remain intact between the prequel and postgame.
+          - Separate SharedObject namespace: stickwarCompleteSaveV1.
+          - Expansion population floor raised to 120 for both teams; production costs and unit population values are unchanged.
+          - New postgame spans Order/Chaos remixes, northern wars, bosses, trials, ascendant battles, 100-unit war and benchmark finale.
+
           Low-level performance foundation:
-          - Fixes HealthBar's never-cleared first-draw flag, stopping unchanged health bars from redrawing vector graphics forever.
-          - Replaces per-spatial-query Dictionary insert/delete churn with generation-stamped integer vectors.
-          - Dynamically expands spatial buckets and raises initial bucket capacity for expansion-scale armies.
-          - Replaces repeated depth bubble scans with bounded linear forward/reverse passes.
-          - Replaces projectile splice/shift compaction with in-place swap removal while retaining existing projectile pools.
-          - Avoids empty per-frame garrison UnitMove allocation/execution.
-          - Caches statue timeline state and unit selection-shadow graphics.
-          - Replaces hot Math.pow(x,2) distance/collision operations with multiplication.
-          - Cleans overdue corpse queues in bounded batches.
-          - Recycles blood/ash splats with ring cursors rather than shifting arrays.
-          - Clears transient air-effect arrays without splice-return allocation.
+          - Health bars stop redrawing unchanged vector graphics forever.
+          - Spatial query dedupe uses generation-stamped integer vectors instead of per-query Dictionary churn.
+          - Spatial buckets grow safely beyond vanilla density limits.
+          - Depth ordering uses bounded linear forward/reverse passes instead of repeated bubble-sort scans.
+          - Projectile cleanup uses in-place swap removal while preserving existing object pools.
+          - Empty per-frame garrison command allocation/execution is eliminated.
+          - Statue timeline state and unit selection-shadow graphics are cached.
+          - Hot squared-distance/collision Math.pow calls are multiplication.
+          - Overdue corpses are cleaned in bounded batches; blood/ash recycling avoids queue shifts.
+          - Transient air-effect arrays clear without splice-return allocation.
 
           Combat attacks, movement, AI, damage, cooldowns and projectile simulation remain full-rate.
           Rebuilt, re-decompiled, and structurally verified before publication.
@@ -141,6 +154,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-BUILD.txt assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish verified Stick War Complete V1 performance foundation [skip ci]'
+            git commit -m 'Publish verified Stick War Complete V1 [skip ci]'
             git push origin HEAD:stickwar-complete-v1-foundation
           fi
