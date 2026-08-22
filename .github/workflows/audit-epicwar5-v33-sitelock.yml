@@ -1,0 +1,74 @@
+name: Audit Epic War 5 V3.3 Sitelock
+
+on:
+  push:
+    branches:
+      - epicwar5-v33-sitelock-hotfix
+    paths:
+      - '.github/workflows/audit-epicwar5-v33-sitelock.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/audit-epicwar5-v33-sitelock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-v33-sitelock-hotfix
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify exact live V3.3 and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test "$(sha256sum assets/epic-war-5-expansion-v33.swf | cut -d' ' -f1)" = 'e97e02250d0e8b823fb9537a59bb7e86909320d5d84fe407ba8cf81fa3723d33'
+          mkdir -p /tmp/ffdec /tmp/v33
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Decompile exact live V3.3
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v33/export assets/epic-war-5-expansion-v33.swf > /tmp/v33/export.log 2>&1 || true
+          test -d /tmp/v33/export/scripts
+      - name: Find sitelock and host checks
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd /tmp/v33/export/scripts
+          {
+            echo '=== literal sitelock text ==='
+            grep -RniEi 'sitelock|site.?lock|site locked|this game' . || true
+            echo '=== domain / URL checks ==='
+            grep -RniEi 'loaderInfo|LoaderInfo|allowDomain|Security\.|armorgames|kongregate|newgrounds|domain|\.url|url\.indexOf|url\.search|host|location' . || true
+          } | tee /tmp/v33/sitelock-audit.txt
+      - name: Package candidate startup files
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/v33/candidates
+          grep -RliEi 'sitelock|site.?lock|this game|loaderInfo|LoaderInfo|allowDomain|Security\.|armorgames|domain|\.url' /tmp/v33/export/scripts | while read -r f; do
+            rel="${f#/tmp/v33/export/scripts/}"
+            mkdir -p "/tmp/v33/candidates/$(dirname "$rel")"
+            cp "$f" "/tmp/v33/candidates/$rel"
+          done
+      - name: Upload sitelock audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-v33-sitelock-audit
+          retention-days: 7
+          path: |
+            /tmp/v33/sitelock-audit.txt
+            /tmp/v33/candidates
+            /tmp/v33/export.log
