@@ -1,0 +1,25 @@
+Epic War 5 — Expansion V3.2 Quality Pass
+Source: canonical Armor Games SWF SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: 65dda500163de79538a8a8810cd21d8eafed0f9edb3c12c0edd81714c5e01f36
+
+V3.2 quality changes:
+- Main story + extra + Expansion path now reaches all 12 army slots at 45 unique clears; trial wins remain optional accelerators.
+- Every unit/hero keeps 18 total upgrade slots, but advanced slots 10-18 now use role-specific existing abilities instead of repeated filler.
+- Advanced branch pricing is depth-aware: 16x rank for roots, 18x for middle nodes, 20x for capstones.
+- The strongest expansion gear is rebalanced around tradeoffs; the exact same item cannot occupy multiple gear slots on one character.
+- Expansion equipment is a first-clear reward; repeat clears grant extra EXP instead of unlimited copies of the stage reward.
+- Expansion enemy HP/attack growth is smoother; second portals, second bosses, and fog pressure begin slightly later.
+- Expansion stage cards display T1-T5 threat bands.
+- V3.1 save repair, unlock feedback, defense/population caps, and performance caching remain intact.
+
+Scope unchanged:
+- 25 Expansion stages.
+- 55 total equipment entries.
+- 12 maximum army slots.
+- 18 upgrade slots per unit/hero.
+
+Verification:
+- Full V3 + V3.1 + V3.2 patch stack applied to the exact clean SWF.
+- FFDec import/rebuild succeeded.
+- Re-decompiled release contains all required V3.2 markers.
