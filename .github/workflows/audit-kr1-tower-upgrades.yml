@@ -1,0 +1,76 @@
+name: Audit KR1 tower upgrade contracts
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/audit_kr1_tower_upgrades.py'
+      - '.github/workflows/audit-kr1-tower-upgrades.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: kr1-tower-upgrade-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch publisher KR1 and FFDec
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/ultimate/audit_kr1_tower_upgrades.py
+          mkdir -p /tmp/u /tmp/ffdec /tmp/u/report
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+
+      - name: Export publisher KR1 ActionScript
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/export
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/export /tmp/u/kr1.swf >/tmp/u/export.log 2>&1 || true
+          for cls in \
+            TowerArcherRanger TowerArcherMusketeer TowerSoldierPaladin TowerSoldierBarbarian \
+            TowerMageArcane TowerMageSorcerer TowerEngineerTesla TowerEngineerBfg; do
+            test -f "/tmp/u/export/scripts/${cls}.as"
+          done
+
+      - name: Extract action/rank contracts
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/audit_kr1_tower_upgrades.py /tmp/u/export/scripts \
+            --output /tmp/u/report/kr1-tower-upgrades.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/u/report/kr1-tower-upgrades.json',encoding='utf-8'))
+          assert d['summary']['tower_count']==8
+          assert d['summary']['all_have_upgradeTower']
+          assert d['summary']['total_special_actions']>0
+          for cls,row in d['towers'].items():
+              assert row['actions'], cls
+              print(cls, row['actions'])
+          PY
+
+      - name: Upload structural report only
+        uses: actions/upload-artifact@v4
+        with:
+          name: kr1-tower-upgrade-contracts
+          path: /tmp/u/report/kr1-tower-upgrades.json
+          retention-days: 30
