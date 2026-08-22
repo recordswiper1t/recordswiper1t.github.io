@@ -22,13 +22,14 @@ import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
+V121_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12-1.swf"
 V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"
 V11_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v11.swf"
 V10_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v10.swf"
 V9_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v9.swf"
 V8_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v8.swf"
 V7_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v5.swf"
-SWF = next((p for p in (V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF) if p.exists()), V11_SWF)
+SWF = next((p for p in (V121_SWF, V12_SWF, V11_SWF, V10_SWF, V9_SWF, V8_SWF, V7_SWF) if p.exists()), V11_SWF)
 CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
