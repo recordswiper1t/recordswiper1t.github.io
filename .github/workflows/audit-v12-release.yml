@@ -146,4 +146,3 @@ jobs:
           local_hash=$(sha256sum /tmp/krf-v121.swf | cut -d' ' -f1)
           manifest_hash=$(cut -d' ' -f1 assets/V12-1-SHA256SUMS.txt)
           test "$local_hash" = "$manifest_hash"
-
