@@ -1,0 +1,146 @@
+name: Build and verify Epic War 5 Expansion V3.5
+
+# Revalidate pull requests after the verified binary is published by the branch build.
+on:
+  push:
+    branches: [codex/epicwar5-expansion-v35]
+    paths:
+      - '.github/workflows/build-epicwar5-expansion-v35.yml'
+      - 'tools/epicwar5/expansion/patch_direct_expansion_v35.py'
+      - 'assets/epic-war-5-expansion-v34.swf'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/**'
+      - 'index.html'
+      - 'README.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-epicwar5-expansion-v35.yml'
+      - 'tools/epicwar5/expansion/patch_direct_expansion_v35.py'
+      - 'assets/epic-war-5-expansion-v35.swf'
+      - 'assets/EPICWAR5-EXPANSION-V35-BUILD.txt'
+      - 'assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/**'
+      - 'index.html'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v5
+        with: {distribution: temurin, java-version: '17'}
+      - name: Freeze V3.4 and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test "$(sha256sum assets/epic-war-5-expansion-v34.swf | cut -d' ' -f1)" = '3df32beb904019239883101afe60ae7dae3c64c9a09321395afaa0c77b7085d2'
+          mkdir -p /tmp/ffdec /tmp/v35/src /tmp/v35/out /tmp/v35/verify
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Patch exact V3.4 and rebuild V3.5
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v35/src assets/epic-war-5-expansion-v34.swf >/tmp/v35/export.log 2>&1 || true
+          test -f /tmp/v35/src/scripts/Game/Interface/WorldMap.as
+          python3 tools/epicwar5/expansion/patch_direct_expansion_v35.py /tmp/v35/src
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v34.swf /tmp/v35/out/epic-war-5-expansion-v35.swf /tmp/v35/src >/tmp/v35/import.log 2>&1
+          test -s /tmp/v35/out/epic-war-5-expansion-v35.swf
+          head -c 3 /tmp/v35/out/epic-war-5-expansion-v35.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-decompile and verify direct entry plus frozen gameplay
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v35/verify /tmp/v35/out/epic-war-5-expansion-v35.swf >/tmp/v35/verify.log 2>&1 || true
+          game=/tmp/v35/verify/scripts/Game
+          wm=$game/Interface/WorldMap.as
+          bs=$game/System/Battle/BattleSystem.as
+          grep -F 'expansionDirectAvailable' "$wm"
+          grep -F 'parameters.ew5ExpansionDirect' "$wm"
+          grep -F 'this.expansionPendingStage = 100 + id' "$wm"
+          grep -F 'if(this.expansionPendingStage > 0)' "$wm"
+          grep -F 'sandboxMaster:Boolean = false' "$bs"
+          grep -F 'EXPANSION SANDBOX' "$bs"
+          python3 tools/epicwar5/expansion/validate_v34_invariants.py /tmp/v35/verify
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          t=Path('/tmp/v35/verify/scripts/Game/Interface/WorldMap.as').read_text(encoding='utf-8-sig')
+          m=re.search(r'(?ms)private function expansionStageClick.*?(?=private function expansionCloseClick)',t)
+          assert m and 'new battle_mc' not in m.group(0) and 'this.destroy();' not in m.group(0)
+          helper=re.search(r'(?ms)private function expansionDirectAvailable.*?(?=private function expansionInstallButton)',t)
+          assert helper and 'stageSetValue' not in helper.group(0) and 'saveData' not in helper.group(0)
+          assert t.count('this.expansionDirectAvailable()') == 3
+          PY
+      - name: Verify V3.5 release integration
+        shell: bash
+        run: |
+          set -euxo pipefail
+          grep -F '/assets/epic-war-5-expansion-v35.swf?v=35-direct-entry-r1' epicwar5-expansion/index.html
+          grep -F 'parameters:{ew5ExpansionDirect:"1"}' epicwar5-expansion/index.html
+          grep -F '/assets/epic-war-5-expansion-v35.swf?v=iphone-exp-v35-r1' iphone/epicwar5.html
+          grep -F 'params:{ew5ExpansionDirect:"1"}' iphone/epicwar5.html
+          grep -F 'epic-war-5-expansion-v35.swf' desktop/run_native.py desktop/run-native.ps1
+          grep -F 'Expansion V3.5' README.md index.html desktop/README.md
+          python3 -m py_compile tools/epicwar5/expansion/patch_direct_expansion_v35.py desktop/run_native.py
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
+          fi
+      - name: Stage build record and checksum
+        shell: bash
+        run: |
+          set -euxo pipefail
+          hash=$(sha256sum /tmp/v35/out/epic-war-5-expansion-v35.swf | cut -d' ' -f1)
+          printf '%s  assets/epic-war-5-expansion-v35.swf\n' "$hash" > /tmp/v35/out/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt
+          cat > /tmp/v35/out/EPICWAR5-EXPANSION-V35-BUILD.txt <<EOF
+          Epic War 5 — Expansion V3.5 — Direct Entry Completion
+          Baseline V3.4 SHA-256: 3df32beb904019239883101afe60ae7dae3c64c9a09321395afaa0c77b7085d2
+          Release SWF SHA-256: $hash
+          Toolchain: FFDec 26.2.1
+
+          - The Expansion-specific browser and iPhone launchers expose stage 26 immediately through the ew5ExpansionDirect FlashVar.
+          - Direct access never writes original-campaign clears, expansion clears, inventory, currency or progression.
+          - Expansion stages 27-50 still unlock sequentially from genuine expansion victories.
+          - Native/default launches retain the normal 12 story + 8 extra unlock requirement.
+          - V3.4 deferred battle entry, default-off sandbox, GitHub Pages host fix, V3.3 progression and large-battle performance remain intact.
+          - Rebuilt from exact V3.4, freshly re-decompiled, invariant-checked and release-surface verified.
+          EOF
+          sed -i 's/^          //' /tmp/v35/out/EPICWAR5-EXPANSION-V35-BUILD.txt
+      - name: Match committed release on pull requests
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sha256sum -c assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt
+          cmp /tmp/v35/out/epic-war-5-expansion-v35.swf assets/epic-war-5-expansion-v35.swf
+          cmp /tmp/v35/out/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v35-verified
+          retention-days: 7
+          path: /tmp/v35/out
+      - name: Publish verified V3.5 to the branch
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp /tmp/v35/out/epic-war-5-expansion-v35.swf assets/
+          cp /tmp/v35/out/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt assets/
+          cp /tmp/v35/out/EPICWAR5-EXPANSION-V35-BUILD.txt assets/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/epic-war-5-expansion-v35.swf assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt assets/EPICWAR5-EXPANSION-V35-BUILD.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Epic War 5 Expansion V3.5 direct entry [skip ci]'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi

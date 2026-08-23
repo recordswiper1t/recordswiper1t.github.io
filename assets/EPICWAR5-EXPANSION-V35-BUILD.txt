@@ -1,0 +1,11 @@
+Epic War 5 — Expansion V3.5 — Direct Entry Completion
+Baseline V3.4 SHA-256: 3df32beb904019239883101afe60ae7dae3c64c9a09321395afaa0c77b7085d2
+Release SWF SHA-256: ecf871992b20105c3c0ef4404035d2f1036088190237ad636b5cd866b04d8e22
+Toolchain: FFDec 26.2.1
+
+- The Expansion-specific browser and iPhone launchers expose stage 26 immediately through the ew5ExpansionDirect FlashVar.
+- Direct access never writes original-campaign clears, expansion clears, inventory, currency or progression.
+- Expansion stages 27-50 still unlock sequentially from genuine expansion victories.
+- Native/default launches retain the normal 12 story + 8 extra unlock requirement.
+- V3.4 deferred battle entry, default-off sandbox, GitHub Pages host fix, V3.3 progression and large-battle performance remain intact.
+- Rebuilt from exact V3.4, freshly re-decompiled, invariant-checked and release-surface verified.
