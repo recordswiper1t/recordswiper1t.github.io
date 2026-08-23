@@ -35,7 +35,7 @@ Python 3 is required for the macOS/Linux bootstrap launcher.
 
 ## Released game selection
 
-- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V7 fallback.
+- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
 - `epicwar5` launches `assets/epic-war-5-expansion-v331.swf`, the released V3.3.1 performance/sitelock build.
 
