@@ -116,10 +116,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -F 'kingdom-rush-frontiers-v12-1.swf' mod/fast.html
-          grep -F 'kingdom-rush-frontiers-v12-1.swf' iphone/krf.html
+          grep -F '/mod/fast.html?v=12-1-audio-popups-r2' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r2' iphone/krf.html
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run_native.py
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run-native.ps1
+          grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
 
       - uses: actions/upload-artifact@v4
         with:
