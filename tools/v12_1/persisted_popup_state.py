@@ -13,7 +13,7 @@ def read(path):
 
 
 def write(path, text):
-    (root / path).write_text(text, encoding='utf-8', newline='\n')
+    return (root / path).write_text(text, encoding='utf-8', newline='\n')
 
 
 def rep(text, old, new, label):
@@ -23,12 +23,69 @@ def rep(text, old, new, label):
     return text.replace(old, new, 1)
 
 
-# V12.1 introduced a second popup master (Level.qolPopupsEnabled), while the
-# built-in Tooltips preference is stored on game.main.tooltipsStatus. The static
-# master resets to true on every fresh SWF session, so a saved Tooltips=OFF
-# preference could still allow notification cards until the settings UI was
-# touched. Keep both controls in lockstep and always honor the persisted value.
+# The original SWF initializes game.main.tooltipsStatus=true on every fresh
+# session, and its built-in Tooltip ON/OFF handler never persists that field.
+# V12.1 added Level.qolPopupsEnabled as another in-memory master. Persist one
+# explicit KRF QoL preference and keep both runtime values synchronized.
 level = read('Level.as')
+
+level = rep(
+    level,
+    '''         this.qolDiagLastMs = getTimer();
+         this.qolRunStartMs = getTimer();
+         this.qolLoadBestTime();''',
+    '''         this.qolDiagLastMs = getTimer();
+         this.qolRunStartMs = getTimer();
+         this.qolLoadPopupPreference();
+         this.qolLoadBestTime();''',
+    'load popup preference during level init',
+)
+
+anchor = '''      private function qolTimeAttackKey() : String
+'''
+helpers = r'''      private function qolLoadPopupPreference() : void
+      {
+         var save:SharedObject = null;
+         try
+         {
+            save = SharedObject.getLocal("krf_qol_settings");
+            if(save.data.hasOwnProperty("popupsEnabled"))
+            {
+               Level.qolPopupsEnabled = Boolean(save.data.popupsEnabled);
+            }
+            else
+            {
+               Level.qolPopupsEnabled = this.game.main.tooltipsStatus;
+            }
+            this.game.main.tooltipsStatus = Level.qolPopupsEnabled;
+            save.close();
+         }
+         catch(err:Error)
+         {
+            Level.qolPopupsEnabled = this.game.main.tooltipsStatus;
+         }
+      }
+      
+      public function qolSavePopupPreference(param1:Boolean) : void
+      {
+         var save:SharedObject = null;
+         Level.qolPopupsEnabled = param1;
+         this.game.main.tooltipsStatus = param1;
+         try
+         {
+            save = SharedObject.getLocal("krf_qol_settings");
+            save.data.popupsEnabled = param1;
+            save.flush();
+            save.close();
+         }
+         catch(err:Error)
+         {
+         }
+      }
+      
+'''+anchor
+level = rep(level, anchor, helpers, 'popup persistence helpers')
+
 level = rep(
     level,
     'this.qolSettings.addChild(this.qolButton("POP-UP HINTS: " + (Level.qolPopupsEnabled ? "ON" : "OFF"),28,386,524,"popup_hints"));',
@@ -46,11 +103,10 @@ level = rep(
     '''         else if(action == "popup_hints")
          {
             var nextPopupState:Boolean = !(Level.qolPopupsEnabled && this.game.main.tooltipsStatus);
-            Level.qolPopupsEnabled = nextPopupState;
-            this.game.main.tooltipsStatus = nextPopupState;
+            this.qolSavePopupPreference(nextPopupState);
             if(!nextPopupState)
 ''',
-    'popup toggle synchronization',
+    'popup toggle synchronization and persistence',
 )
 level = rep(
     level,
@@ -90,8 +146,8 @@ level = rep(
 )
 write('Level.as', level)
 
-# The scripted Level 1 BUILD HERE sign is created outside Level itself, so it
-# must check the saved Tooltips value in addition to the session master.
+# The scripted Level-1 BUILD HERE sign is created outside Level itself, so it
+# checks both synchronized runtime values after Level loads the saved preference.
 tutorial_path = '§dynamic const function§.as'
 tutorial = read(tutorial_path)
 tutorial = rep(
@@ -102,14 +158,50 @@ tutorial = rep(
 )
 write(tutorial_path, tutorial)
 
+# The built-in settings menu must use the same persistence function. This is the
+# missing link in the original SWF: it only mutated tooltipsStatus in memory.
+settings_path = '§_-bK§.as'
+settings = read(settings_path)
+settings = rep(
+    settings,
+    '''                  this.cRoot.game.main.tooltipsStatus = true;
+                  Level.qolPopupsEnabled = true;
+                  this.§_-2O§();
+''',
+    '''                  this.cRoot.qolSavePopupPreference(true);
+                  this.§_-2O§();
+''',
+    'built-in popup on persistence',
+)
+settings = rep(
+    settings,
+    '''                  this.cRoot.game.main.tooltipsStatus = false;
+                  Level.qolPopupsEnabled = false;
+                  this.cRoot.removeToopTip();
+''',
+    '''                  this.cRoot.qolSavePopupPreference(false);
+                  this.cRoot.removeToopTip();
+''',
+    'built-in popup off persistence',
+)
+write(settings_path, settings)
+
 checks = {
     'Level.as': [
-        'nextPopupState',
+        'SharedObject.getLocal("krf_qol_settings")',
+        'save.data.popupsEnabled = param1',
+        'save.flush()',
+        'qolLoadPopupPreference();',
+        'qolSavePopupPreference(nextPopupState)',
         'Level.qolPopupsEnabled && this.game.main.tooltipsStatus ? "ON" : "OFF"',
         'if(!Level.qolPopupsEnabled || !this.game.main.tooltipsStatus)',
     ],
     tutorial_path: [
         'if(Level.qolPopupsEnabled && this.level.game.main.tooltipsStatus)',
+    ],
+    settings_path: [
+        'this.cRoot.qolSavePopupPreference(true)',
+        'this.cRoot.qolSavePopupPreference(false)',
     ],
 }
 for path, needles in checks.items():
@@ -118,4 +210,4 @@ for path, needles in checks.items():
         if needle not in text:
             raise SystemExit(f'{path}: missing {needle}')
 
-print('V12.1 persisted popup-state integration applied')
+print('V12.1 persisted popup preference applied')
