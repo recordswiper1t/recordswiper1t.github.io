@@ -13,7 +13,7 @@ $KrfCandidates = @(
 )
 $StickWar = Join-Path $Root 'assets\stick-war-complete-v1.swf'
 $EpicWar5Stable = Join-Path $Root 'assets\epic-war-5-sandbox-v2.swf'
-$EpicWar5Expansion = Join-Path $Root 'assets\epic-war-5-expansion-v34.swf'
+$EpicWar5Expansion = Join-Path $Root 'assets\epic-war-5-expansion-v35.swf'
 
 $Game = 'krf'
 $Refresh = $false
@@ -61,7 +61,7 @@ switch ($Game) {
         $Game = 'epicwar5'; $Swf = $EpicWar5Stable; $GameLabel = 'Epic War 5 (stable V1.05-based build)'; break
     }
     { $_ -in @('epicwar5-expansion','epic-war-5-expansion','ew5-expansion') } {
-        $Game = 'epicwar5-expansion'; $Swf = $EpicWar5Expansion; $GameLabel = 'Epic War 5 Expansion V3.4'; break
+        $Game = 'epicwar5-expansion'; $Swf = $EpicWar5Expansion; $GameLabel = 'Epic War 5 Expansion V3.5'; break
     }
     default { throw "Unknown game '$Game'. Choose krf, stickwar, epicwar5, or epicwar5-expansion." }
 }
