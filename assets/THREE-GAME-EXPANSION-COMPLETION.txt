@@ -11,9 +11,10 @@ SHA-256: 29655254eeba6d761ace518aa4e5372ac06dfd286760767947ec9488501a7653
 Artifact: assets/stick-war-complete-v1.swf
 Completion: repaired web startup, 65-stage campaign/war games, Battle Lab, Order/Chaos systems, mastery, possession, sandbox and performance release.
 
-Epic War 5 — Expansion V3.6
-SHA-256: cfc5424232b81693b42187242c2e93bb867b36636ba266ffc01595c687a74563
-Artifact: assets/epic-war-5-expansion-v36.swf
+Epic War 5 — Expansion V3.7
+SHA-256: cb78bef6532d1d425d68af15cccff36e5549d45424b8a0f230cd5cc2994b5e03
+Artifact: assets/epic-war-5-expansion-v37.swf
+Completion note: V3.7 replaces V3.6's invalid timeline-symbol clone with an explicit second six-slot battle HUD, eliminating the PlayerUnit initialization exception while retaining direct entry and clean map teardown.
 Completion: save-safe direct stage-26 entry, sequential stages 27-50, clean world-map-to-battle layering, default-off sandbox, progression/relic fixes and large-battle performance.
 
 Each binary was rebuilt, checksum-recorded, freshly decompiled for release-marker verification, checked against its active release surfaces, and browser-tested.
