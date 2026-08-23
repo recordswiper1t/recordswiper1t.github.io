@@ -1,14 +1,6 @@
 name: Smoke KRF live GitHub Pages
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'assets/kingdom-rush-frontiers-v12-1.swf'
-      - 'assets/V12-1-SHA256SUMS.txt'
-      - 'mod/**'
-      - 'iphone/krf.html'
-      - '.github/workflows/smoke-krf-pages.yml'
   push:
     branches: [main]
     paths:
