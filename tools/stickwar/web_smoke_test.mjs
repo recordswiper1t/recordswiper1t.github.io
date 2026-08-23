@@ -16,6 +16,8 @@ page.on('pageerror', err => {
   console.error(line);
 });
 page.on('requestfailed', req => {
+  // Chromium reports a successful HEAD response as ERR_ABORTED because it intentionally has no body.
+  if (req.method() === 'HEAD') return;
   const line = `[requestfailed] ${req.method()} ${req.url()} ${req.failure()?.errorText || ''}`;
   events.push(line);
   console.error(line);
@@ -31,7 +33,7 @@ page.on('response', res => {
 try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Verified'), null, { timeout: 30_000 });
-  await page.click('#play');
+  await page.click('#playCampaign');
   await page.waitForSelector('ruffle-player', { timeout: 30_000 });
   await page.waitForTimeout(15_000);
 
@@ -41,7 +43,7 @@ try {
     const canvas = shadow?.querySelector('canvas');
     return {
       status: document.querySelector('#status')?.textContent || '',
-      shellDisplay: getComputedStyle(document.querySelector('#shell')).display,
+      shellDisplay: getComputedStyle(document.querySelector('#playerShell')).display,
       playerPresent: Boolean(player),
       canvasPresent: Boolean(canvas),
       canvasWidth: canvas?.width || 0,
