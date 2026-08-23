@@ -21,11 +21,6 @@ on:
       - 'assets/epic-war-5-expansion-v35.swf'
       - 'assets/EPICWAR5-EXPANSION-V35-BUILD.txt'
       - 'assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt'
-      - 'epicwar5-expansion/index.html'
-      - 'iphone/epicwar5.html'
-      - 'desktop/**'
-      - 'index.html'
-      - 'README.md'
   workflow_dispatch:
 
 permissions:
@@ -82,20 +77,14 @@ jobs:
           assert helper and 'stageSetValue' not in helper.group(0) and 'saveData' not in helper.group(0)
           assert t.count('this.expansionDirectAvailable()') == 3
           PY
-      - name: Verify V3.5 release integration
+      - name: Verify archived V3.5 release integrity
         shell: bash
         run: |
           set -euxo pipefail
-          grep -F '/assets/epic-war-5-expansion-v35.swf?v=35-direct-entry-r1' epicwar5-expansion/index.html
-          grep -F 'parameters:{ew5ExpansionDirect:"1"}' epicwar5-expansion/index.html
-          grep -F '/assets/epic-war-5-expansion-v35.swf?v=iphone-exp-v35-r1' iphone/epicwar5.html
-          grep -F 'params:{ew5ExpansionDirect:"1"}' iphone/epicwar5.html
-          grep -F 'epic-war-5-expansion-v35.swf' desktop/run_native.py desktop/run-native.ps1
-          grep -F 'Expansion V3.5' README.md index.html desktop/README.md
-          python3 -m py_compile tools/epicwar5/expansion/patch_direct_expansion_v35.py desktop/run_native.py
-          if command -v pwsh >/dev/null 2>&1; then
-            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
-          fi
+          sha256sum -c assets/EPICWAR5-EXPANSION-V35-SHA256SUMS.txt
+          grep -F 'Epic War 5 — Expansion V3.5 — Direct Entry Completion' assets/EPICWAR5-EXPANSION-V35-BUILD.txt
+          grep -F 'Release SWF SHA-256: ecf871992b20105c3c0ef4404035d2f1036088190237ad636b5cd866b04d8e22' assets/EPICWAR5-EXPANSION-V35-BUILD.txt
+          python3 -m py_compile tools/epicwar5/expansion/patch_direct_expansion_v35.py
       - name: Stage build record and checksum
         shell: bash
         run: |
@@ -144,3 +133,4 @@ jobs:
             git commit -m 'Publish Epic War 5 Expansion V3.5 direct entry [skip ci]'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
+
