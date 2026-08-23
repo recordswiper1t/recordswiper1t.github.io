@@ -52,7 +52,7 @@ jobs:
           sha256sum -c assets/V12-1-SHA256SUMS.txt
           head -c 3 assets/kingdom-rush-frontiers-v12-1.swf | grep -Eq 'FWS|CWS|ZWS'
           grep -F 'V12.1 Audio + Pop-up Polish' assets/V12-1-BUILD.txt
-          grep -F 'saved Tooltips=OFF preference is honored immediately after reload' assets/V12-1-BUILD.txt
+          grep -F 'POP-UP HINTS / Tooltips preference persists across fresh Ruffle sessions' assets/V12-1-BUILD.txt
           test -s assets/kingdom-rush-frontiers-v12.swf
           sha256sum -c assets/V12-SHA256SUMS.txt
 
@@ -63,8 +63,11 @@ jobs:
           python3 -m py_compile tools/v12_1/audio_popups.py tools/v12_1/persisted_popup_state.py
           grep -F 'python3 tools/v12_1/persisted_popup_state.py' .github/workflows/build-v12-1-audio-popups.yml
           grep -F 'sha256sum -c assets/V12-SHA256SUMS.txt' .github/workflows/build-v12-1-audio-popups.yml
-          grep -F 'nextPopupState' tools/v12_1/persisted_popup_state.py
-          grep -F 'this.level.game.main.tooltipsStatus' tools/v12_1/persisted_popup_state.py
+          grep -F 'qolLoadPopupPreference' tools/v12_1/persisted_popup_state.py
+          grep -F 'qolSetPopupPreference' tools/v12_1/persisted_popup_state.py
+          grep -F 'SharedObject.getLocal("krf_qol_settings")' tools/v12_1/persisted_popup_state.py
+          grep -F 'save.flush()' tools/v12_1/persisted_popup_state.py
+          grep -F 'this.cRoot.qolSetPopupPreference' tools/v12_1/persisted_popup_state.py
 
       - name: Verify Python native launcher prefers V12.1
         shell: bash
@@ -104,12 +107,13 @@ jobs:
         run: |
           set -euo pipefail
           grep -F 'https://unpkg.com/@ruffle-rs/ruffle@0.5.0' mod/fast.html
-          grep -F '/mod/fast.html?v=12-1-audio-popups-r2' mod/index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' mod/fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r2' iphone/krf.html
+          grep -F '/mod/fast.html?v=12-1-audio-popups-r3' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r3' iphone/krf.html
           grep -F '/mod/' index.html
           grep -F '/iphone/krf.html' index.html
           grep -F 'V12.1' mod/index.html
+          grep -F 'persists across fresh Ruffle sessions' mod/index.html
           grep -F 'V12.1' README.md
           grep -F 'V12.1' desktop/README.md
           grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
@@ -127,9 +131,9 @@ jobs:
             if curl -fsS http://127.0.0.1:8765/mod/ >/tmp/krf-mod.html; then break; fi
             sleep 0.25
           done
-          grep -F '/mod/fast.html?v=12-1-audio-popups-r2' /tmp/krf-mod.html
-          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-audio-popups-r2' -o /tmp/krf-fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' /tmp/krf-fast.html
+          grep -F '/mod/fast.html?v=12-1-audio-popups-r3' /tmp/krf-mod.html
+          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-audio-popups-r3' -o /tmp/krf-fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' /tmp/krf-fast.html
           curl -fsS http://127.0.0.1:8765/assets/kingdom-rush-frontiers-v12-1.swf -o /tmp/krf-v121.swf
           test -s /tmp/krf-v121.swf
           head -c 3 /tmp/krf-v121.swf | grep -Eq 'FWS|CWS|ZWS'
