@@ -14,6 +14,29 @@ async function flashPress(x, y, holdMs = 140) {
   await page.mouse.up();
 }
 
+async function playerState() {
+  return page.evaluate(() => {
+    const player = document.querySelector('ruffle-player');
+    const shadow = player?.shadowRoot;
+    const canvas = shadow?.querySelector('canvas');
+    shadow?.querySelector('#hardware-acceleration-modal .close-modal')?.click();
+    return {
+      status: document.querySelector('#status')?.textContent || '',
+      playerPresent: Boolean(player),
+      canvasPresent: Boolean(canvas),
+      canvasWidth: canvas?.width || 0,
+      canvasHeight: canvas?.height || 0,
+      readyState: player?.readyState ?? null,
+    };
+  });
+}
+
+function assertPlayerLoaded(state, label) {
+  if (!state.playerPresent || !state.canvasPresent || state.canvasWidth === 0 || state.canvasHeight === 0 || state.readyState < 2) {
+    throw new Error(`${label}: Ruffle did not load the SWF: ${JSON.stringify(state)}`);
+  }
+}
+
 page.on('console', msg => {
   const line = `[console:${msg.type()}] ${msg.text()}`;
   events.push(line);
@@ -39,6 +62,7 @@ page.on('response', res => {
 });
 
 try {
+  // Normal campaign path: prove the released SWF reaches the interactive SW2 title menu.
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   console.log('[locale]', JSON.stringify(await page.evaluate(() => ({
     language: navigator.language,
@@ -49,37 +73,32 @@ try {
   await page.click('#playCampaign');
   await page.waitForSelector('ruffle-player', { timeout: 30_000 });
   await page.waitForTimeout(20_000);
-
-  const state = await page.evaluate(() => {
-    const player = document.querySelector('ruffle-player');
-    const shadow = player?.shadowRoot;
-    const canvas = shadow?.querySelector('canvas');
-    shadow?.querySelector('#hardware-acceleration-modal .close-modal')?.click();
-    return {
-      status: document.querySelector('#status')?.textContent || '',
-      shellDisplay: getComputedStyle(document.querySelector('#playerShell')).display,
-      playerPresent: Boolean(player),
-      canvasPresent: Boolean(canvas),
-      canvasWidth: canvas?.width || 0,
-      canvasHeight: canvas?.height || 0,
-      readyState: player?.readyState ?? null,
-    };
-  });
-  console.log('[state]', JSON.stringify(state));
+  const campaignState = await playerState();
+  console.log('[campaign-state]', JSON.stringify(campaignState));
+  assertPlayerLoaded(campaignState, 'campaign');
   await page.waitForTimeout(500);
   await page.screenshot({ path: '/tmp/super-stick-war-main-menu.png' });
 
-  if (!state.playerPresent || !state.canvasPresent || state.canvasWidth === 0 || state.canvasHeight === 0 || state.readyState < 2) {
-    throw new Error(`Ruffle did not load the SWF: ${JSON.stringify(state)}`);
-  }
-
-  // SW2 polls mouse-down state once per Flash frame, so hold the press long enough
-  // to be observed rather than using an instantaneous synthetic click.
-  const eventMark = events.length;
+  // SW2 polls mouse-down state once per Flash frame, so use a frame-visible press.
   await flashPress(180, 760);
   await page.waitForTimeout(3000);
   await page.screenshot({ path: '/tmp/super-stick-war-campaign-menu.png' });
-  console.log('[campaign-transition-events]', JSON.stringify(events.slice(eventMark)));
+
+  // Battle Lab is the strongest web-runtime regression test: swcLab=1 must now bypass
+  // the dead Flash-era intro loaders and route a fresh campaign directly into level 0,
+  // which CampaignScreen immediately opens as CampaignGameScreen.
+  const labEventMark = events.length;
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Verified'), null, { timeout: 30_000 });
+  await page.click('#playLab');
+  await page.waitForSelector('ruffle-player', { timeout: 30_000 });
+  await page.waitForTimeout(12_000);
+  const labState = await playerState();
+  console.log('[lab-state]', JSON.stringify(labState));
+  assertPlayerLoaded(labState, 'lab');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: '/tmp/super-stick-war-battle-lab.png' });
+  console.log('[lab-events]', JSON.stringify(events.slice(labEventMark)));
 
   const fatal = events.filter(line => /\[pageerror\]|panicked at|RuntimeError|wasm.*error|unhandled/i.test(line));
   if (fatal.length) {
