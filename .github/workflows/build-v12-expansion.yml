@@ -121,4 +121,3 @@ jobs:
             git commit -m 'Build verified V12 Last Rift expansion [skip ci]'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
-
