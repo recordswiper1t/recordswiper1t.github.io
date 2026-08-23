@@ -127,5 +127,22 @@ if t.count(old) != 1:
     raise SystemExit(f'CampaignMenuScreen Battle Lab routing: expected 1 match, got {t.count(old)}')
 t = t.replace(old, new, 1)
 
+old = '''         this.buttons = [];
+         this.keyboard.cleanUp();
+         this.youtubeLoader.stopVideo();
+         this.mouseState.cleanUp();
+'''
+new = '''         this.buttons = [];
+         this.keyboard.cleanUp();
+         if(this.youtubeLoader != null)
+         {
+            this.youtubeLoader.stopVideo();
+         }
+         this.mouseState.cleanUp();
+'''
+if t.count(old) != 1:
+    raise SystemExit(f'CampaignMenuScreen leave loader guard: expected 1 match, got {t.count(old)}')
+t = t.replace(old, new, 1)
+
 p.write_text(t, encoding='utf-8', newline='\n')
 print('patched', p.relative_to(root))
