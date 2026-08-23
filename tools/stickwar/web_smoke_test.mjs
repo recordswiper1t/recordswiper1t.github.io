@@ -103,6 +103,9 @@ try {
   const labState = await playerState();
   console.log('[lab-state]', JSON.stringify(labState));
   assertPlayerLoaded(labState, 'lab');
+  if (String(labState.parameters?.swcLab) !== '1') {
+    throw new Error(`Battle Lab FlashVars were not delivered to Ruffle: ${JSON.stringify(labState.parameters)}`);
+  }
   await page.waitForTimeout(500);
   const labScreenshot = '/tmp/super-stick-war-battle-lab.png';
   await page.screenshot({ path: labScreenshot });
@@ -116,6 +119,10 @@ try {
   }
   console.log('[lab-events]', JSON.stringify(events.slice(labEventMark)));
 
+  const legacyLoads = events.filter(line => /youtube\.com\/apiplayer|stickempires\.com\/getIntroLink/i.test(line));
+  if (legacyLoads.length) {
+    throw new Error(`Obsolete Flash-era startup loaders are still active:\n${legacyLoads.join('\n')}`);
+  }
   const fatal = events.filter(line => /\[pageerror\]|panicked at|RuntimeError|Error #\d+|AVM2.*error|wasm.*error|unhandled/i.test(line));
   if (fatal.length) {
     throw new Error(`Fatal browser/Ruffle diagnostics detected:\n${fatal.join('\n')}`);
