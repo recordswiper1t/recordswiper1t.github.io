@@ -129,7 +129,8 @@ jobs:
           grep -F 'applyBattleLabPreset' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
           grep -F 'Boss Rush' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
           # Web runtime must stay self-contained: no dead Flash-era intro loaders.
-          grep -F 'SUPER STICK WAR WEB RUNTIME V1' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
+          grep -F 'this.youtubeLoader = null;' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
+          grep -F 'this.main.showScreen("campaignMap",false,true);' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
           ! grep -F 'urlLoader.load(urlRequest);' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
           ! grep -F 'new YoutubeLoader("w6q9EoFmu0w")' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
           sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
@@ -143,6 +144,22 @@ jobs:
             /tmp/stickwar/RELEASE-SHA256SUMS.txt
             /tmp/stickwar/import.log
             /tmp/stickwar/verify.log
+      - name: Publish repaired V1 asset to repair branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'fix/super-stick-war-runtime'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git fetch origin "$GITHUB_HEAD_REF"
+          git checkout "$GITHUB_HEAD_REF"
+          cp /tmp/stickwar/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
+          sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish repaired Super Stick War V1 [skip ci]'
+            git push origin "HEAD:$GITHUB_HEAD_REF"
+          fi
       - name: Publish verified V1 asset to branch
         if: github.event_name == 'push' && github.ref_name == 'stickwar-complete-v1-foundation'
         shell: bash
