@@ -40,6 +40,14 @@ function assertPlayerLoaded(state, label) {
   }
 }
 
+function assertComplexScreenshot(path, label) {
+  const bytes = statSync(path).size;
+  console.log(`[${label}-screenshot-bytes]`, bytes);
+  if (bytes < 25_000) {
+    throw new Error(`${label} did not reach a live battle (screenshot ${bytes} bytes)`);
+  }
+}
+
 page.on('console', msg => {
   const line = `[console:${msg.type()}] ${msg.text()}`;
   events.push(line);
@@ -86,10 +94,16 @@ try {
   await flashPress(180, 760);
   await page.waitForTimeout(3000);
   await page.screenshot({ path: '/tmp/super-stick-war-campaign-menu.png' });
-  // NEW GAME is centered in the next panel. Reaching it proves the normal campaign button works.
+  // NEW GAME is centered in the next panel.
   await flashPress(500, 760);
   await page.waitForTimeout(2500);
   await page.screenshot({ path: '/tmp/super-stick-war-difficulty-menu.png' });
+  // NORMAL should skip the obsolete remote intro and enter level 0 (Archidon Border).
+  await flashPress(175, 765);
+  await page.waitForTimeout(10_000);
+  const campaignBattle = '/tmp/super-stick-war-campaign-battle.png';
+  await page.screenshot({ path: campaignBattle });
+  assertComplexScreenshot(campaignBattle, 'campaign-battle');
 
   // Battle Lab is the strongest web-runtime regression test: swcLab=1 must now bypass
   // the dead Flash-era intro loaders and route a fresh campaign directly into level 0,
@@ -109,14 +123,7 @@ try {
   await page.waitForTimeout(500);
   const labScreenshot = '/tmp/super-stick-war-battle-lab.png';
   await page.screenshot({ path: labScreenshot });
-  const labScreenshotBytes = statSync(labScreenshot).size;
-  console.log('[lab-screenshot-bytes]', labScreenshotBytes);
-  // The static title/menu screenshots are ~10 KB in this deterministic runner. A live
-  // battlefield is far more visually complex. This catches silent AS3 transition failures
-  // that leave Ruffle alive but strand the user on the title screen.
-  if (labScreenshotBytes < 25_000) {
-    throw new Error(`Battle Lab did not leave the title/menu screen (screenshot ${labScreenshotBytes} bytes)`);
-  }
+  assertComplexScreenshot(labScreenshot, 'lab');
   console.log('[lab-events]', JSON.stringify(events.slice(labEventMark)));
 
   const legacyLoads = events.filter(line => /youtube\.com\/apiplayer|stickempires\.com\/getIntroLink/i.test(line));
