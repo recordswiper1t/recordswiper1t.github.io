@@ -1,0 +1,11 @@
+Epic War 5 — Expansion V3.6 — Battle Layer Cleanup
+Baseline V3.5 SHA-256: ecf871992b20105c3c0ef4404035d2f1036088190237ad636b5cd866b04d8e22
+Release SWF SHA-256: cfc5424232b81693b42187242c2e93bb867b36636ba266ffc01595c687a74563
+Toolchain: FFDec 26.2.1
+
+- Expansion stage selection remains deferred to the world-map frame lifecycle.
+- The world map is destroyed before the queued battle is initialized, preventing the map layer from covering active combat in Ruffle.
+- Dedicated browser and iPhone launchers still expose only stage 26 without modifying campaign progress.
+- Expansion stages 27-50 remain sequentially gated by genuine victories.
+- V3.5 direct entry, V3.4 sandbox, progression and large-battle performance remain intact.
+- Rebuilt from exact V3.5, freshly re-decompiled, invariant-checked and release-surface verified.
