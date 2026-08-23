@@ -134,4 +134,3 @@ for name, needles in checks.items():
         if needle not in text:
             raise SystemExit(f'{name}: missing {needle}')
 print('V12 compatibility and full audit polish pass applied successfully')
-
