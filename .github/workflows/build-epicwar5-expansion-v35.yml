@@ -1,5 +1,6 @@
 name: Build and verify Epic War 5 Expansion V3.5
 
+# Revalidate pull requests after the verified binary is published by the branch build.
 on:
   push:
     branches: [codex/epicwar5-expansion-v35]
