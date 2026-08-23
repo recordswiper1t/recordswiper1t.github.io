@@ -1,3 +1,4 @@
+# Final release gate for the generated V12.1 binary and every published launcher path.
 name: Audit KRF V12.1 release surface
 
 on:
