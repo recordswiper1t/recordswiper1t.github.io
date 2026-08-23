@@ -66,9 +66,11 @@ try {
   }
 
   // Exercise the real Flash menu: PLAY CAMPAIGN is the lower-left button in the 850x700 SWF.
+  const eventMark = events.length;
   await page.mouse.click(180, 760);
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(5000);
   await page.screenshot({ path: '/tmp/super-stick-war-after-campaign.png' });
+  console.log('[campaign-transition-events]', JSON.stringify(events.slice(eventMark)));
 
   const fatal = events.filter(line => /\[pageerror\]|panicked at|RuntimeError|wasm.*error|unhandled/i.test(line));
   if (fatal.length) {
