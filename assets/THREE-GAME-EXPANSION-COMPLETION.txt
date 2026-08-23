@@ -1,0 +1,21 @@
+Three-Game Expansion Completion Manifest
+Published: 2026-08-23
+
+Kingdom Rush Ultimate — Original KR + Frontiers V12.2
+KR SHA-256: 7b5467a3eccc17f6dd001ff2d41bdf1b03d79fd515a2a9586c42bfd982bb1e23
+KRF SHA-256: f3dde7ab176e67e384d747aa7100df9a4123b300f6c4c129d19b9ee0b75817af
+Artifacts: assets/kingdom-rush-original-12141.swf; assets/kingdom-rush-frontiers-v12-2-offline.swf
+Completion: one launcher, isolated campaign/save runtimes, original KR campaign, Frontiers 30-wave Last Rift act, scoring, popup/audio controls, sandbox/performance systems, and deterministic offline startup.
+
+Super Stick War — Complete Expansion V1
+SHA-256: 29655254eeba6d761ace518aa4e5372ac06dfd286760767947ec9488501a7653
+Artifact: assets/stick-war-complete-v1.swf
+Completion: repaired web startup, 65-stage campaign/war games, Battle Lab, Order/Chaos systems, mastery, possession, sandbox and performance release.
+
+Epic War 5 — Expansion V3.8
+SHA-256: 8601d4cb1e4298e0d601f05e7ba75c05bc3cfbaff612442c47b3773ea2f7a6f8
+Artifact: assets/epic-war-5-expansion-v38.swf
+Completion note: V3.8 places slots 7-12 in an unclipped readable second row, adds a compact clickable sandbox palette, and gives sandbox-spawned allies and enemies explicit forward movement while retaining direct entry and clean map teardown.
+Completion: save-safe direct stage-26 entry, sequential stages 27-50, clean world-map-to-battle layering, default-off sandbox, progression/relic fixes and large-battle performance.
+
+Each binary was rebuilt, checksum-recorded, freshly decompiled for release-marker verification, checked against its active release surfaces, and browser-tested.

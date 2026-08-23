@@ -28,7 +28,7 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 | --- | --- | --- |
 | **Kingdom Rush Ultimate (KR + KRF)** | **Release-ready two-campaign launcher** | Complete original KR publisher runtime plus offline-ready Frontiers V12.2, separate saves, campaign switching, sandbox/performance systems and **The Last Rift** |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | **Expansion V3.8 complete locally** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
+| **Epic War 5** | **Released Expansion V3.8** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -52,9 +52,9 @@ V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery n
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. The expansion line progressed through V3/V3.1/V3.2 to the V3.3 performance/quality release and V3.3.1 site-hosting hotfix.
+Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V3.8 keeps the wider battlefield, makes slots 7–12 readable, replaces the sandbox cheat sheet with clickable controls, and gives spawned armies explicit forward orders.
 
-The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the dedicated V3.3 performance patch and validation/rebuild workflows.
+The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.8 UI/sandbox patch, frozen invariant checks, and reproducible FFDec rebuild workflow.
 
 ## Release verification
 

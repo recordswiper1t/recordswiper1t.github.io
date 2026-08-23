@@ -37,7 +37,7 @@ KRF_CANDIDATES = [
 ]
 GAME_FILES = {
     "stickwar": ROOT / "assets" / "stick-war-complete-v1.swf",
-    "epicwar5": ROOT / "assets" / "epic-war-5-expansion-v331.swf",
+    "epicwar5": ROOT / "assets" / "epic-war-5-expansion-v38.swf",
 }
 GAME_ALIASES = {
     "krf": "krf",

@@ -1,0 +1,16 @@
+Epic War 5 — Expansion V3.8 — HUD and Sandbox Polish
+Baseline V3.7 SHA-256: cb78bef6532d1d425d68af15cccff36e5549d45424b8a0f230cd5cc2994b5e03
+Release SWF SHA-256: 8601d4cb1e4298e0d601f05e7ba75c05bc3cfbaff612442c47b3773ea2f7a6f8
+Toolchain: FFDec 26.2.1
+
+- Positions slots 7-12 in the main battle UI coordinate space so timeline masks cannot clip or stack them.
+- Shows high-contrast slot numbers, equipped unit names, population, spawn progress, and explicit EMPTY/LOCKED states.
+- Repairs the missing battle-music alias that previously aborted Expansion battle initialization.
+- Replaces the keyboard-debug banner with a compact clickable sandbox palette positioned above the original HUD while retaining shortcuts.
+- Gives sandbox allies and enemies explicit forward orders to the opposite side of the battlefield.
+- Caps sandbox batches at 20 and speed at 4x to reduce accidental battle overload.
+- Permits loopback only for repeatable certification of the exact production bytes; Pages remains the production whitelist.
+- Preserves V3.7's world-map teardown before battle initialization and V3.5's save-safe direct Expansion entry.
+- Expansion stages 27-50 remain sequentially gated by genuine victories.
+- Sandbox remains default-off; V3.3.1 performance and production site-lock behavior remain intact.
+- Rebuilt from exact V3.7, freshly re-decompiled, invariant-checked and browser-runtime verified.

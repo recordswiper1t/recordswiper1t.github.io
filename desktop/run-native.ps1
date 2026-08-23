@@ -13,7 +13,7 @@ $KrfCandidates = @(
     (Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf')
 )
 $StickWar = Join-Path $Root 'assets\stick-war-complete-v1.swf'
-$EpicWar5 = Join-Path $Root 'assets\epic-war-5-expansion-v331.swf'
+$EpicWar5 = Join-Path $Root 'assets\epic-war-5-expansion-v38.swf'
 
 $Game = 'krf'
 $Refresh = $false
