@@ -80,17 +80,14 @@ jobs:
           assert helper and 'stageSetValue' not in helper.group(0) and 'saveData' not in helper.group(0)
           assert t.count('this.expansionDirectAvailable()') == 3
           PY
-      - name: Verify V3.6 release integration
+      - name: Verify archived V3.6 integrity
         shell: bash
         run: |
           set -euxo pipefail
-          grep -F '/assets/epic-war-5-expansion-v36.swf?v=36-map-cleanup-r1' epicwar5-expansion/index.html
-          grep -F 'parameters:{ew5ExpansionDirect:"1"}' epicwar5-expansion/index.html
-          grep -F '/assets/epic-war-5-expansion-v36.swf?v=iphone-exp-v36-r1' iphone/epicwar5.html
-          grep -F 'params:{ew5ExpansionDirect:"1"}' iphone/epicwar5.html
-          grep -F 'epic-war-5-expansion-v36.swf' desktop/run_native.py desktop/run-native.ps1
-          grep -F 'Expansion V3.6' README.md index.html desktop/README.md
-          python3 -m py_compile tools/epicwar5/expansion/patch_expansion_map_cleanup_v36.py desktop/run_native.py
+          sha256sum -c assets/EPICWAR5-EXPANSION-V36-SHA256SUMS.txt
+          test "$(sha256sum assets/epic-war-5-expansion-v36.swf | cut -d' ' -f1)" = 'cfc5424232b81693b42187242c2e93bb867b36636ba266ffc01595c687a74563'
+          grep -F 'Expansion V3.6' assets/EPICWAR5-EXPANSION-V36-BUILD.txt
+          python3 -m py_compile tools/epicwar5/expansion/patch_expansion_map_cleanup_v36.py
       - name: Stage build record and checksum
         shell: bash
         run: |

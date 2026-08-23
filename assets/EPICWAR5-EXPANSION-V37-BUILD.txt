@@ -1,0 +1,12 @@
+Epic War 5 — Expansion V3.7 — Battle Initialization Completion
+Baseline V3.6 SHA-256: cfc5424232b81693b42187242c2e93bb867b36636ba266ffc01595c687a74563
+Release SWF SHA-256: cb78bef6532d1d425d68af15cccff36e5549d45424b8a0f230cd5cc2994b5e03
+Toolchain: FFDec 26.2.1
+
+- Replaces the invalid getQualifiedClassName(unit1) clone, which produced a plain MovieClip without the children PlayerUnit requires.
+- Creates an explicit second six-slot HUD row with selection, unit identifier, population count and spawn progress controls.
+- Allows all twelve army controllers to initialize before battle state, spell controls and mana state are finalized.
+- Preserves V3.6's world-map teardown before battle initialization and V3.5's save-safe direct Expansion entry.
+- Expansion stages 27-50 remain sequentially gated by genuine victories.
+- V3.4 sandbox controls remain default-off; V3.3.1 performance and site-lock behavior remain intact.
+- Rebuilt from exact V3.6, freshly re-decompiled, invariant-checked and browser-runtime verified.
