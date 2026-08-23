@@ -16,6 +16,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -125,3 +126,8 @@ jobs:
             git commit -m 'Build verified V12 Last Rift expansion'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
+          # GITHUB_TOKEN-authored pushes intentionally do not start other workflows.
+          # Explicit dispatch guarantees that every published V12 rebuilds V12.1.
+          gh workflow run build-v12-1-audio-popups.yml --ref "${GITHUB_REF_NAME}"
+        env:
+          GH_TOKEN: ${{ github.token }}
