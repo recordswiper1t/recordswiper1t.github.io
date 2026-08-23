@@ -59,12 +59,15 @@ try {
     };
   });
   console.log('[state]', JSON.stringify(state));
+  await page.screenshot({ path: '/tmp/super-stick-war-startup.png' });
 
-  if (!state.playerPresent || !state.canvasPresent || state.canvasWidth === 0 || state.canvasHeight === 0) {
-    throw new Error(`Ruffle did not produce a live canvas: ${JSON.stringify(state)}`);
+  if (!state.playerPresent || !state.canvasPresent || state.canvasWidth === 0 || state.canvasHeight === 0 || state.readyState < 2) {
+    throw new Error(`Ruffle did not load the SWF: ${JSON.stringify(state)}`);
   }
 
-  const fatal = events.filter(line => /pageerror|panicked at|RuntimeError|Failed to load|wasm.*error|unhandled/i.test(line));
+  // Old SW2 menu code attempts obsolete YouTube/StickEmpires HTTP resources. Those are diagnosed
+  // separately and are not a Ruffle/WASM crash. Actual player/bootstrap failures must still fail CI.
+  const fatal = events.filter(line => /\[pageerror\]|panicked at|RuntimeError|wasm.*error|unhandled/i.test(line));
   if (fatal.length) {
     throw new Error(`Fatal browser/Ruffle diagnostics detected:\n${fatal.join('\n')}`);
   }
