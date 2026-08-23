@@ -34,7 +34,7 @@ jobs:
           mkdir -p /tmp/krf-src /tmp/report
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/krf-src assets/kingdom-rush-frontiers-v12-1.swf >/tmp/export.log 2>&1 || true
           test -f /tmp/krf-src/scripts/Level.as
-      - name: Trace tooltips persistence and settings handlers
+      - name: Trace tooltips persistence and initialization
         shell: bash
         run: |
           set -euo pipefail
@@ -60,6 +60,17 @@ jobs:
                           out.extend(f'{j+1:5d}: {lines[j]}' for j in range(a,b))
                           out.append('')
           Path('/tmp/report/settings-context.txt').write_text('\n'.join(out),encoding='utf-8')
+
+          level=(root/'Level.as').read_text(encoding='utf-8-sig').splitlines()
+          report=[]
+          for needle in ['public function Level(', 'qolInstallTimerHud()', 'qolLoadBestTime()', 'qolRenderSettings()']:
+              report.append(f'===== {needle} =====')
+              hits=[i for i,line in enumerate(level) if needle in line]
+              for i in hits:
+                  a=max(0,i-35); b=min(len(level),i+100)
+                  report.extend(f'{j+1:5d}: {level[j]}' for j in range(a,b))
+                  report.append('')
+          Path('/tmp/report/level-init-context.txt').write_text('\n'.join(report),encoding='utf-8')
           PY
           grep -RniF 'tooltipsStatus' /tmp/krf-src/scripts > /tmp/report/tooltips-index.txt || true
           grep -RniE 'SharedObject|\.flush\(' /tmp/krf-src/scripts > /tmp/report/sharedobject-index.txt || true
