@@ -215,6 +215,25 @@ class ClassRenamer:
 
 
 def transform_tree(elem: ET.Element, id_map: dict[int, int], renamer: ClassRenamer, stats: Counter) -> None:
+    # FFDec serializes SymbolClass/ExportAssets character references as a
+    # parallel <tags><item>text array, not as tagId attributes. Leaving those
+    # raw binds imported KR1 classes onto unrelated KRF character IDs at runtime.
+    if elem.attrib.get("type") in {"SymbolClassTag", "ExportAssetsTag"}:
+        tags = elem.find("tags")
+        if tags is not None:
+            for item in tags.findall("item"):
+                if item.text is None:
+                    continue
+                try:
+                    number = int(item.text)
+                except ValueError:
+                    continue
+                if number == 0:
+                    stats["linkage_document_ids_preserved"] += 1
+                elif number in id_map:
+                    item.text = str(id_map[number])
+                    stats["linkage_text_ids_remapped"] += 1
+
     for node in elem.iter():
         for key, value in list(node.attrib.items()):
             if is_character_id_field(node, key):
@@ -228,24 +247,39 @@ def transform_tree(elem: ET.Element, id_map: dict[int, int], renamer: ClassRenam
                     node.attrib[key] = str(id_map[number])
                     stats["id_values_remapped"] += 1
                     continue
-            new_value, count = renamer.replace(value)
-            if count:
-                node.attrib[key] = new_value
-                stats["class_tokens_renamed"] += count
+            # Do not globally rewrite scalar attributes. Obfuscated AS3 class
+            # names can be raw words such as "false" or "dynamic"; replacing
+            # those values corrupts ordinary SWF XML flags. ABC/linkage names
+            # live in element text constant/name arrays and are handled below.
         if node.text and len(node.text) <= 8192:
             new_text, count = renamer.replace(node.text)
             if count:
                 node.text = new_text
                 stats["class_tokens_renamed"] += count
-        if node.tail and len(node.tail) <= 8192:
-            new_tail, count = renamer.replace(node.tail)
-            if count:
-                node.tail = new_tail
-                stats["class_tokens_renamed"] += count
 
 
 def drop_source_document_class(symbol_tag: ET.Element, stats: Counter) -> None:
     """Remove SymbolClass entries bound to character/tag 0 (source document class)."""
+    tags = symbol_tag.find("tags")
+    names = symbol_tag.find("names")
+    if tags is not None and names is not None:
+        tag_items = list(tags.findall("item"))
+        name_items = list(names.findall("item"))
+        if len(tag_items) != len(name_items):
+            raise SystemExit("source SymbolClass tag/name arrays have different lengths")
+        if any((item.text or "").strip() == "0" for item in tag_items):
+            # The document-class SymbolClass block also binds the source
+            # preloader shell. None of those launch-only bindings belong in the
+            # Frontiers runtime, and retaining them can instantiate KR1's sealed
+            # preloader clips during KRF frame construction.
+            removed = len(tag_items)
+            tags.clear()
+            names.clear()
+            stats["document_preloader_linkage_entries_removed"] += removed
+            stats["document_class_entries_removed"] += 1
+
+    # Retain compatibility with FFDec variants that serialize bindings as
+    # attribute-bearing child records rather than parallel arrays.
     for parent in list(symbol_tag.iter()):
         for child in list(parent):
             attrs = child.attrib
@@ -259,15 +293,23 @@ def serialize_fragment(elem: ET.Element) -> bytes:
 
 
 def find_insertion_point(path: Path) -> int:
-    """Insert before the base SWF EndTag; tags after EndTag are not executable."""
+    """Insert definitions/code before the first rendered base timeline frame.
+
+    DoABC tags appended only before EndTag are structurally present but may never
+    initialize: they sit after the base timeline's final ShowFrame.  Imported
+    classes then appear in FFDec exports while getDefinitionByName fails at
+    runtime.  Definitions, linkages, and ABC must be registered before frame 1.
+    """
     with path.open("rb") as fh:
         with mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-            marker = b'type="EndTag"'
+            frame_marker = b'\n    <item type="ShowFrameTag"'
+            frame_hit = mm.find(frame_marker)
+            if frame_hit >= 0:
+                return frame_hit + 1
+            marker = b'\n    <item type="EndTag"'
             hit = mm.rfind(marker)
             if hit >= 0:
-                start = mm.rfind(b"<item", 0, hit)
-                if start >= 0:
-                    return start
+                return hit + 1
             close = mm.rfind(b"</tags>")
             if close < 0:
                 raise SystemExit(f"could not find EndTag or </tags> in {path}")
@@ -284,7 +326,7 @@ def copy_with_insert(base: Path, output: Path, insert_file: Path) -> None:
                 raise SystemExit("unexpected EOF copying base XML prefix")
             dst.write(chunk)
             remaining -= len(chunk)
-        dst.write(b"\n<!-- KR1 namespaced imported definitions/code -->\n")
+        dst.write(b"\n<!-- KR1 namespaced imported definitions/code before frame 1 -->\n")
         with insert_file.open("rb") as add:
             while True:
                 chunk = add.read(1024 * 1024)
@@ -372,7 +414,7 @@ def main() -> None:
         "policy": {
             "base_document_class_retained": True,
             "source_document_class_binding_removed": True,
-            "inserted_before_base_end_tag": True,
+            "inserted_before_base_first_show_frame": True,
             "top_level_source_timeline_control_imported": False,
             "nested_define_sprite_timeline_control_retained": True,
             "compact_collision_free_character_id_mapping": True,

@@ -26,24 +26,23 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 
 | Project | Current state | Main features |
 | --- | --- | --- |
-| **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
-| **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12.1 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
+| **Kingdom Rush Ultimate (KR + KRF)** | **Release-ready two-campaign launcher** | Complete original KR publisher runtime plus offline-ready Frontiers V12.2, separate saves, campaign switching, sandbox/performance systems and **The Last Rift** |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | Released on `main` through Expansion V3.3.1 | Sandbox builds, expanded campaign/equipment/progression, large-battle performance pass, release-candidate verification and sitelock hotfix |
+| **Epic War 5** | **Expansion V3.8 complete locally** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
-## Kingdom Rush Frontiers — current released mod
+## Kingdom Rush Frontiers — current expansion
 
-Current Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish.
+Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish. V12.2 preserves all of it and removes the obsolete online-service startup gate that could loop on fresh browsers.
 
 The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, recycle/loop play, tower clipboard, cleanup/cheat controls, diagnostics and adaptive load controls. Native Ruffle is recommended for large swarms because it avoids browser/WebAssembly overhead.
 
-## Kingdom Rush Ultimate — V13
+## Kingdom Rush Ultimate — KR + KRF
 
-Development lives in [PR #42](../../pull/42). The architecture keeps Frontiers V12.1 as the authoritative runtime and imports KR1 content through a collision-safe namespace/rebind layer so existing sandbox/performance systems remain intact.
+The browser launcher under `ultimate/` exposes both complete, tested campaigns from one access point. Original Kingdom Rush runs in its publisher engine and Frontiers runs in the enhanced V12.2 engine; the two runtimes and save namespaces stay isolated so switching campaigns cannot trigger the class collisions found in the abandoned single-SWF experiments.
 
-The branch is not promoted to a release until imported KR stages, KR tower/hero compatibility, combined campaign saves/UI and final FFDec round-trip/runtime gates pass. See `docs/KINGDOM_RUSH_ULTIMATE.md` and `docs/KINGDOM_RUSH_ULTIMATE_STATUS.md` on that branch for the detailed compatibility/release plan.
+The earlier shared-engine V13 work remains documented under `docs/` as development history, but no broken composed SWF is exposed by the site.
 
 ## Super Stick War — SW1 + SW2
 

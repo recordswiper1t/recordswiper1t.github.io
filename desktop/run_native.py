@@ -26,6 +26,7 @@ CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
 KRF_CANDIDATES = [
+    ROOT / "assets" / "kingdom-rush-frontiers-v12-2-offline.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v12-1.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v12.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v11.swf",

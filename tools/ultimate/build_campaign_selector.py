@@ -22,6 +22,20 @@ from campaign_registry import routes, validate as validate_routes
 
 MAP_CLASS = "§class const for§.as"
 PAGE_SIZE = 7
+MAP_PRIVATE_QNAME_RENAMES = {
+    # Each obfuscated private identifier below also exists as a public class
+    # name in the merged KR1/KRF ABC pool. FFDec can otherwise bind constructor
+    # writes to the public QName and Ruffle raises #1056 on a fresh save.
+    "§_-SC§": "ultimateFlagStarFrames",
+    "§_-dp§": "ultimateMapDecorations",
+    "§_-tQ§": "ultimateMapUpgradeButton",
+    "§_-sc§": "ultimateMapFlagStars",
+    "§_-4c§": "ultimateMapIntroLayer",
+    "§_-mz§": "ultimateMapTweens",
+    "§_-fx§": "ultimateMapProgressCounter",
+    "§_-ou§": "ultimateMapMenuTween",
+    "§_-Nx§": "ultimateMapSocialTween",
+}
 
 
 def ready_stage_rows() -> list[dict]:
@@ -69,9 +83,41 @@ def as3_string(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def normalize_map_private_fields(text: str) -> tuple[str, list[str]]:
+    """Give merged-map private traits unambiguous identifiers.
+
+    The Ultimate ABC contains public classes whose QNames equal several private
+    fields in the KRF map class.  FFDec's round trip can bind writes to the public
+    QName instead of the private trait, producing AVM2 #1056 only after a player
+    creates/loads a save.  Normalize the whole known collision set in one pass so
+    release testing does not merely uncover the same defect one field at a time.
+    """
+    renamed: list[str] = []
+    for obfuscated, safe in MAP_PRIVATE_QNAME_RENAMES.items():
+        obfuscated_count = text.count(obfuscated)
+        safe_count = text.count(safe)
+        if obfuscated_count and safe_count:
+            raise SystemExit(
+                f"map private field normalization: mixed {obfuscated!r}/{safe!r} state"
+            )
+        if obfuscated_count:
+            text = text.replace(obfuscated, safe)
+            renamed.append(obfuscated)
+        elif not safe_count:
+            raise SystemExit(
+                f"map private field normalization: neither {obfuscated!r} nor {safe!r} found"
+            )
+    return text, renamed
+
+
 def patch_map(text: str, stage_rows: list[dict]) -> tuple[str, dict]:
+    text, fields_renamed = normalize_map_private_fields(text)
     if "private var ultimateCampaignButton:Sprite" in text:
-        return text, {"already_patched": True, "source_ready_stages": len(stage_rows)}
+        return text, {
+            "already_patched": True,
+            "source_ready_stages": len(stage_rows),
+            "map_private_fields_renamed": fields_renamed,
+        }
 
     import_anchor = "   import flash.geom.*;\n"
     text = replace_once(text, import_anchor, import_anchor + "   import flash.text.*;\n", "campaign selector text imports")
@@ -107,6 +153,7 @@ def patch_map(text: str, stage_rows: list[dict]) -> tuple[str, dict]:
         "pages": (len(stage_rows) + PAGE_SIZE - 1) // PAGE_SIZE,
         "page_size": PAGE_SIZE,
         "blocked_original_stages": blocked_count,
+        "map_private_fields_renamed": fields_renamed,
     }
 
 

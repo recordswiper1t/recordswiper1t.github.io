@@ -1,5 +1,7 @@
 # Kingdom Rush Ultimate
 
+> Historical shared-engine design record. The released launcher now keeps the original KR and enhanced KRF V12.2 runtimes isolated behind one campaign chooser because live testing proved the composed AVM2 runtime unsafe. No experimental combined SWF is exposed.
+
 Goal: one Frontiers-based runtime containing the original **Kingdom Rush** and **Kingdom Rush: Frontiers** campaigns, their post-campaign stages, both games' towers and heroes, and the complete V11/V12 sandbox/performance feature set.
 
 ## Runtime rule

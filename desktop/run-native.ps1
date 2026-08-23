@@ -3,6 +3,7 @@ Set-Location (Join-Path $PSScriptRoot '..')
 
 $Root = (Get-Location).Path
 $KrfCandidates = @(
+    (Join-Path $Root 'assets\kingdom-rush-frontiers-v12-2-offline.swf'),
     (Join-Path $Root 'assets\kingdom-rush-frontiers-v12-1.swf'),
     (Join-Path $Root 'assets\kingdom-rush-frontiers-v12.swf'),
     (Join-Path $Root 'assets\kingdom-rush-frontiers-v11.swf'),

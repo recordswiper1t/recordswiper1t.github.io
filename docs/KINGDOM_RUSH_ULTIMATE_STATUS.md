@@ -1,5 +1,7 @@
 # Kingdom Rush Ultimate V13 — release gate status
 
+> Historical V13 integration record. This single-SWF approach was not promoted: gameplay tests exposed unresolved cross-engine class-initialization faults. The shipping Ultimate launcher instead provides both campaigns through isolated, tested runtimes, with Frontiers V12.2 removing obsolete online startup dependencies.
+
 V13 is deliberately fail-closed. The current authoritative Frontiers runtime is **V12.1** (`kingdom-rush-frontiers-v12-1.swf`), with V12 and V11 retained only as fallbacks for tooling. Ultimate must preserve the V12 Last Rift content, the V12.1 audio/pop-up polish, and the existing sandbox/performance systems while importing KR1 content.
 
 ## Automated gates

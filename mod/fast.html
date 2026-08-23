@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Kingdom Rush Frontiers — V12.1 The Last Rift</title>
+<title>Kingdom Rush Frontiers — V12.2 Offline Edition</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}
@@ -26,22 +26,22 @@ button,a{appearance:none;border:0;border-radius:10px;min-height:42px;padding:10p
 </head>
 <body>
 <div id="player"></div>
-<div id="loading"><div>Loading V12.1 — The Last Rift…</div></div>
+<div id="loading"><div>Loading V12.2 — Offline Edition…</div></div>
 <button id="menu" aria-label="Game controls">⋯</button>
 <div id="panel">
 <button id="quality">Visual quality: Auto</button>
 <button id="full" class="secondary">Full screen</button>
 <button id="saves" class="secondary">Saves / backup</button>
-<button id="reload" class="secondary">Reload V12.1</button>
-<a class="secondary" href="/mod/">V12.1 info / native desktop</a>
+<button id="reload" class="secondary">Reload V12.2</button>
+<a class="secondary" href="/mod/">V12.2 info / native desktop</a>
 <a class="secondary" href="https://github.com/recordswiper1t/recordswiper1t.github.io">Download native version</a>
 </div>
-<div id="status">V12.1 The Last Rift • browser mode • native desktop recommended for huge swarms</div>
+<div id="status">V12.2 Offline Edition • browser mode • native desktop recommended for huge swarms</div>
 <script src="https://unpkg.com/@ruffle-rs/ruffle@0.5.0"></script>
 <script>
 (()=>{
 'use strict';
-const SWF_URL='/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups';
+const SWF_URL='/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline';
 const CANONICAL_SWF_NAME='kingdom-rush-frontiers.swf';
 const playerHost=document.getElementById('player'),panel=document.getElementById('panel'),loading=document.getElementById('loading'),status=document.getElementById('status');
 const touch=('ontouchstart' in window)||(navigator.maxTouchPoints||0)>0||(matchMedia&&matchMedia('(pointer:coarse)').matches);
@@ -51,7 +51,7 @@ function defaultQuality(){return ios?'low':touch?'medium':'high'}
 function selectedQuality(){return localStorage.getItem('krf-fast-quality')||defaultQuality()}
 function updateQualityLabel(){document.getElementById('quality').textContent='Visual quality: '+selectedQuality().toUpperCase()}
 function makePlayer(){const api=window.RufflePlayer&&window.RufflePlayer.newest&&window.RufflePlayer.newest();if(!api)throw new Error('Ruffle failed to load.');const p=api.createPlayer();p.tabIndex=0;p.style.touchAction='none';playerHost.replaceChildren(p);player=p;return p}
-async function load(){loading.classList.remove('hidden');status.textContent='Loading V12.1 • '+selectedQuality().toUpperCase()+' quality';try{const p=player||makePlayer();await p.ruffle().load({url:SWF_URL,swfFileName:CANONICAL_SWF_NAME,autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:selectedQuality(),backgroundColor:'#000000',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,preloader:false,splashScreen:false,polyfills:false,backgroundExecutionMode:'none',base:location.origin+'/mod/'});try{p.focus({preventScroll:true})}catch(_){try{p.focus()}catch(__){}}status.textContent='V12.1 The Last Rift • '+selectedQuality().toUpperCase()+' • sandbox, loop scoring and post-boss act enabled';}catch(e){status.textContent='V12.1 failed to load: '+(e.message||String(e))+' • try the native desktop launcher';throw e}finally{loading.classList.add('hidden')}}
+async function load(){loading.classList.remove('hidden');status.textContent='Loading V12.2 • '+selectedQuality().toUpperCase()+' quality';try{const p=player||makePlayer();await p.ruffle().load({url:SWF_URL,swfFileName:CANONICAL_SWF_NAME,autoplay:'on',unmuteOverlay:'visible',contextMenu:'on',menu:true,allowFullscreen:true,fullScreenAspectRatio:'landscape',scale:'showAll',quality:selectedQuality(),backgroundColor:'#000000',allowScriptAccess:false,openUrlMode:'confirm',allowNetworking:'all',upgradeToHttps:true,compatibilityRules:true,warnOnUnsupportedContent:false,preloader:false,splashScreen:false,polyfills:false,backgroundExecutionMode:'none',base:location.origin+'/mod/'});try{p.focus({preventScroll:true})}catch(_){try{p.focus()}catch(__){}}status.textContent='V12.2 Offline Edition • '+selectedQuality().toUpperCase()+' • sandbox, loop scoring and post-boss act enabled';}catch(e){status.textContent='V12.2 failed to load: '+(e.message||String(e))+' • try the native desktop launcher';throw e}finally{loading.classList.add('hidden')}}
 function saveMenu(){if(!player)return;try{const r=player.getBoundingClientRect();player.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+Math.min(100,r.width/2),clientY:r.top+Math.min(100,r.height/2),button:2,buttons:2,view:window}));status.textContent='Ruffle menu requested • choose Save Manager';}catch(_){status.textContent='Long-press inside the game for Ruffle save controls'}}
 document.getElementById('menu').onclick=()=>panel.classList.toggle('open');
 document.getElementById('reload').onclick=()=>location.reload();
