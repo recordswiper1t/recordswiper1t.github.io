@@ -1,29 +1,39 @@
-name: Audit V12 release surface
+name: Audit KRF V12.1 release surface
 
 on:
   pull_request:
     branches: [main]
     paths:
+      - 'assets/kingdom-rush-frontiers-v12-1.swf'
+      - 'assets/V12-1-BUILD.txt'
+      - 'assets/V12-1-SHA256SUMS.txt'
       - 'assets/kingdom-rush-frontiers-v12.swf'
-      - 'assets/V12-BUILD.txt'
       - 'assets/V12-SHA256SUMS.txt'
+      - 'tools/v12_1/**'
       - 'desktop/**'
       - 'index.html'
       - 'mod/fast.html'
       - 'mod/index.html'
+      - 'iphone/krf.html'
       - 'README.md'
+      - '.github/workflows/build-v12-1-audio-popups.yml'
       - '.github/workflows/audit-v12-release.yml'
   push:
     branches: [main]
     paths:
+      - 'assets/kingdom-rush-frontiers-v12-1.swf'
+      - 'assets/V12-1-BUILD.txt'
+      - 'assets/V12-1-SHA256SUMS.txt'
       - 'assets/kingdom-rush-frontiers-v12.swf'
-      - 'assets/V12-BUILD.txt'
       - 'assets/V12-SHA256SUMS.txt'
+      - 'tools/v12_1/**'
       - 'desktop/**'
       - 'index.html'
       - 'mod/fast.html'
       - 'mod/index.html'
+      - 'iphone/krf.html'
       - 'README.md'
+      - '.github/workflows/build-v12-1-audio-popups.yml'
       - '.github/workflows/audit-v12-release.yml'
   workflow_dispatch:
 
@@ -32,40 +42,71 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify release binary and checksum
+
+      - name: Verify V12.1 binary, checksum and provenance
         shell: bash
         run: |
           set -euo pipefail
+          test -s assets/kingdom-rush-frontiers-v12-1.swf
+          sha256sum -c assets/V12-1-SHA256SUMS.txt
+          head -c 3 assets/kingdom-rush-frontiers-v12-1.swf | grep -Eq 'FWS|CWS|ZWS'
+          grep -F 'V12.1 Audio + Pop-up Polish' assets/V12-1-BUILD.txt
+          grep -F 'saved Tooltips=OFF preference is honored immediately after reload' assets/V12-1-BUILD.txt
           test -s assets/kingdom-rush-frontiers-v12.swf
           sha256sum -c assets/V12-SHA256SUMS.txt
-          head -c 3 assets/kingdom-rush-frontiers-v12.swf | grep -Eq 'FWS|CWS|ZWS'
-          grep -F 'Verified SHA-256: 6ef44a97f9b56fbed5a7af2c74f1b9fafdae7c7f3ef54c3d5627c588c56dc098' assets/V12-BUILD.txt
-      - name: Verify Python launcher
+
+      - name: Verify V12.1 patch/build pipeline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/v12_1/audio_popups.py tools/v12_1/persisted_popup_state.py
+          grep -F 'python3 tools/v12_1/persisted_popup_state.py' .github/workflows/build-v12-1-audio-popups.yml
+          grep -F 'sha256sum -c assets/V12-SHA256SUMS.txt' .github/workflows/build-v12-1-audio-popups.yml
+          grep -F 'nextPopupState' tools/v12_1/persisted_popup_state.py
+          grep -F 'this.level.game.main.tooltipsStatus' tools/v12_1/persisted_popup_state.py
+
+      - name: Verify Python native launcher prefers V12.1
         shell: bash
         run: |
           set -euo pipefail
           python3 -m py_compile desktop/run_native.py
           python3 desktop/run_native.py --help >/dev/null
-          grep -F 'V12_SWF = ROOT / "assets" / "kingdom-rush-frontiers-v12.swf"' desktop/run_native.py
-          grep -F '"dx12"' desktop/run_native.py
-          grep -F '"gl"' desktop/run_native.py
-      - name: Verify PowerShell launcher syntax and renderer fallback
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('desktop/run_native.py').read_text(encoding='utf-8')
+          v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
+          v12 = text.index('kingdom-rush-frontiers-v12.swf')
+          assert v121 < v12, 'Python launcher does not prefer V12.1 before V12'
+          assert '"dx12"' in text and '"gl"' in text
+          PY
+
+      - name: Verify PowerShell native launcher prefers V12.1
         shell: bash
         run: |
           set -euo pipefail
-          grep -F '$V12 = Join-Path $Root' desktop/run-native.ps1
-          grep -F "'dx12'" desktop/run-native.ps1
-          grep -F "'gl'" desktop/run-native.ps1
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path('desktop/run-native.ps1').read_text(encoding='utf-8')
+          v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
+          v12 = text.index('kingdom-rush-frontiers-v12.swf')
+          assert v121 < v12, 'PowerShell launcher does not prefer V12.1 before V12'
+          assert "'dx12'" in text and "'gl'" in text
+          PY
           if command -v pwsh >/dev/null 2>&1; then
             pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
           fi
-      - name: Verify browser and documentation target V12
+
+      - name: Verify browser, iPhone and docs target V12.1
         shell: bash
         run: |
           set -euo pipefail
-          grep -F 'v12-last-rift' index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12.swf?v=12-last-rift' mod/fast.html
-          grep -F 'LATEST BUILD • V12 THE LAST RIFT' mod/index.html
-          grep -F 'V12' README.md
+          grep -F 'https://unpkg.com/@ruffle-rs/ruffle@0.5.0' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r2' iphone/krf.html
+          grep -F '/mod/' index.html
+          grep -F '/iphone/krf.html' index.html
+          grep -F 'V12.1' mod/index.html
+          grep -F 'V12.1' README.md
+          grep -F 'V12.1' desktop/README.md
           grep -F 'DX12' desktop/README.md
           grep -F 'OpenGL' desktop/README.md
