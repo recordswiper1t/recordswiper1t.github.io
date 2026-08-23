@@ -49,5 +49,78 @@ if t.count(old) != 1:
     raise SystemExit(f'CampaignMenuScreen intro transition: expected 1 match, got {t.count(old)}')
 t = t.replace(old, new, 1)
 
+old = '''      private function normalButton() : void
+      {
+         this.checkCheatMode();
+         this.switchToIntro();
+         this.main.campaign.setDifficulty(Campaign.D_NORMAL);
+      }
+      
+      private function hardButton() : void
+      {
+         this.checkCheatMode();
+         this.switchToIntro();
+         this.main.campaign.setDifficulty(Campaign.D_HARD);
+      }
+      
+      private function insaneButton() : void
+      {
+         this.checkCheatMode();
+         this.switchToIntro();
+         this.main.campaign.setDifficulty(Campaign.D_INSANE);
+      }
+'''
+new = '''      private function normalButton() : void
+      {
+         this.checkCheatMode();
+         this.main.campaign.setDifficulty(Campaign.D_NORMAL);
+         this.switchToIntro();
+      }
+      
+      private function hardButton() : void
+      {
+         this.checkCheatMode();
+         this.main.campaign.setDifficulty(Campaign.D_HARD);
+         this.switchToIntro();
+      }
+      
+      private function insaneButton() : void
+      {
+         this.checkCheatMode();
+         this.main.campaign.setDifficulty(Campaign.D_INSANE);
+         this.switchToIntro();
+      }
+'''
+if t.count(old) != 1:
+    raise SystemExit(f'CampaignMenuScreen difficulty ordering: expected 1 match, got {t.count(old)}')
+t = t.replace(old, new, 1)
+
+p.write_text(t, encoding='utf-8', newline='\n')
+print('patched', p.relative_to(root))
+
+# Battle Lab parameters were originally consumed only by CampaignGameScreen, so the web
+# launcher's "Launch Battle Lab" button still landed on the ordinary title menu. Route
+# swcLab launches through the normal campaign-map/game-screen lifecycle without loading a
+# saved campaign. This keeps lab sessions isolated from the persistent campaign save.
+p = root / 'com/brockw/stickwar/stickwar2.as'
+t = p.read_text(encoding='utf-8-sig')
+old = '''         showScreen("mainMenu");
+         tracker = null;
+'''
+new = '''         paramObj = LoaderInfo(stage.root.loaderInfo).parameters;
+         if(paramObj != null && String(paramObj.swcLab) == "1")
+         {
+            this.campaign.setDifficulty(Campaign.D_NORMAL);
+            showScreen("campaignMap");
+         }
+         else
+         {
+            showScreen("mainMenu");
+         }
+         tracker = null;
+'''
+if t.count(old) != 1:
+    raise SystemExit(f'stickwar2 Battle Lab routing: expected 1 match, got {t.count(old)}')
+t = t.replace(old, new, 1)
 p.write_text(t, encoding='utf-8', newline='\n')
 print('patched', p.relative_to(root))
