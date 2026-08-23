@@ -37,12 +37,12 @@ jobs:
         env:
           STICKWAR_URL: http://127.0.0.1:8000/stickwar-complete/
         run: node tools/stickwar/web_smoke_test.mjs
-      - name: Upload startup screenshot
+      - name: Upload startup screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: super-stick-war-web-smoke
-          path: /tmp/super-stick-war-startup.png
+          path: /tmp/super-stick-war-*.png
           if-no-files-found: ignore
       - name: Show server log
         if: always()
