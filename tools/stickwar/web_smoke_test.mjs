@@ -40,7 +40,7 @@ try {
   await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Verified'), null, { timeout: 30_000 });
   await page.click('#playCampaign');
   await page.waitForSelector('ruffle-player', { timeout: 30_000 });
-  await page.waitForTimeout(12_000);
+  await page.waitForTimeout(20_000);
 
   const state = await page.evaluate(() => {
     const player = document.querySelector('ruffle-player');
@@ -65,11 +65,11 @@ try {
     throw new Error(`Ruffle did not load the SWF: ${JSON.stringify(state)}`);
   }
 
-  // Exercise the real Flash menu: PLAY CAMPAIGN is the lower-left button in the 850x700 SWF.
+  // PLAY CAMPAIGN is the lower-left button once the original 15s+ title fade has completed.
   const eventMark = events.length;
   await page.mouse.click(180, 760);
-  await page.waitForTimeout(5000);
-  await page.screenshot({ path: '/tmp/super-stick-war-after-campaign.png' });
+  await page.waitForTimeout(3000);
+  await page.screenshot({ path: '/tmp/super-stick-war-campaign-menu.png' });
   console.log('[campaign-transition-events]', JSON.stringify(events.slice(eventMark)));
 
   const fatal = events.filter(line => /\[pageerror\]|panicked at|RuntimeError|wasm.*error|unhandled/i.test(line));
