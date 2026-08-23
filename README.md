@@ -31,7 +31,7 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 | **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
 | **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12.1 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | Released on `main` through Expansion V3.5 | Direct Expansion entry, expanded campaign/equipment/progression, repaired battle transitions, optional battle sandbox, large-battle performance and release verification |
+| **Epic War 5** | Released on `main` through Expansion V3.6 | Direct Expansion entry, clean battle-layer transitions, expanded campaign/equipment/progression, optional battle sandbox, large-battle performance and release verification |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -55,10 +55,11 @@ V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery n
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the stable game page remains under `epicwar5/` and the completed expansion is under `epicwar5-expansion/`. V3.5 adds save-safe direct access to the first Expansion stage from the dedicated web/mobile launchers while retaining V3.4's repaired battle entry, default-off sandbox and V3.3.1 performance/sitelock stack.
+Released assets and build records live under `assets/`; the stable game page remains under `epicwar5/` and the completed expansion is under `epicwar5-expansion/`. V3.6 adds save-safe direct access to the first Expansion stage and removes the world-map display layer before combat starts, while retaining the default-off sandbox and V3.3.1 performance/sitelock stack.
 
-The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.3 performance work, V3.4 runtime/sandbox patch, V3.5 direct-entry completion, frozen invariant validator and reproducible FFDec rebuild workflows.
+The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.3 performance work, V3.4 runtime/sandbox patch, V3.5 direct-entry completion, V3.6 battle-layer cleanup, frozen invariant validator and reproducible FFDec rebuild workflows.
 
 ## Release verification
 
 Verified releases use matching build/checksum records in `assets/`. GitHub Actions workflows under `.github/workflows/` perform source pinning where applicable, FFDec import/re-export checks and release-marker validation before publication.
+

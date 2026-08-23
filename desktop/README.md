@@ -40,7 +40,7 @@ Python 3 is required for the macOS/Linux bootstrap launcher.
 - `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
 - `epicwar5` launches the stable V1.05-based Sandbox V2 build.
-- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v35.swf`, the released V3.5 Expansion with direct web/mobile entry, repaired stage transitions and a default-off battle sandbox. Native play keeps the normal campaign unlock requirement.
+- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v36.swf`, the released V3.6 Expansion with direct web/mobile entry, clean world-map-to-battle layering and a default-off battle sandbox. Native play keeps the normal campaign unlock requirement.
 
 Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish.
 
@@ -109,3 +109,4 @@ Native Ruffle stores Flash local data separately from browser Ruffle. KRF Time A
 ## Build verification
 
 Release SWFs are built from verified binaries/sources, imported with FFDec where applicable, re-exported, and checked for required gameplay/mod markers before they are published. SHA-256/build records in `assets/` identify the verified binaries.
+
