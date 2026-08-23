@@ -7,6 +7,16 @@ on:
       - '.github/workflows/verify-epicwar5-expansion-v34.yml'
       - 'tools/epicwar5/expansion/patch_runtime_sandbox_v34.py'
       - 'tools/epicwar5/expansion/validate_v34_invariants.py'
+      - 'assets/epic-war-5-expansion-v34.swf'
+      - 'assets/EPICWAR5-EXPANSION-V34-BUILD.txt'
+      - 'assets/EPICWAR5-EXPANSION-V34-SHA256SUMS.txt'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/run_native.py'
+      - 'desktop/run-native.ps1'
+      - 'desktop/README.md'
+      - 'index.html'
+      - 'README.md'
   workflow_dispatch:
 
 permissions:
@@ -99,6 +109,22 @@ jobs:
           grep -F 'load >= 175' "$bs"
 
           python3 tools/epicwar5/expansion/validate_v34_invariants.py /tmp/v34/verify
+      - name: Verify published V3.4 release surface
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sha256sum -c assets/EPICWAR5-EXPANSION-V34-SHA256SUMS.txt
+          head -c 3 assets/epic-war-5-expansion-v34.swf | grep -Eq 'FWS|CWS|ZWS'
+          grep -F '/assets/epic-war-5-expansion-v34.swf?v=34-runtime-r1' epicwar5-expansion/index.html
+          grep -F '/assets/epic-war-5-expansion-v34.swf?v=iphone-exp-v34-r1' iphone/epicwar5.html
+          grep -F 'epic-war-5-expansion-v34.swf' desktop/run_native.py
+          grep -F 'epic-war-5-expansion-v34.swf' desktop/run-native.ps1
+          grep -F '/epicwar5-expansion/' index.html
+          grep -F 'Expansion V3.4' README.md
+          python3 -m py_compile desktop/run_native.py
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
+          fi
       - name: Upload verified candidate
         uses: actions/upload-artifact@v4
         with:
