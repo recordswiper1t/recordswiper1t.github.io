@@ -1,8 +1,10 @@
-Kingdom Rush Frontiers — V12.1 Audio + Pop-up Polish
+Kingdom Rush Frontiers — V12.1 Audio + Pop-up Polish (completion rebuild)
 - Fixes music/SFX mute state so pause/settings global mute cannot restore categories the player turned off.
 - Existing channels mute immediately; requested per-sound volume is preserved for correct later unmute.
 - Adds POP-UP HINTS ON/OFF to sandbox settings.
-- The built-in Tooltips switch controls the same master preference.
+- The built-in Tooltips switch and sandbox switch now stay synchronized.
+- A saved Tooltips=OFF preference is honored immediately after reload, including tutorial/notification cards created before opening sandbox settings.
 - Pop-up OFF suppresses tooltips, tutorial BUILD HERE signs, enemy/tutorial notification cards and similar instructional prompts without disabling gameplay controls.
 - Retains V12 The Last Rift and all earlier sandbox/performance features.
+- The V12 input checksum is verified before patching and the generated SWF is freshly re-exported for marker verification.
 Built, re-exported and structurally verified with FFDec 26.2.1.
