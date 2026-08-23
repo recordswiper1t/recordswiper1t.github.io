@@ -1,0 +1,93 @@
+name: Audit Epic War 5 Expansion Runtime
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-runtime.yml'
+      - 'tools/epicwar5/expansion/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Decompile original and current expansion
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ffdec /tmp/ew5/original /tmp/ew5/exp
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          curl -fL --retry 3 --connect-timeout 20 'https://cache.armorgames.com/files/games/epic-war-5-12518.swf' -o /tmp/ew5/original.swf
+          test "$(sha256sum /tmp/ew5/original.swf | cut -d' ' -f1)" = '848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8'
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/original /tmp/ew5/original.swf >/tmp/ew5/original.log 2>&1 || true
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/exp assets/epic-war-5-expansion-v331.swf >/tmp/ew5/exp.log 2>&1 || true
+          test -f /tmp/ew5/original/scripts/Game/Interface/WorldMap.as
+          test -f /tmp/ew5/exp/scripts/Game/Interface/WorldMap.as
+      - name: Print transition call graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== ORIGINAL WorldMap battle entry references ==='
+          grep -nE 'battle_mc|\.init\(this\.mGF|destroy\(\)|stageClick|normal|extra|trial' /tmp/ew5/original/scripts/Game/Interface/WorldMap.as | head -n 260 || true
+          echo '=== EXPANSION WorldMap battle entry references ==='
+          grep -nE 'battle_mc|\.init\(this\.mGF|destroy\(\)|expansionStage|stageClick|normal|extra|trial' /tmp/ew5/exp/scripts/Game/Interface/WorldMap.as | head -n 340 || true
+          echo '=== ORIGINAL classes containing new battle_mc ==='
+          grep -RniF 'new battle_mc' /tmp/ew5/original/scripts | head -n 100 || true
+          echo '=== EXPANSION classes containing new battle_mc ==='
+          grep -RniF 'new battle_mc' /tmp/ew5/exp/scripts | head -n 100 || true
+          echo '=== battle_mc-related exported files ==='
+          find /tmp/ew5/exp/scripts -type f -iname '*battle*' | sort | head -n 180 || true
+      - name: Print WorldMap transition methods
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for tag, root in [('ORIGINAL', Path('/tmp/ew5/original/scripts/Game/Interface/WorldMap.as')), ('EXPANSION', Path('/tmp/ew5/exp/scripts/Game/Interface/WorldMap.as'))]:
+              t=root.read_text(encoding='utf-8-sig')
+              print('\n===',tag,'selected WorldMap methods ===')
+              for name in ['normalStageClick','extraStageClick','trialStageClick','stageClick','expansionStageClick','destroy']:
+                  m=re.search(r'(?ms)^\s*(?:public|private|protected) function '+re.escape(name)+r'\b.*?(?=^\s*(?:public|private|protected) function |^\s*}\s*$)',t)
+                  if m: print('\n---',name,'---\n',m.group(0)[:12000])
+          PY
+      - name: Print expansion lifecycle suspects
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in \
+            Game/Interface/BattleResult.as \
+            Game/System/Battle/BattleSystem.as \
+            Game/System/Battle/BattleControlEnemy.as \
+            Game/Manager/DataManager.as \
+            Game/Main.as; do
+            echo "=== $f transition/lifecycle refs ==="
+            grep -nEi 'worldmap|battle_mc|battle_result|destroy\(|removeChild|addChild|gotoAnd|stageRoot|isPaused|saveData|expansion' "/tmp/ew5/exp/scripts/$f" | head -n 280 || true
+          done
+      - name: Upload decompiled runtime audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-runtime-audit
+          retention-days: 7
+          path: |
+            /tmp/ew5/original/scripts/Game/Interface/WorldMap.as
+            /tmp/ew5/exp/scripts/Game/Interface/WorldMap.as
+            /tmp/ew5/exp/scripts/Game/Interface/BattleResult.as
+            /tmp/ew5/exp/scripts/Game/System/Battle/BattleSystem.as
+            /tmp/ew5/exp/scripts/Game/System/Battle/BattleControlEnemy.as
+            /tmp/ew5/exp/scripts/Game/Manager/DataManager.as
+            /tmp/ew5/exp/scripts/Game/Main.as
+            /tmp/ew5/original.log
+            /tmp/ew5/exp.log
