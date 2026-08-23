@@ -77,6 +77,7 @@ jobs:
           v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
           v12 = text.index('kingdom-rush-frontiers-v12.swf')
           assert v121 < v12, 'Python launcher does not prefer V12.1 before V12'
+          assert 'kingdom-rush-frontiers-v5.swf' in text
           assert '"dx12"' in text and '"gl"' in text
           PY
 
@@ -90,6 +91,7 @@ jobs:
           v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
           v12 = text.index('kingdom-rush-frontiers-v12.swf')
           assert v121 < v12, 'PowerShell launcher does not prefer V12.1 before V12'
+          assert 'kingdom-rush-frontiers-v5.swf' in text
           assert "'dx12'" in text and "'gl'" in text
           PY
           if command -v pwsh >/dev/null 2>&1; then
@@ -101,6 +103,7 @@ jobs:
         run: |
           set -euo pipefail
           grep -F 'https://unpkg.com/@ruffle-rs/ruffle@0.5.0' mod/fast.html
+          grep -F '/mod/fast.html?v=12-1-audio-popups-r2' mod/index.html
           grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' mod/fast.html
           grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r2' iphone/krf.html
           grep -F '/mod/' index.html
@@ -108,5 +111,27 @@ jobs:
           grep -F 'V12.1' mod/index.html
           grep -F 'V12.1' README.md
           grep -F 'V12.1' desktop/README.md
+          grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
           grep -F 'DX12' desktop/README.md
           grep -F 'OpenGL' desktop/README.md
+
+      - name: Smoke-test the GitHub Pages loading path locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/krf-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in {1..20}; do
+            if curl -fsS http://127.0.0.1:8765/mod/ >/tmp/krf-mod.html; then break; fi
+            sleep 0.25
+          done
+          grep -F '/mod/fast.html?v=12-1-audio-popups-r2' /tmp/krf-mod.html
+          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-audio-popups-r2' -o /tmp/krf-fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r2' /tmp/krf-fast.html
+          curl -fsS http://127.0.0.1:8765/assets/kingdom-rush-frontiers-v12-1.swf -o /tmp/krf-v121.swf
+          test -s /tmp/krf-v121.swf
+          head -c 3 /tmp/krf-v121.swf | grep -Eq 'FWS|CWS|ZWS'
+          local_hash=$(sha256sum /tmp/krf-v121.swf | cut -d' ' -f1)
+          manifest_hash=$(cut -d' ' -f1 assets/V12-1-SHA256SUMS.txt)
+          test "$local_hash" = "$manifest_hash"
