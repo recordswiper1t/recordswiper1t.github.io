@@ -1,0 +1,19 @@
+Three-Game Expansion Completion Manifest
+Published: 2026-08-23
+
+Kingdom Rush Frontiers — V12.1 The Last Rift
+SHA-256: 2c6ffd9447a31f12060485e1c0cc1c2d4b2305b2afb9c1bc78bc180ff9c9d904
+Artifact: assets/kingdom-rush-frontiers-v12-1.swf
+Completion: 30-wave post-boss act, corrected final-run scoring, persisted popup settings, audio controls, sandbox, performance and deterministic V12 -> V12.1 release dispatch.
+
+Super Stick War — Complete Expansion V1
+SHA-256: 29655254eeba6d761ace518aa4e5372ac06dfd286760767947ec9488501a7653
+Artifact: assets/stick-war-complete-v1.swf
+Completion: repaired web startup, 65-stage campaign/war games, Battle Lab, Order/Chaos systems, mastery, possession, sandbox and performance release.
+
+Epic War 5 — Expansion V3.6
+SHA-256: cfc5424232b81693b42187242c2e93bb867b36636ba266ffc01595c687a74563
+Artifact: assets/epic-war-5-expansion-v36.swf
+Completion: save-safe direct stage-26 entry, sequential stages 27-50, clean world-map-to-battle layering, default-off sandbox, progression/relic fixes and large-battle performance.
+
+Each binary was rebuilt, checksum-recorded, freshly decompiled for release-marker verification, checked against its active release surfaces, and browser-tested.
