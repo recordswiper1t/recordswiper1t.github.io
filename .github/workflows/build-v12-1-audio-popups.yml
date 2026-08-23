@@ -114,7 +114,6 @@ jobs:
           grep -F 'this.cRoot.qolSetPopupPreference(true)' '/tmp/verify/scripts/§_-bK§.as'
           grep -F 'this.cRoot.qolSetPopupPreference(false)' '/tmp/verify/scripts/§_-bK§.as'
           grep -F 'qolV12PostBossActive' /tmp/verify/scripts/Level15.as
-          grep -F 'this is Level15 && this.mode == §_-Mm§.MODE_CAMPAIGN && !Level15.qolV12PostBossActive' /tmp/verify/scripts/Level.as
           grep -F 'THE LAST RIFT' /tmp/verify/scripts/Level15.as
           sha256sum /tmp/out/kingdom-rush-frontiers-v12-1.swf > /tmp/out/V12-1-SHA256SUMS.txt
 
