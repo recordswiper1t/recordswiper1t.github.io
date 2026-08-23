@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -114,6 +114,7 @@ jobs:
           grep -F 'this.cRoot.qolSetPopupPreference(true)' '/tmp/verify/scripts/§_-bK§.as'
           grep -F 'this.cRoot.qolSetPopupPreference(false)' '/tmp/verify/scripts/§_-bK§.as'
           grep -F 'qolV12PostBossActive' /tmp/verify/scripts/Level15.as
+          grep -F 'this is Level15 && this.mode == §_-Mm§.MODE_CAMPAIGN && !Level15.qolV12PostBossActive' /tmp/verify/scripts/Level.as
           grep -F 'THE LAST RIFT' /tmp/verify/scripts/Level15.as
           sha256sum /tmp/out/kingdom-rush-frontiers-v12-1.swf > /tmp/out/V12-1-SHA256SUMS.txt
 
@@ -121,9 +122,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -F '/mod/fast.html?v=12-1-audio-popups-r3' mod/index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' mod/fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r3' iphone/krf.html
+          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-last-rift-final-r4' iphone/krf.html
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run_native.py
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run-native.ps1
           grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
@@ -151,6 +152,7 @@ jobs:
           - The preference is restored at Level construction before tutorial/notification gameplay objects are initialized.
           - Pop-up OFF suppresses tooltips, tutorial BUILD HERE signs, enemy/tutorial notification cards and similar instructional prompts without disabling gameplay controls.
           - Campaign/game saves and krf_qol_time_attack records are not overwritten by the popup preference.
+          - Level 15 time-attack and loop records bank only after all 30 Last Rift waves are complete, never at the original boss transition.
           - Retains V12 The Last Rift and all earlier sandbox/performance features.
           - The V12 input checksum is verified before patching and the generated SWF is freshly re-exported for marker verification.
           Built, re-exported and structurally verified with FFDec 26.2.1.
@@ -162,3 +164,4 @@ jobs:
             git commit -m 'Rebuild V12.1 with persisted popup settings [skip ci]'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
+
