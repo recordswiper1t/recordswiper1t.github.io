@@ -37,7 +37,7 @@ KRF_CANDIDATES = [
 GAME_FILES = {
     "stickwar": ROOT / "assets" / "stick-war-complete-v1.swf",
     "epicwar5": ROOT / "assets" / "epic-war-5-sandbox-v2.swf",
-    "epicwar5-expansion": ROOT / "assets" / "epic-war-5-expansion-v34.swf",
+    "epicwar5-expansion": ROOT / "assets" / "epic-war-5-expansion-v35.swf",
 }
 GAME_ALIASES = {
     "krf": "krf",
@@ -57,7 +57,7 @@ GAME_LABELS = {
     "krf": "Kingdom Rush Frontiers",
     "stickwar": "Super Stick War (SW1 + SW2)",
     "epicwar5": "Epic War 5 (stable V1.05-based build)",
-    "epicwar5-expansion": "Epic War 5 Expansion V3.4",
+    "epicwar5-expansion": "Epic War 5 Expansion V3.5",
 }
 
 
