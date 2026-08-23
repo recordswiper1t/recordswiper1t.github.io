@@ -34,8 +34,8 @@ jobs:
           set -euo pipefail
 
           site='https://recordswiper1t.github.io'
-          expected_fast='/mod/fast.html?v=12-1-audio-popups-r3'
-          expected_swf='/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3'
+          expected_fast='/mod/fast.html?v=12-1-last-rift-final-r4'
+          expected_swf='/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4'
           expected_hash=$(cut -d' ' -f1 assets/V12-1-SHA256SUMS.txt)
 
           # GitHub Pages can deploy a few moments after the source commit. Retry
@@ -76,3 +76,4 @@ jobs:
           test "$deployed_hash" = "$expected_hash"
 
           echo "Live KRF Pages SWF verified: $deployed_hash"
+
