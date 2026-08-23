@@ -1,0 +1,107 @@
+name: Temporary KRF lifecycle source audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-krf-lifecycle.yml'
+  push:
+    branches: [agent/krf-lifecycle-audit]
+    paths:
+      - '.github/workflows/audit-krf-lifecycle.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download FFDec 26.2.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          mkdir -p /tmp/ffdec && unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Export current V12.1 ActionScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/krf-src /tmp/report
+          mkdir -p /tmp/krf-src /tmp/report
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/krf-src assets/kingdom-rush-frontiers-v12-1.swf >/tmp/export.log 2>&1 || true
+          test -f /tmp/krf-src/scripts/Level.as
+          test -f /tmp/krf-src/scripts/Level15.as
+      - name: Extract victory, scoring and Last Rift lifecycle context
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('/tmp/krf-src/scripts')
+
+          def extract_function(text, marker):
+              start=text.find(marker)
+              if start < 0: return f'NOT FOUND: {marker}\n'
+              brace=text.find('{', start)
+              if brace < 0: return f'NO BRACE: {marker}\n'
+              depth=0; ins=False; esc=False; quote=''; i=brace
+              while i < len(text):
+                  c=text[i]
+                  if ins:
+                      if esc: esc=False
+                      elif c=='\\': esc=True
+                      elif c==quote: ins=False
+                  else:
+                      if c in ('"', "'"): ins=True; quote=c
+                      elif c=='{': depth+=1
+                      elif c=='}':
+                          depth-=1
+                          if depth==0:
+                              return text[start:i+1]+'\n'
+                  i+=1
+              return f'UNTERMINATED: {marker}\n'
+
+          level=(root/'Level.as').read_text(encoding='utf-8-sig')
+          l15=(root/'Level15.as').read_text(encoding='utf-8-sig')
+          sections=[]
+          for marker in [
+              'private function qolTimeAttackKey()',
+              'private function qolSaveBestTime()',
+              'private function qolBankRun()',
+              'private function qolFinishTimeAttack()',
+              'private function qolTimeAttackDone()',
+              'private function qolGameTick()',
+              'public function onPreWin()',
+          ]:
+              sections.append('===== Level.as :: '+marker+' =====\n'+extract_function(level,marker))
+          for marker in [
+              'override public function onPreWin()',
+              'private function qolV12BeginPostBoss()',
+              'private function qolV12Frame(',
+          ]:
+              sections.append('===== Level15.as :: '+marker+' =====\n'+extract_function(l15,marker))
+          Path('/tmp/report/functions.txt').write_text('\n'.join(sections),encoding='utf-8')
+
+          # Show every call site and enough surrounding context to determine ordering.
+          report=[]
+          for name,text in [('Level.as',level),('Level15.as',l15)]:
+              lines=text.splitlines()
+              needles=['onPreWin(', 'qolFinishTimeAttack(', 'qolBankRun(', 'qolV12PostBossActive', 'isReadyToWin', 'readyToWinTimeCounter']
+              report.append('######## '+name+' ########')
+              for i,line in enumerate(lines):
+                  if any(n in line for n in needles):
+                      report.append(f'--- hit line {i+1}: {line.strip()} ---')
+                      a=max(0,i-18); b=min(len(lines),i+19)
+                      report.extend(f'{j+1:5d}: {lines[j]}' for j in range(a,b))
+                      report.append('')
+          Path('/tmp/report/callsites.txt').write_text('\n'.join(report),encoding='utf-8')
+          PY
+          wc -l /tmp/report/*.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: krf-lifecycle-source-audit
+          path: /tmp/report
