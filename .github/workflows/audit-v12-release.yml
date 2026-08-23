@@ -107,6 +107,10 @@ jobs:
         run: |
           set -euo pipefail
           grep -F 'https://unpkg.com/@ruffle-rs/ruffle@0.5.0' mod/fast.html
+          if grep -Fq 'preloader:false' mod/fast.html iphone/krf.html; then
+            echo 'Deprecated Ruffle preloader option returned' >&2
+            exit 1
+          fi
           grep -F '/mod/fast.html?v=12-1-audio-popups-r3' mod/index.html
           grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' mod/fast.html
           grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r3' iphone/krf.html
