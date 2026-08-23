@@ -35,7 +35,7 @@ The repository is deliberately fail-closed: a generated SWF is not described as 
 
 ## Kingdom Rush Frontiers — current released mod
 
-Current Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish.
+Current Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish, and its POP-UP HINTS / Tooltips preference is stored separately from campaign saves so the choice persists across fresh Ruffle sessions.
 
 The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, recycle/loop play, tower clipboard, cleanup/cheat controls, diagnostics and adaptive load controls. Native Ruffle is recommended for large swarms because it avoids browser/WebAssembly overhead.
 
