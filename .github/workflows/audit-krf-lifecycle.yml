@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -134,9 +134,10 @@ jobs:
           Path('/tmp/report/network-context.txt').write_text('\n'.join(out),encoding='utf-8')
           Path('/tmp/report/network-files.txt').write_text('\n'.join(files)+'\n',encoding='utf-8')
           PY
-          grep -RniE 'https?://|\.swf["'"' ]|navigateToURL|URLLoader|Loader\.load|Security\.allowDomain|loaderInfo\.url|ExternalInterface' /tmp/krf-src/scripts > /tmp/report/network-index.txt || true
+          find /tmp/krf-src/scripts -type f -name '*.as' -print | sort > /tmp/report/all-script-files.txt
           wc -l /tmp/report/*.txt
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: krf-lifecycle-source-audit
           path: /tmp/report
