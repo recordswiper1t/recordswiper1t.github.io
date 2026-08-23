@@ -86,7 +86,6 @@ jobs:
               sections.append('===== Level15.as :: '+marker+' =====\n'+extract_function(l15,marker))
           Path('/tmp/report/functions.txt').write_text('\n'.join(sections),encoding='utf-8')
 
-          # Show every call site and enough surrounding context to determine ordering.
           report=[]
           for name,text in [('Level.as',level),('Level15.as',l15)]:
               lines=text.splitlines()
@@ -100,6 +99,42 @@ jobs:
                       report.append('')
           Path('/tmp/report/callsites.txt').write_text('\n'.join(report),encoding='utf-8')
           PY
+      - name: Trace publisher-era external loaders and site locks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('/tmp/krf-src/scripts')
+          needles=[
+              'server.cpmstar.com','mochiads.com','linkping.swf','AGI2.swf','ABS.swf',
+              'agi.armorgames.com','stats.ironhidegames.com','armorgames.com/login',
+              'getmobile.kingdomrushfrontiers.com','navigateToURL','URLLoader','Loader.load',
+              'Security.allowDomain','loaderInfo.url','ExternalInterface'
+          ]
+          out=[]
+          files=[]
+          for p in sorted(root.rglob('*.as')):
+              try: text=p.read_text(encoding='utf-8-sig')
+              except Exception: continue
+              lines=text.splitlines()
+              hits=[i for i,line in enumerate(lines) if any(n.lower() in line.lower() for n in needles)]
+              if not hits: continue
+              rel=p.relative_to(root)
+              files.append(str(rel))
+              out.append('===== '+str(rel)+' =====')
+              merged=[]
+              for i in hits:
+                  a=max(0,i-24); b=min(len(lines),i+25)
+                  if merged and a <= merged[-1][1]: merged[-1]=(merged[-1][0],max(merged[-1][1],b))
+                  else: merged.append((a,b))
+              for a,b in merged:
+                  out.extend(f'{j+1:5d}: {lines[j]}' for j in range(a,b))
+                  out.append('')
+          Path('/tmp/report/network-context.txt').write_text('\n'.join(out),encoding='utf-8')
+          Path('/tmp/report/network-files.txt').write_text('\n'.join(files)+'\n',encoding='utf-8')
+          PY
+          grep -RniE 'https?://|\.swf["'"' ]|navigateToURL|URLLoader|Loader\.load|Security\.allowDomain|loaderInfo\.url|ExternalInterface' /tmp/krf-src/scripts > /tmp/report/network-index.txt || true
           wc -l /tmp/report/*.txt
       - uses: actions/upload-artifact@v4
         with:
