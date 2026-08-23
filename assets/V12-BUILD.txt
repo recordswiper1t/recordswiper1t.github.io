@@ -2,6 +2,7 @@ Kingdom Rush Frontiers — V12: The Last Rift — Full Audit Release
 - 30-wave post-final-boss act with three runtime-built routes and 15 extra tower sites.
 - Evolved Rift enemy archetypes, Vorak the Rift Sovereign, Nyra the Riftwarden and the Rift Beacon.
 - Full-run loop records for fastest time, fewest virtual lives lost and combined score (seconds + 15s per virtual life).
+- Level 15 records bank only after The Last Rift is complete; the original boss transition cannot create a partial-run best.
 - Hero-owned summon cleanup for Cronan, Alric and Mirage.
 - Adaptive visual quality and amortized Last Rift scans while combat remains full-rate.
 - DX12-first Windows native launcher with OpenGL fallback; Vulkan is explicit opt-in only.
