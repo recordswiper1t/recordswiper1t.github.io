@@ -62,4 +62,3 @@ The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.3 p
 ## Release verification
 
 Verified releases use matching build/checksum records in `assets/`. GitHub Actions workflows under `.github/workflows/` perform source pinning where applicable, FFDec import/re-export checks and release-marker validation before publication.
-
