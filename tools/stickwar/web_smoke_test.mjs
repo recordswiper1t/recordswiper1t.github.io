@@ -6,6 +6,14 @@ const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1
 const page = await context.newPage();
 const events = [];
 
+async function flashPress(x, y, holdMs = 140) {
+  await page.mouse.move(x, y);
+  await page.waitForTimeout(120);
+  await page.mouse.down();
+  await page.waitForTimeout(holdMs);
+  await page.mouse.up();
+}
+
 page.on('console', msg => {
   const line = `[console:${msg.type()}] ${msg.text()}`;
   events.push(line);
@@ -65,9 +73,10 @@ try {
     throw new Error(`Ruffle did not load the SWF: ${JSON.stringify(state)}`);
   }
 
-  // PLAY CAMPAIGN is the lower-left button once the original 15s+ title fade has completed.
+  // SW2 polls mouse-down state once per Flash frame, so hold the press long enough
+  // to be observed rather than using an instantaneous synthetic click.
   const eventMark = events.length;
-  await page.mouse.click(180, 760);
+  await flashPress(180, 760);
   await page.waitForTimeout(3000);
   await page.screenshot({ path: '/tmp/super-stick-war-campaign-menu.png' });
   console.log('[campaign-transition-events]', JSON.stringify(events.slice(eventMark)));
