@@ -95,32 +95,37 @@ if t.count(old) != 1:
     raise SystemExit(f'CampaignMenuScreen difficulty ordering: expected 1 match, got {t.count(old)}')
 t = t.replace(old, new, 1)
 
-p.write_text(t, encoding='utf-8', newline='\n')
-print('patched', p.relative_to(root))
-
-# Battle Lab parameters were originally consumed only by CampaignGameScreen, so the web
-# launcher's "Launch Battle Lab" button still landed on the ordinary title menu. Route
-# swcLab launches through the normal campaign-map/game-screen lifecycle without loading a
-# saved campaign. This keeps lab sessions isolated from the persistent campaign save.
-p = root / 'com/brockw/stickwar/stickwar2.as'
-t = p.read_text(encoding='utf-8-sig')
-old = '''         showScreen("mainMenu");
-         tracker = null;
+old = '''         this.mc.mainPanel.stickWarButton.addEventListener(MouseEvent.CLICK,this.stickWarButton);
+         this.mc.introBrokenMc.addEventListener(MouseEvent.CLICK,this.openIntroLink);
+         this.mc.creditsScreen.visible = false;
+      }
+      
+      private function skipButton() : void
 '''
-new = '''         paramObj = LoaderInfo(stage.root.loaderInfo).parameters;
-         if(paramObj != null && String(paramObj.swcLab) == "1")
+new = '''         this.mc.mainPanel.stickWarButton.addEventListener(MouseEvent.CLICK,this.stickWarButton);
+         this.mc.introBrokenMc.addEventListener(MouseEvent.CLICK,this.openIntroLink);
+         this.mc.creditsScreen.visible = false;
+         if(this.main.loaderInfo != null && String(this.main.loaderInfo.parameters.swcLab) == "1")
          {
-            this.campaign.setDifficulty(Campaign.D_NORMAL);
-            showScreen("campaignMap");
+            // Battle Lab FlashVars were previously consumed only after entering a battle,
+            // so the web launcher could not actually launch the configured lab. Route the
+            // fresh, unsaved campaign instance into level 0 on the next frame.
+            this.main.campaign.setDifficulty(Campaign.D_NORMAL);
+            addEventListener(Event.ENTER_FRAME,this.startBattleLabOnce,false,0,true);
          }
-         else
-         {
-            showScreen("mainMenu");
-         }
-         tracker = null;
+      }
+      
+      private function startBattleLabOnce(evt:Event) : void
+      {
+         removeEventListener(Event.ENTER_FRAME,this.startBattleLabOnce);
+         this.main.showScreen("campaignMap",false,true);
+      }
+      
+      private function skipButton() : void
 '''
 if t.count(old) != 1:
-    raise SystemExit(f'stickwar2 Battle Lab routing: expected 1 match, got {t.count(old)}')
+    raise SystemExit(f'CampaignMenuScreen Battle Lab routing: expected 1 match, got {t.count(old)}')
 t = t.replace(old, new, 1)
+
 p.write_text(t, encoding='utf-8', newline='\n')
 print('patched', p.relative_to(root))
