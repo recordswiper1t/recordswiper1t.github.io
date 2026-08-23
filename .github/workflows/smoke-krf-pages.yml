@@ -76,4 +76,3 @@ jobs:
           test "$deployed_hash" = "$expected_hash"
 
           echo "Live KRF Pages SWF verified: $deployed_hash"
-
