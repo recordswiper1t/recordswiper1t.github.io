@@ -1,8 +1,9 @@
 import { chromium } from 'playwright';
 
 const url = process.env.STICKWAR_URL || 'http://127.0.0.1:8000/stickwar-complete/';
-const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const browser = await chromium.launch({ headless: true, args: ['--lang=en-US'] });
+const context = await browser.newContext({ locale: 'en-US', viewport: { width: 1280, height: 800 } });
+const page = await context.newPage();
 const events = [];
 
 page.on('console', msg => {
@@ -32,6 +33,11 @@ page.on('response', res => {
 
 try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  console.log('[locale]', JSON.stringify(await page.evaluate(() => ({
+    language: navigator.language,
+    languages: navigator.languages,
+    intl: Intl.DateTimeFormat().resolvedOptions().locale,
+  }))));
   await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Verified'), null, { timeout: 30_000 });
   await page.click('#playCampaign');
   await page.waitForSelector('ruffle-player', { timeout: 30_000 });
@@ -48,6 +54,7 @@ try {
       canvasPresent: Boolean(canvas),
       canvasWidth: canvas?.width || 0,
       canvasHeight: canvas?.height || 0,
+      readyState: player?.readyState ?? null,
       shadowText: (shadow?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 500),
     };
   });
@@ -62,5 +69,6 @@ try {
     throw new Error(`Fatal browser/Ruffle diagnostics detected:\n${fatal.join('\n')}`);
   }
 } finally {
+  await context.close();
   await browser.close();
 }
