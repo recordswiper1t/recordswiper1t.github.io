@@ -107,7 +107,7 @@ level_text = replace_one(level_text,'      private var qolRunStartMs:int = 0;\n'
 level_text = replace_one(level_text,'         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolTimerLast = -1;\n         this.qolBestTimeLoaded = false;','         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolRunStartedAtWave = this.indexWaves;\n         this.qolTimerLast = -1;\n         this.qolBestTimeLoaded = false;','manual run eligibility start')
 level_text = replace_one(level_text,'         this.qolTimeAttackLaunched = true;\n         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolTimerRunning = true;','         this.qolTimeAttackLaunched = true;\n         this.qolVirtualLivesLost = 0;\n         this.qolRunStartMs = getTimer();\n         this.qolRunStartedAtWave = this.indexWaves;\n         this.qolTimerRunning = true;','time attack eligibility start')
 level_text = replace_one(level_text,'      private function qolBankRun() : void\n      {\n         var elapsed:Number = this.qolCurrentRunSeconds();','      private function qolBankRun() : void\n      {\n         if(this.qolRunStartedAtWave != 0 || !this.qolTimeAttackDone())\n         {\n            this.qolUpdateTimerHud();\n            return;\n         }\n         var elapsed:Number = this.qolCurrentRunSeconds();','full-run bank guard')
-level_text = replace_one(level_text,'      private function qolFinishTimeAttack() : void\n      {\n         if(!this.qolTimerRunning)\n         {\n            return;\n         }','      private function qolFinishTimeAttack() : void\n      {\n         if(!this.qolTimerRunning)\n         {\n            if(Level.qolRecycleEnemies)\n            {\n               this.qolBankRun();\n            }\n            return;\n         }','recycle-only completion bank')
+level_text = replace_one(level_text,'      private function qolFinishTimeAttack() : void\n      {\n         if(!this.qolTimerRunning)\n         {\n            return;\n         }','      private function qolFinishTimeAttack() : void\n      {\n         // Level 15 continues into The Last Rift after its original boss. Both\n         // timer-driven and normal victory completion reach this function before\n         // Level15.onPreWin() installs that act, so defer banking until it does.\n         if(this is Level15 && this.mode == §_-Mm§.MODE_CAMPAIGN && !Level15.qolV12PostBossActive)\n         {\n            this.qolUpdateTimerHud();\n            return;\n         }\n         if(!this.qolTimerRunning)\n         {\n            if(Level.qolRecycleEnemies)\n            {\n               this.qolBankRun();\n            }\n            return;\n         }','defer original Level 15 completion and preserve recycle banking')
 
 # Public bridge used by the post-boss act to invoke the same safe Send-All path.
 level_text = replace_one(level_text,'      private function qolGameTick() : void\n','      public function qolV12StartAllWaves() : void\n      {\n         this.qolSendAllWaves();\n      }\n      \n      private function qolGameTick() : void\n','postboss send-all bridge')
@@ -122,7 +122,7 @@ subprocess.check_call([sys.executable, str(Path(__file__).with_name('level15-cur
 
 # Final structural markers before handing the source to FFDec.
 checks = {
-    'Level.as': ['qolVirtualLivesLost','qolBankRun','qolRunStartedAtWave','qolV12StartAllWaves','SoldierSandWarrior','SoldierMirageIllusion','Adaptive render quality'],
+    'Level.as': ['qolVirtualLivesLost','qolBankRun','qolRunStartedAtWave','qolV12StartAllWaves','!Level15.qolV12PostBossActive','SoldierSandWarrior','SoldierMirageIllusion','Adaptive render quality'],
     'Level15.as': ['THE LAST RIFT','VORAK, THE RIFT SOVEREIGN','NYRA THE RIFTWARDEN','qolV12BuildPath','qolV12PostBossActive'],
     'Enemy.as': ['qolRecordVirtualLivesLost(this.cost)'],
     'EnemyCanibalBeast.as': ['qolRecordVirtualLivesLost(this.cost)'],
@@ -134,3 +134,4 @@ for name, needles in checks.items():
         if needle not in text:
             raise SystemExit(f'{name}: missing {needle}')
 print('V12 compatibility and full audit polish pass applied successfully')
+
