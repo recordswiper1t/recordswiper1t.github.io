@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/verify-epicwar5-expansion-v34.yml'
       - 'tools/epicwar5/expansion/patch_runtime_sandbox_v34.py'
+      - 'tools/epicwar5/expansion/validate_v34_invariants.py'
   workflow_dispatch:
 
 permissions:
@@ -97,7 +98,7 @@ jobs:
           fi
           grep -F 'load >= 175' "$bs"
 
-          python3 tools/epicwar5/expansion/validate_v33_rc.py /tmp/v34/verify
+          python3 tools/epicwar5/expansion/validate_v34_invariants.py /tmp/v34/verify
       - name: Upload verified candidate
         uses: actions/upload-artifact@v4
         with:
