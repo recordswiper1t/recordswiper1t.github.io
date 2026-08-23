@@ -8,6 +8,7 @@ Sandbox V2 source patches have been applied.
 from pathlib import Path
 import sys
 
+# Stable release hotfix revision 1. Keep this script expansion-independent.
 if len(sys.argv) != 2:
     raise SystemExit('usage: patch_pages_host.py <ffdec-export-root>')
 
