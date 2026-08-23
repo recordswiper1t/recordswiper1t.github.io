@@ -7,6 +7,7 @@ Kingdom Rush Frontiers — V12.1 Audio + Pop-up Polish (persisted-settings compl
 - The preference is restored at Level construction before tutorial/notification gameplay objects are initialized.
 - Pop-up OFF suppresses tooltips, tutorial BUILD HERE signs, enemy/tutorial notification cards and similar instructional prompts without disabling gameplay controls.
 - Campaign/game saves and krf_qol_time_attack records are not overwritten by the popup preference.
+- Level 15 time-attack and loop records bank only after all 30 Last Rift waves are complete, never at the original boss transition.
 - Retains V12 The Last Rift and all earlier sandbox/performance features.
 - The V12 input checksum is verified before patching and the generated SWF is freshly re-exported for marker verification.
 Built, re-exported and structurally verified with FFDec 26.2.1.
