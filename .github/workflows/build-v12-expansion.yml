@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: {distribution: temurin, java-version: '17'}
       - name: Verify exact V11 base
         shell: bash
@@ -69,6 +69,7 @@ jobs:
           grep -F 'qolV12BuildPath' /tmp/verify/scripts/Level15.as
           grep -F 'qolVirtualLivesLost' /tmp/verify/scripts/Level.as
           grep -F 'qolRunStartedAtWave' /tmp/verify/scripts/Level.as
+          grep -F 'this is Level15 && this.mode == §_-Mm§.MODE_CAMPAIGN && !Level15.qolV12PostBossActive' /tmp/verify/scripts/Level.as
           grep -F 'SoldierSandWarrior' /tmp/verify/scripts/Level.as
           grep -F 'SoldierMirageIllusion' /tmp/verify/scripts/Level.as
           grep -F 'BANK CURRENT LOOP RUN' /tmp/verify/scripts/Level.as
@@ -92,6 +93,7 @@ jobs:
           - 30-wave post-final-boss act with three runtime-built routes and 15 extra tower sites.
           - Evolved Rift enemy archetypes, Vorak the Rift Sovereign, Nyra the Riftwarden and the Rift Beacon.
           - Full-run loop records for fastest time, fewest virtual lives lost and combined score (seconds + 15s per virtual life).
+          - Level 15 records bank only after The Last Rift is complete; the original boss transition cannot create a partial-run best.
           - Hero-owned summon cleanup for Cronan, Alric and Mirage.
           - Adaptive visual quality and amortized Last Rift scans while combat remains full-rate.
           - DX12-first Windows native launcher with OpenGL fallback; Vulkan is explicit opt-in only.

@@ -68,6 +68,8 @@ jobs:
           grep -F 'SharedObject.getLocal("krf_qol_settings")' tools/v12_1/persisted_popup_state.py
           grep -F 'save.flush()' tools/v12_1/persisted_popup_state.py
           grep -F 'this.cRoot.qolSetPopupPreference' tools/v12_1/persisted_popup_state.py
+          grep -F '!Level15.qolV12PostBossActive' tools/v12/run-build-v12.py
+          grep -F 'original Level 15 completion' tools/v12/run-build-v12.py
 
       - name: Verify Python native launcher prefers V12.1
         shell: bash
@@ -111,9 +113,9 @@ jobs:
             echo 'Deprecated Ruffle preloader option returned' >&2
             exit 1
           fi
-          grep -F '/mod/fast.html?v=12-1-audio-popups-r3' mod/index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' mod/fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-r3' iphone/krf.html
+          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-last-rift-final-r4' iphone/krf.html
           grep -F '/mod/' index.html
           grep -F '/iphone/krf.html' index.html
           grep -F 'V12.1' mod/index.html
@@ -135,9 +137,9 @@ jobs:
             if curl -fsS http://127.0.0.1:8765/mod/ >/tmp/krf-mod.html; then break; fi
             sleep 0.25
           done
-          grep -F '/mod/fast.html?v=12-1-audio-popups-r3' /tmp/krf-mod.html
-          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-audio-popups-r3' -o /tmp/krf-fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-audio-popups-r3' /tmp/krf-fast.html
+          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' /tmp/krf-mod.html
+          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-last-rift-final-r4' -o /tmp/krf-fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' /tmp/krf-fast.html
           curl -fsS http://127.0.0.1:8765/assets/kingdom-rush-frontiers-v12-1.swf -o /tmp/krf-v121.swf
           test -s /tmp/krf-v121.swf
           head -c 3 /tmp/krf-v121.swf | grep -Eq 'FWS|CWS|ZWS'
