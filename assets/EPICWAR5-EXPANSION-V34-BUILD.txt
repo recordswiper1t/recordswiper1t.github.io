@@ -1,0 +1,21 @@
+Epic War 5 — Expansion V3.4 — Runtime Repair + Optional Sandbox
+Baseline V3.3.1 SHA-256: 40712cc3685861ee93a97ad49cd4ff71c2ebc55c9959a1d9f160fcf39e8d6577
+Toolchain: FFDec 26.2.1
+Release SWF SHA-256: 3df32beb904019239883101afe60ae7dae3c64c9a09321395afaa0c77b7085d2
+
+Runtime repair:
+- Expansion stage clicks queue battle selection and transition from WorldMap ENTER_FRAME, matching stock EW5 lifecycle.
+- The click handler no longer constructs battle_mc or destroys WorldMap synchronously.
+- GitHub Pages HostManager authorization remains intact.
+
+Optional sandbox (OFF by default):
+- Backtick toggles sandbox master.
+- F1 mana; F2/F3 unit; F4 ally; F5 enemy; F6 batch; F7 speed; F8 wipe; F9 win; F10 heal; F11 free spells; F12 fast units.
+- U building cap; O population boost; [ / ] mana amount; H HUD.
+- Native B retreat and P pause controls are not overridden.
+- No max-all/save rewrite helper is added.
+
+Verification:
+- Exact V3.3.1 decompiled, patched, FFDec-rebuilt and re-decompiled.
+- V3.4 transition and default-OFF sandbox markers survived rebuild.
+- Frozen V3.3 progression/save/stage/reward/balance/performance invariants all passed; only the obsolete V3.3 HTML filename freeze was excluded.

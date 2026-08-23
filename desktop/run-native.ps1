@@ -12,7 +12,8 @@ $KrfCandidates = @(
     (Join-Path $Root 'assets\kingdom-rush-frontiers-v5.swf')
 )
 $StickWar = Join-Path $Root 'assets\stick-war-complete-v1.swf'
-$EpicWar5 = Join-Path $Root 'assets\epic-war-5-expansion-v331.swf'
+$EpicWar5Stable = Join-Path $Root 'assets\epic-war-5-sandbox-v2.swf'
+$EpicWar5Expansion = Join-Path $Root 'assets\epic-war-5-expansion-v34.swf'
 
 $Game = 'krf'
 $Refresh = $false
@@ -30,13 +31,14 @@ for ($i = 0; $i -lt $args.Count; $i++) {
         '--gl' { $ForceGl = $true; continue }
         '--dx12' { $ForceDx12 = $true; continue }
         '--game' {
-            if ($i + 1 -ge $args.Count) { throw '--game requires krf, stickwar, or epicwar5.' }
+            if ($i + 1 -ge $args.Count) { throw '--game requires krf, stickwar, epicwar5, or epicwar5-expansion.' }
             $i++
             $Game = ([string]$args[$i]).ToLowerInvariant()
             continue
         }
         '--stickwar' { $Game = 'stickwar'; continue }
         '--epicwar5' { $Game = 'epicwar5'; continue }
+        '--epicwar5-expansion' { $Game = 'epicwar5-expansion'; continue }
         '--krf' { $Game = 'krf'; continue }
         default {
             if ($arg -like '--game=*') { $Game = $arg.Substring(7).ToLowerInvariant(); continue }
@@ -56,9 +58,12 @@ switch ($Game) {
         $Game = 'stickwar'; $Swf = $StickWar; $GameLabel = 'Super Stick War (SW1 + SW2)'; break
     }
     { $_ -in @('epicwar5','epic-war-5','ew5') } {
-        $Game = 'epicwar5'; $Swf = $EpicWar5; $GameLabel = 'Epic War 5 Expansion'; break
+        $Game = 'epicwar5'; $Swf = $EpicWar5Stable; $GameLabel = 'Epic War 5 (stable V1.05-based build)'; break
     }
-    default { throw "Unknown game '$Game'. Choose krf, stickwar, or epicwar5." }
+    { $_ -in @('epicwar5-expansion','epic-war-5-expansion','ew5-expansion') } {
+        $Game = 'epicwar5-expansion'; $Swf = $EpicWar5Expansion; $GameLabel = 'Epic War 5 Expansion V3.4'; break
+    }
+    default { throw "Unknown game '$Game'. Choose krf, stickwar, epicwar5, or epicwar5-expansion." }
 }
 if (-not $Swf -or -not (Test-Path $Swf)) { throw "Missing game SWF: $Swf" }
 

@@ -13,11 +13,13 @@ For the highest laptop performance, download/extract the repository and use nati
 desktop\run-native.bat --game krf
 desktop\run-native.bat --game stickwar
 desktop\run-native.bat --game epicwar5
+desktop\run-native.bat --game epicwar5-expansion
 
 # macOS / Linux
 sh desktop/run-native.sh --game krf
 sh desktop/run-native.sh --game stickwar
 sh desktop/run-native.sh --game epicwar5
+sh desktop/run-native.sh --game epicwar5-expansion
 ```
 
 The launcher downloads native Ruffle on first use and reuses the cached executable. See [`desktop/README.md`](desktop/README.md) for renderer fallback, stable/nightly selection and performance notes.
@@ -29,7 +31,7 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 | **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
 | **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12.1 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | Released on `main` through Expansion V3.3.1 | Sandbox builds, expanded campaign/equipment/progression, large-battle performance pass, release-candidate verification and sitelock hotfix |
+| **Epic War 5** | Released on `main` through Expansion V3.4 | Expanded campaign/equipment/progression, repaired battle transitions, optional battle sandbox, large-battle performance and release verification |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -53,9 +55,9 @@ V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery n
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. The expansion line progressed through V3/V3.1/V3.2 to the V3.3 performance/quality release and V3.3.1 site-hosting hotfix.
+Released assets and build records live under `assets/`; the stable game page remains under `epicwar5/` and the completed expansion is under `epicwar5-expansion/`. V3.4 retains the V3.3.1 performance/sitelock stack, repairs Expansion battle entry, and adds a default-off battle sandbox.
 
-The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the dedicated V3.3 performance patch and validation/rebuild workflows.
+The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.3 performance work, V3.4 runtime/sandbox patch, frozen invariant validator and reproducible FFDec rebuild workflows.
 
 ## Release verification
 

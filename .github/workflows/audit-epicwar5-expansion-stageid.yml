@@ -1,0 +1,58 @@
+name: Audit Epic War 5 Expansion Stage IDs
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-epicwar5-expansion-stageid.yml'
+      - 'tools/epicwar5/expansion/**'
+
+permissions:
+  contents: read
+
+jobs:
+  audit-stageid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Decompile current expansion
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/ffdec /tmp/ew5
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5 assets/epic-war-5-expansion-v331.swf >/tmp/export.log 2>&1 || true
+          test -f /tmp/ew5/scripts/Game/System/Battle/BattleControlPlayer.as
+      - name: Find all battle_stage consumers
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== ALL battle_stage references ==='
+          grep -RniF 'battle_stage' /tmp/ew5/scripts/Game | head -n 500 || true
+          for f in \
+            Game/System/Background/BackgroundMgr.as \
+            Game/System/GameObject/CharacterMgr.as \
+            Game/System/Battle/SpellMgr.as \
+            Game/System/Battle/BattleControlPlayer.as \
+            Game/System/Battle/BattleControlEnemy.as \
+            Game/System/Battle/BattleSystem.as; do
+            echo "=== $f init/body ==="
+            sed -n '1,260p' "/tmp/ew5/scripts/$f" || true
+          done
+      - name: Upload initialization files
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-stageid-audit
+          retention-days: 7
+          path: |
+            /tmp/ew5/scripts/Game/System/Background/BackgroundMgr.as
+            /tmp/ew5/scripts/Game/System/GameObject/CharacterMgr.as
+            /tmp/ew5/scripts/Game/System/Battle/SpellMgr.as
+            /tmp/ew5/scripts/Game/System/Battle/BattleControlPlayer.as
+            /tmp/ew5/scripts/Game/System/Battle/BattleControlEnemy.as
+            /tmp/ew5/scripts/Game/System/Battle/BattleSystem.as
