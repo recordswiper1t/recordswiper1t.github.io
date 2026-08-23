@@ -15,9 +15,10 @@ This is the highest-performance laptop path for the released Flash mods. It runs
 desktop\run-native.bat --game krf
 desktop\run-native.bat --game stickwar
 desktop\run-native.bat --game epicwar5
+desktop\run-native.bat --game epicwar5-expansion
 ```
 
-Windows also accepts the shortcuts `--krf`, `--stickwar` and `--epicwar5`.
+Windows also accepts the shortcuts `--krf`, `--stickwar`, `--epicwar5` and `--epicwar5-expansion`.
 
 No Python installation is required on Windows.
 
@@ -29,6 +30,7 @@ Run:
 sh desktop/run-native.sh --game krf
 sh desktop/run-native.sh --game stickwar
 sh desktop/run-native.sh --game epicwar5
+sh desktop/run-native.sh --game epicwar5-expansion
 ```
 
 Python 3 is required for the macOS/Linux bootstrap launcher.
@@ -37,7 +39,8 @@ Python 3 is required for the macOS/Linux bootstrap launcher.
 
 - `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
-- `epicwar5` launches `assets/epic-war-5-expansion-v331.swf`, the released V3.3.1 performance/sitelock build.
+- `epicwar5` launches the stable V1.05-based Sandbox V2 build.
+- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v34.swf`, the released V3.4 Expansion with repaired stage transitions and a default-off battle sandbox.
 
 Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish.
 
