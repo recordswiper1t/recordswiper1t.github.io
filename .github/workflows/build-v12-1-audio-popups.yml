@@ -138,6 +138,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # A sibling release job may have advanced this branch while FFDec was rebuilding.
+          # Synchronize first, then layer the verified generated artifacts onto the latest tip.
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
           cp /tmp/out/kingdom-rush-frontiers-v12-1.swf assets/kingdom-rush-frontiers-v12-1.swf
           sed 's#/tmp/out/kingdom-rush-frontiers-v12-1.swf#assets/kingdom-rush-frontiers-v12-1.swf#' \
             /tmp/out/V12-1-SHA256SUMS.txt > assets/V12-1-SHA256SUMS.txt
@@ -160,6 +164,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/kingdom-rush-frontiers-v12-1.swf assets/V12-1-SHA256SUMS.txt assets/V12-1-BUILD.txt
           if ! git diff --cached --quiet; then
-            git commit -m 'Rebuild V12.1 with persisted popup settings [skip ci]'
+            git commit -m 'Rebuild V12.1 with persisted popup settings'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
