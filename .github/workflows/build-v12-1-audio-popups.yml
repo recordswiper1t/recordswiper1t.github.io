@@ -164,4 +164,3 @@ jobs:
             git commit -m 'Rebuild V12.1 with persisted popup settings [skip ci]'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
-
