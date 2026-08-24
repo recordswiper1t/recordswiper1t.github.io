@@ -1,0 +1,17 @@
+Kingdom Rush Ultimate V15
+
+Input: kingdom-rush-ultimate-v14.swf
+Output: kingdom-rush-ultimate-v15.swf
+Size: 91100192 bytes
+SHA-256: 76b4848e3fc8268f8a5cb30916aeb6db18a80691383e87f5e70eac4fce769ad0
+Reproducible patch: tools/ultimate/patch_crossover_armory_v15.py
+
+V15 replaces the KR and KRF debug-style sandbox surfaces with bronze/parchment
+war rooms and adds bidirectional crossover armories. Eight tier-four towers and
+the source-ready hero roster from each campaign can be deployed into the other
+campaign through explicit host-compatible guest combat branches.
+
+The exact output was rebuilt with FFDec abort-on-error over the 49 modified
+classes, freshly re-decompiled, and checked for both armory/spawn surfaces,
+guest tower and hero combat methods, native-root guards, V14 map switching,
+adaptive speed, and immediate-result Instant Win markers.

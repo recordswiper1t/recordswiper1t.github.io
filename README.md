@@ -28,9 +28,9 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 
 | Project | Current state | Main features |
 | --- | --- | --- |
-| **Kingdom Rush Ultimate (KR + KRF)** | **Released combined 34-stage campaign** | One selector with 19 sourced Kingdom Rush stages plus all 15 Frontiers campaign stages, with standalone recovery launchers and isolated saves |
+| **Kingdom Rush Ultimate (KR + KRF)** | **Released V15 combined runtime** | 19 sourced Kingdom Rush stages plus 15 Frontiers stages, native map switching, shared systems, game-styled war rooms and bidirectional guest tower/hero armories |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | **Released Expansion V3.9** | Compact circular slots 7–12, redesigned sandbox dashboard, moving spawned armies, adaptive 8× speed, immediate Instant Win, expanded progression and large-battle performance work |
+| **Epic War 5** | **Released Expansion V4.0** | Compact circular slots 7–12, animated soldier-card Battle Forge, moving spawned armies, adaptive 8× speed, immediate Instant Win, expanded progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -42,7 +42,7 @@ The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, rec
 
 ## Kingdom Rush Ultimate — KR + KRF
 
-The browser launcher under `ultimate/` defaults to the verified V13 combined runtime. Its in-game ULTIMATE panel exposes 34 playable stages across five pages: 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available from the same launcher as isolated-save recovery paths.
+The browser launcher under `ultimate/` defaults to the verified V15 combined runtime. It exposes 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages on their native maps. Each campaign now has a game-styled armory that deploys the other game's eight tier-four towers and source-ready hero roster through an explicit host-compatible guest combat mode. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available as isolated-save recovery paths.
 
 The combined release was verified through Southport's complete seven-wave victory loop, Frontiers stage launches and enemy movement, shared-map return routing, and all five selector pages. Retired Mochi and CPMStar requests are removed from the combined and standalone Frontiers startup paths.
 
@@ -54,7 +54,7 @@ V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery n
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V3.8 keeps the wider battlefield, makes slots 7–12 readable, replaces the sandbox cheat sheet with clickable controls, and gives spawned armies explicit forward orders.
+Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V4.0 keeps the wider battlefield and compact slots 7–12, replaces the old debug palette with an animated roster-card Battle Forge, and gives spawned armies explicit forward orders.
 
 The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.8 UI/sandbox patch, frozen invariant checks, and reproducible FFDec rebuild workflow.
 

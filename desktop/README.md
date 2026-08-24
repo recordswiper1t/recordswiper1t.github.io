@@ -40,7 +40,7 @@ Python 3 is required for the macOS/Linux bootstrap launcher.
 - `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring offline-ready V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v2.swf`, the released 65-stage SW1+SW2 expansion with a visible clickable sandbox and adaptive 12× speed.
 - `epicwar5` launches the stable V1.05-based Sandbox V2 build.
-- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v39.swf`, the released V3.9 Expansion with direct web/mobile entry, compact circular slots 7–12, a clickable battle sandbox, adaptive 8× speed and immediate Instant Win. Native play keeps the normal campaign unlock requirement.
+- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v40.swf`, the released V4.0 Expansion with direct web/mobile entry, compact circular slots 7–12, an animated soldier-card Battle Forge, adaptive 8× speed and immediate Instant Win. Native play keeps the normal campaign unlock requirement.
 
 Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish; V12.2 removes the retired online-service startup gate for deterministic offline play.
 

@@ -1,0 +1,14 @@
+Epic War 5 Expansion V4.0
+
+Input: epic-war-5-expansion-v39.swf
+Output: epic-war-5-expansion-v40.swf
+Size: 18330184 bytes
+SHA-256: 5e30af390ce51013fba9836df0826fd05812f67d3472015bcedc0ee71de8492b
+Reproducible patch: tools/epicwar5/expansion/patch_native_sandbox_v40.py
+
+V4.0 replaces the grey text palette with a bronze/crimson Battle Forge. Its
+paged roster constructs the game's real animated unit timelines as clickable
+cards, while retaining ally/enemy spawning, forward orders, batch controls,
+mana, rule toggles, adaptive 1x/2x/4x/6x/8x speed and immediate Instant Win.
+
+The exact output passed FFDec abort-on-error import and fresh re-decompilation.

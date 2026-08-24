@@ -1,47 +1,39 @@
-# Kingdom Rush Ultimate V14 — release status
+# Kingdom Rush Ultimate V15 — release status
 
-V14 is the combined Flash runtime. The central launcher opens it directly with `?campaign=ultimate`, while standalone Kingdom Rush and offline-ready Frontiers V12.2 remain available as recovery choices.
+V15 keeps the two native campaign maps and V14 shared systems, replaces the custom sandbox surfaces with bronze/parchment war rooms, and adds bidirectional crossover armories.
 
 ## Released artifact
 
-- file: `assets/kingdom-rush-ultimate-v14.swf`
-- size: **91,082,091 bytes**
-- SHA-256: **938D42E985F96875C9AAE7C90CA8C0FCC63F3BFB2939750E5C39082208907FCC**
-- campaign maps: both native maps — all 19 stages present in the verified Kingdom Rush Flash source plus all 15 Frontiers campaign stages
-- in-game map switching: persistent **KR MAP** and **KRF MAP** controls
-- shared systems: synchronized stars plus native hero, upgrade, achievement and encyclopedia entry points
-- battle tools: clickable KR and KRF sandbox controls with adaptive 1×/2×/4×/8×/12× speed
-- Instant Win: direct result-screen path, including the custom final Frontiers stage
+- file: `assets/kingdom-rush-ultimate-v15.swf`
+- size: **91,100,192 bytes**
+- SHA-256: **76B4848E3FC8268F8A5CB30916AEB6DB18A80691383E87F5E70EAC4FCE769AD0**
+- Kingdom Rush stages: all **19** stages embedded in the verified publisher Flash source
+- Frontiers stages: all **15** campaign stages in the enhanced Flash runtime
+- native map switching: persistent **KR MAP**, **KRF MAP**, and **SHARED HUB** controls
+- shared systems: stars, upgrade rooms, hero rooms, achievements, and encyclopedias
+- speed and victory tools: adaptive 1×/2×/4×/8×/12× plus immediate result-screen Instant Win
 
-The launcher intentionally describes the exact content present in the verified Flash inputs. Later mobile-only post-campaign and endless maps are not advertised as part of this build.
+## V15 crossover armories
 
-## Gameplay certification completed
+The Kingdom Rush war room can deploy all eight Frontiers tier-four towers and ten source-ready Frontiers heroes. The Frontiers war room can deploy all eight original Kingdom Rush tier-four towers and nine heroes present in the publisher Flash source.
 
-The exact V14 SWF was exercised through the same Ruffle browser path used by the site:
+Guest objects use their real linked tower/hero timelines. Their native-only initialization is bypassed when they enter the other campaign, then a host-compatible combat branch moves heroes, targets the host level's live enemies, and applies damage through the shared `setDamage` contract. Native instances still follow their original code paths.
 
-- combined title, save selection and Frontiers difficulty/map startup completed without browser errors;
-- the persistent KR MAP, KRF MAP and SHARED HUB controls rendered over the native Frontiers map;
-- KRF → KR switching produced the real KR map, hid the inactive KRF map completely and centered the narrower KR canvas;
-- the shared hub rendered both campaigns' hero, star-upgrade, achievement and encyclopedia entry points plus the complete speed/Instant Win contract;
-- fresh post-build decompilation confirmed both direct victory-menu jumps and the custom final-stage bypass in the released bytes;
-- the prior V13 battle certification remains the gameplay regression baseline: Southport completed all seven waves and returned from victory, while Emberspike Depths and Hammerhold both started live advancing waves.
+## Verification
 
-The remaining MP3 end-of-stream diagnostic is inherited unchanged from the original Frontiers audio and is non-blocking; it also occurs in the untouched standalone runtime.
+- strict FFDec import completed with abort-on-error for all 49 modified Ultimate classes;
+- the resulting 91 MB SWF freshly re-decompiled;
+- fresh output contains both armory pages, all guest-spawn routes, both guest tower bases, both guest hero bases, and the inherited V14 map/speed/Instant Win markers;
+- normal native constructors are guarded only when the parent level belongs to the other campaign;
+- launchers and checksum tests point exclusively to V15.
 
-## Structural and regression gates
+## Later Kingdom Rush stages
 
-- collision-safe KR class namespacing and Frontiers-parent compatibility bridge;
-- 19 KR stage classes, eight KR tier-4 tower classes, and nine source-ready KR hero classes;
-- native map routing plus shared star, hero, upgrade, achievement and encyclopedia surfaces;
-- fresh compiler/serialization verification and twelve automated release/Ultimate tests;
-- preservation of Frontiers sandbox, The Last Rift, audio/pop-up polish, and performance markers;
-- standalone Frontiers V12.2 smoke-tested from title through Hammerhold enemy movement.
+The available Flash source ends at Level19 (Ha'Kraj Plateau). Pit of Fire, Pandaemonium, Fungal Forest, Rotwick, Ancient Necropolis, Nightfang Swale, and Castle Blackburn were released in later Steam/mobile builds and are not present in the audited SWF. This repository does not fabricate or mislabel those stages. They require a compatible source from a copy the user owns, or a full reconstruction of maps, paths, waves, art, enemies, and specials.
 
 ## Access paths
 
 - central hub: `/`
 - combined release: `/ultimate/play.html?campaign=ultimate`
-- three-game mobile hub: `/games/`
+- mobile hub: `/games/`
 - standalone recovery choices: `/ultimate/play.html?campaign=kr` and `/ultimate/play.html?campaign=krf`
-
-These routes are release gates: the games are not considered shipped unless the public central page reaches the real title/map/battle runtime rather than only a wrapper page.
