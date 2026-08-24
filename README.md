@@ -28,24 +28,23 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 
 | Project | Current state | Main features |
 | --- | --- | --- |
-| **Kingdom Rush Frontiers** | Released on `main` through V12/V12.1 | Full sandbox, tower clipboard, hero/enemy controls, Time Attack/loop scoring, diagnostics, adaptive performance controls, **The Last Rift** expansion |
-| **Kingdom Rush Ultimate (KR + KRF)** | Active V13 integration in PR #42 | Frontiers V12.1 runtime + KR1 campaign/content import, combined campaign routing, 16 tier-4 targets, combined hero target, inherited V11/V12 sandbox/performance systems |
+| **Kingdom Rush Ultimate (KR + KRF)** | **Released combined 34-stage campaign** | One selector with 19 sourced Kingdom Rush stages plus all 15 Frontiers campaign stages, with standalone recovery launchers and isolated saves |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | Released on `main` through Expansion V3.7 | Direct Expansion entry, clean battle-layer transitions, complete twelve-slot battle initialization, expanded campaign/equipment/progression, optional battle sandbox, large-battle performance and release verification |
+| **Epic War 5** | **Released Expansion V3.8** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
-## Kingdom Rush Frontiers — current released mod
+## Kingdom Rush Frontiers — current expansion
 
-Current Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish, and its POP-UP HINTS / Tooltips preference is stored separately from campaign saves so the choice persists across fresh Ruffle sessions. Level 15 records are finalized only after all 30 Last Rift waves, so the original boss transition cannot save a partial expansion run.
+Frontiers V12 keeps the V11 sandbox/performance feature set and adds **The Last Rift**, post-boss scoring, renderer hardening and additional performance work. V12.1 contains the current audio/pop-up polish. V12.2 preserves all of it and removes the obsolete online-service startup gate that could loop on fresh browsers.
 
 The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, recycle/loop play, tower clipboard, cleanup/cheat controls, diagnostics and adaptive load controls. Native Ruffle is recommended for large swarms because it avoids browser/WebAssembly overhead.
 
-## Kingdom Rush Ultimate — V13
+## Kingdom Rush Ultimate — KR + KRF
 
-Development lives in [PR #42](../../pull/42). The architecture keeps Frontiers V12.1 as the authoritative runtime and imports KR1 content through a collision-safe namespace/rebind layer so existing sandbox/performance systems remain intact.
+The browser launcher under `ultimate/` defaults to the verified V13 combined runtime. Its in-game ULTIMATE panel exposes 34 playable stages across five pages: 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available from the same launcher as isolated-save recovery paths.
 
-The branch is not promoted to a release until imported KR stages, KR tower/hero compatibility, combined campaign saves/UI and final FFDec round-trip/runtime gates pass. See `docs/KINGDOM_RUSH_ULTIMATE.md` and `docs/KINGDOM_RUSH_ULTIMATE_STATUS.md` on that branch for the detailed compatibility/release plan.
+The combined release was verified through Southport's complete seven-wave victory loop, Frontiers stage launches and enemy movement, shared-map return routing, and all five selector pages. Retired Mochi and CPMStar requests are removed from the combined and standalone Frontiers startup paths.
 
 ## Super Stick War — SW1 + SW2
 
@@ -55,11 +54,10 @@ V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery n
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the stable game page remains under `epicwar5/` and the completed expansion is under `epicwar5-expansion/`. V3.7 adds save-safe direct access to the first Expansion stage, removes the world-map display layer before combat starts, and initializes all twelve army controllers with a real second HUD row, while retaining the default-off sandbox and V3.3.1 performance/sitelock stack.
+Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V3.8 keeps the wider battlefield, makes slots 7–12 readable, replaces the sandbox cheat sheet with clickable controls, and gives spawned armies explicit forward orders.
 
-The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.3 performance work, V3.4 runtime/sandbox patch, V3.5 direct-entry completion, V3.6 battle-layer cleanup, V3.7 battle-initialization repair, frozen invariant validator and reproducible FFDec rebuild workflows.
+The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.8 UI/sandbox patch, frozen invariant checks, and reproducible FFDec rebuild workflow.
 
 ## Release verification
 
 Verified releases use matching build/checksum records in `assets/`. GitHub Actions workflows under `.github/workflows/` perform source pinning where applicable, FFDec import/re-export checks and release-marker validation before publication.
-

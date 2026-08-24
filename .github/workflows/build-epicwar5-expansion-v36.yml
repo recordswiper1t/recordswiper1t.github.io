@@ -136,4 +136,3 @@ jobs:
             git commit -m 'Publish Epic War 5 Expansion V3.6 battle cleanup'
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
-

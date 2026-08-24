@@ -1,0 +1,229 @@
+name: Compose source-ready KR1 systems into V12.1
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/**'
+      - '.github/workflows/probe-ultimate-composed-source-ready.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/**'
+      - '.github/workflows/probe-ultimate-composed-source-ready.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch source inputs and FFDec
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u /tmp/ffdec /tmp/u/kr1-src /tmp/u/krf-src /tmp/u/report
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          else
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          fi
+          for f in tools/ultimate/*.py; do python3 -m py_compile "$f"; done
+
+      - name: Export both games and build registries/contracts
+        run: |
+          set -euo pipefail
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/kr1-src /tmp/u/kr1.swf >/tmp/u/export-kr1.log 2>&1 || true
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/krf-src "$KRF_BASE" >/tmp/u/export-krf.log 2>&1 || true
+          test -f /tmp/u/kr1-src/scripts/Level.as
+          test -f /tmp/u/krf-src/scripts/Level.as
+          python3 tools/ultimate/port_plan.py --kr1 /tmp/u/kr1-src/scripts --krf /tmp/u/krf-src/scripts --output /tmp/u/port-plan.json
+          python3 tools/ultimate/extract_class_names.py /tmp/u/kr1-src/scripts --prefix KR1__ --output /tmp/u/class-map.json
+          python3 tools/ultimate/tower_registry.py --json >/tmp/u/report/tower-registry.json
+          python3 tools/ultimate/hero_registry.py --json >/tmp/u/report/hero-registry.json
+          python3 tools/ultimate/stage_api_matrix.py \
+            --kr1-scripts /tmp/u/kr1-src/scripts --krf-scripts /tmp/u/krf-src/scripts \
+            --first 1 --last 19 --output /tmp/u/report/stage-api-matrix.json \
+            --union-contract /tmp/u/report/union-level-adapter-contract.json
+
+      - name: Build fully namespaced KR1 plus Frontiers binary
+        run: |
+          set -euo pipefail
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/u/kr1.swf /tmp/u/kr1.xml
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml "$KRF_BASE" /tmp/u/krf.xml
+          python3 tools/ultimate/merge_swf_xml.py \
+            --base /tmp/u/krf.xml --source /tmp/u/kr1.xml --class-map /tmp/u/class-map.json \
+            --output /tmp/u/merged.xml --report /tmp/u/report/merge-report.json
+          java -Xmx9g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/u/merged.xml /tmp/u/merged.swf
+          test -s /tmp/u/merged.swf
+
+      - name: Export merged binary build semantic bridge and rebind KR1 content
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/merged-export /tmp/u/import/scripts
+          java -Xmx7g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 \
+            -export script /tmp/u/merged-export /tmp/u/merged.swf >/tmp/u/export-merged.log 2>&1 || true
+          test -f /tmp/u/merged-export/scripts/KR1__Level.as
+          python3 tools/ultimate/build_level_adapter_from_namespaced_source.py \
+            --namespaced-kr1-level /tmp/u/merged-export/scripts/KR1__Level.as \
+            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
+            --contract /tmp/u/report/union-level-adapter-contract.json \
+            --output /tmp/u/KR1__Level.as \
+            --report /tmp/u/report/level-adapter-build.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/u/report/level-adapter-build.json',encoding='utf-8'))
+          assert d['copied_member_count']==37, d
+          assert not d['missing_members'], d
+          PY
+          python3 tools/ultimate/rebind_namespaced_scripts.py \
+            --scripts /tmp/u/merged-export/scripts --plan /tmp/u/port-plan.json \
+            --exclude-rebind KR1__Level --output /tmp/u/rebind --report /tmp/u/report/rebind-report.json
+          cp /tmp/u/KR1__Level.as /tmp/u/import/scripts/KR1__Level.as
+
+      - name: Stage all source-ready KR1 stages towers and heroes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, shutil
+          root=pathlib.Path('/tmp/u/rebind/scripts')
+          out=pathlib.Path('/tmp/u/import/scripts')
+          copied={'stages':[],'towers':[],'heroes':[]}
+          def one(name):
+              hits=list(root.rglob(name+'.as'))
+              if len(hits)!=1: raise SystemExit(f'{name}: expected one rebound source, got {len(hits)}')
+              shutil.copy2(hits[0],out/(name+'.as'))
+          for n in range(1,20):
+              name=f'KR1__Level{n}'; one(name); copied['stages'].append(name)
+          towers=json.load(open('/tmp/u/report/tower-registry.json',encoding='utf-8'))['routes']
+          for row in towers:
+              if row['game']=='kr1': one(row['runtime_class']); copied['towers'].append(row['runtime_class'])
+          heroes=json.load(open('/tmp/u/report/hero-registry.json',encoding='utf-8'))['routes']
+          for row in heroes:
+              if row['game']=='kr1' and row['role']=='selectable' and row['source_ready']:
+                  one(row['runtime_class']); copied['heroes'].append(row['runtime_class'])
+          assert len(copied['stages'])==19 and len(copied['towers'])==8 and len(copied['heroes'])==9, copied
+          pathlib.Path('/tmp/u/report/composed-class-set.json').write_text(json.dumps(copied,indent=2),encoding='utf-8')
+          print(json.dumps(copied,indent=2))
+          PY
+
+      - name: Apply combined campaign and roster UI to shared Frontiers runtime
+        run: |
+          set -euo pipefail
+          S=/tmp/u/merged-export/scripts
+          python3 tools/ultimate/build_campaign_router.py "$S" --report /tmp/u/report/campaign-router.json
+          python3 tools/ultimate/build_campaign_selector.py "$S" --report /tmp/u/report/campaign-selector.json
+          python3 tools/ultimate/build_ultimate_hero_menu.py "$S" --report /tmp/u/report/hero-menu.json
+          python3 tools/ultimate/build_ultimate_tower_menu.py "$S" --report /tmp/u/report/tower-menu.json
+          cp "$S/Level.as" /tmp/u/import/scripts/Level.as
+          cp "$S/TowerHolder.as" /tmp/u/import/scripts/TowerHolder.as
+          cp "$S/§_-BQ§.as" '/tmp/u/import/scripts/§_-BQ§.as'
+          cp "$S/§class const for§.as" '/tmp/u/import/scripts/§class const for§.as'
+
+      - name: Compile the single composed semantic source-ready candidate
+        id: compile
+        shell: bash
+        run: |
+          set +e
+          java -Xmx12g -jar /tmp/ffdec/ffdec.jar -onerror abort \
+            -importScript /tmp/u/merged.swf /tmp/u/ultimate-source-ready.swf /tmp/u/import \
+            >/tmp/u/import-composed.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "$code" >/tmp/u/import.exit
+          tail -250 /tmp/u/import-composed.log || true
+          exit 0
+
+      - name: Re-export and verify composed candidate
+        if: steps.compile.outputs.exit_code == '0'
+        run: |
+          set -euo pipefail
+          test -s /tmp/u/ultimate-source-ready.swf
+          mkdir -p /tmp/u/verify
+          java -Xmx8g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 120 -exportFileTimeout 240 \
+            -export script /tmp/u/verify /tmp/u/ultimate-source-ready.swf >/tmp/u/verify.log 2>&1 || true
+          S=/tmp/u/verify/scripts
+          grep -F 'class KR1__Level extends Level' "$S/KR1__Level.as"
+          grep -F 'qolTowerClipboard' "$S/Level.as"
+          grep -F 'ultimateStageId' "$S/§_-BQ§.as"
+          grep -F 'KINGDOM RUSH ULTIMATE' "$S/§class const for§.as"
+          grep -F 'ultimateMakeKR1Hero' "$S/Level.as"
+          grep -F 'ultimatePlaceKR1Tower' "$S/TowerHolder.as"
+          if [ "$HAS_V121" = 1 ]; then grep -F 'qolPopupsEnabled' "$S/Level.as"; fi
+          grep -F 'THE LAST RIFT' "$S/Level15.as"
+          python3 - <<'PY'
+          import json, pathlib, hashlib, os
+          root=pathlib.Path('/tmp/u/verify/scripts')
+          classes=json.load(open('/tmp/u/report/composed-class-set.json',encoding='utf-8'))
+          bridge=json.load(open('/tmp/u/report/level-adapter-build.json',encoding='utf-8'))
+          missing=[]
+          for group,names in classes.items():
+              for name in names:
+                  if not (root/(name+'.as')).is_file(): missing.append(name)
+          if missing: raise SystemExit(f'missing composed classes after re-export: {missing}')
+          p=pathlib.Path('/tmp/u/ultimate-source-ready.swf')
+          out={
+              'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
+              'stages_compiled': len(classes['stages']),
+              'kr1_towers_compiled': len(classes['towers']),
+              'kr1_heroes_compiled': len(classes['heroes']),
+              'semantic_level_members_copied': bridge['copied_member_count'],
+              'semantic_level_missing_members': bridge['missing_members'],
+              'combined_router_selector_menu_compiled': True,
+              'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
+              'size': p.stat().st_size,
+              'gameplay_ready': False,
+              'remaining_gate': 'runtime gameplay certification plus missing later KR1/KRF source or reconstruction',
+          }
+          pathlib.Path('/tmp/u/report/composed-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Record composition failure
+        if: steps.compile.outputs.exit_code != '0'
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          log=pathlib.Path('/tmp/u/import-composed.log').read_text(encoding='utf-8',errors='replace')
+          out={'compile_success':False,'exit_code':int(pathlib.Path('/tmp/u/import.exit').read_text().strip()),'log_tail':'\n'.join(log.splitlines()[-250:])}
+          pathlib.Path('/tmp/u/report/composed-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          PY
+
+      - name: Upload composition reports and candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultimate-v12-1-composed-source-ready
+          path: |
+            /tmp/u/report
+            /tmp/u/import-composed.log
+            /tmp/u/verify.log
+            /tmp/u/ultimate-source-ready.swf
+          retention-days: 30
+
+      - name: Require composed candidate to compile
+        run: test '${{ steps.compile.outputs.exit_code }}' = '0'

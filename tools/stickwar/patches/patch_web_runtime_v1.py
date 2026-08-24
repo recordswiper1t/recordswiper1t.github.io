@@ -55,14 +55,14 @@ old = '''      private function normalButton() : void
          this.switchToIntro();
          this.main.campaign.setDifficulty(Campaign.D_NORMAL);
       }
-      
+
       private function hardButton() : void
       {
          this.checkCheatMode();
          this.switchToIntro();
          this.main.campaign.setDifficulty(Campaign.D_HARD);
       }
-      
+
       private function insaneButton() : void
       {
          this.checkCheatMode();
@@ -76,14 +76,14 @@ new = '''      private function normalButton() : void
          this.main.campaign.setDifficulty(Campaign.D_NORMAL);
          this.switchToIntro();
       }
-      
+
       private function hardButton() : void
       {
          this.checkCheatMode();
          this.main.campaign.setDifficulty(Campaign.D_HARD);
          this.switchToIntro();
       }
-      
+
       private function insaneButton() : void
       {
          this.checkCheatMode();
@@ -99,7 +99,7 @@ old = '''         this.mc.mainPanel.stickWarButton.addEventListener(MouseEvent.C
          this.mc.introBrokenMc.addEventListener(MouseEvent.CLICK,this.openIntroLink);
          this.mc.creditsScreen.visible = false;
       }
-      
+
       private function skipButton() : void
 '''
 new = '''         this.mc.mainPanel.stickWarButton.addEventListener(MouseEvent.CLICK,this.stickWarButton);
@@ -114,13 +114,13 @@ new = '''         this.mc.mainPanel.stickWarButton.addEventListener(MouseEvent.C
             addEventListener(Event.ENTER_FRAME,this.startBattleLabOnce,false,0,true);
          }
       }
-      
+
       private function startBattleLabOnce(evt:Event) : void
       {
          removeEventListener(Event.ENTER_FRAME,this.startBattleLabOnce);
          this.main.showScreen("campaignMap",false,true);
       }
-      
+
       private function skipButton() : void
 '''
 if t.count(old) != 1:

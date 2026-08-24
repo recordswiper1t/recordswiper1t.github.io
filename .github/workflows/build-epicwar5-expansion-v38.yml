@@ -1,0 +1,177 @@
+name: Build and verify Epic War 5 Expansion V3.8
+
+on:
+  push:
+    branches: [codex/epicwar5-expansion-v38]
+    paths:
+      - '.github/workflows/build-epicwar5-expansion-v38.yml'
+      - 'tools/epicwar5/expansion/patch_ui_sandbox_v38.py'
+      - 'assets/epic-war-5-expansion-v37.swf'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/**'
+      - 'index.html'
+      - 'README.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-epicwar5-expansion-v38.yml'
+      - 'tools/epicwar5/expansion/patch_ui_sandbox_v38.py'
+      - 'assets/epic-war-5-expansion-v38.swf'
+      - 'assets/EPICWAR5-EXPANSION-V38-BUILD.txt'
+      - 'assets/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/**'
+      - 'index.html'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-java@v5
+        with: {distribution: temurin, java-version: '17'}
+      - name: Freeze V3.7 and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test "$(sha256sum assets/epic-war-5-expansion-v37.swf | cut -d' ' -f1)" = 'cb78bef6532d1d425d68af15cccff36e5549d45424b8a0f230cd5cc2994b5e03'
+          mkdir -p /tmp/ffdec /tmp/v38/src /tmp/v38/out /tmp/v38/verify
+          curl -fL --retry 4 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Patch exact V3.7 and rebuild V3.8
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v38/src assets/epic-war-5-expansion-v37.swf >/tmp/v38/export.log 2>&1 || true
+          test -f /tmp/v38/src/scripts/Game/System/Battle/BattleControlPlayer.as
+          test -f /tmp/v38/src/scripts/Game/System/Battle/PlayerUnit.as
+          python3 tools/epicwar5/expansion/patch_ui_sandbox_v38.py /tmp/v38/src
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v37.swf /tmp/v38/out/epic-war-5-expansion-v38.swf /tmp/v38/src >/tmp/v38/import.log 2>&1
+          test -s /tmp/v38/out/epic-war-5-expansion-v38.swf
+          head -c 3 /tmp/v38/out/epic-war-5-expansion-v38.swf | grep -Eq 'FWS|CWS|ZWS'
+      - name: Re-decompile and verify polished HUD, sandbox movement and frozen gameplay
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v38/verify /tmp/v38/out/epic-war-5-expansion-v38.swf >/tmp/v38/verify.log 2>&1 || true
+          game=/tmp/v38/verify/scripts/Game
+          control=$game/System/Battle/BattleControlPlayer.as
+          unit=$game/System/Battle/PlayerUnit.as
+          battle=$game/System/Battle/BattleSystem.as
+          characters=$game/System/GameObject/CharacterMgr.as
+          host=$game/Manager/HostManager.as
+          sound=$game/Manager/SoundManager.as
+          world=$game/Interface/WorldMap.as
+          grep -F 'private function expansionCreateUnitClip' "$control"
+          grep -F 'clip.expansionIcon = true' "$control"
+          grep -F 'REF.localToGlobal(new Point(0,0))' "$control"
+          grep -F 'this.bSys.ui.addChild(clip)' "$control"
+          grep -F 'clip = this.expansionCreateUnitClip(refs[i],slot)' "$control"
+          grep -F 'this.icoClip.hasOwnProperty("expansionIcon")' "$unit"
+          grep -F 'this.icoClip.unitName.text = this.name_id.toUpperCase()' "$unit"
+          grep -F 'this.icoClip.expansionUnlocked ? "EMPTY" : "LOCKED"' "$unit"
+          grep -F 'this.sandboxMakeButton("SPAWN ALLY"' "$battle"
+          grep -F 'this.sandboxMakeButton("SPAWN ENEMY"' "$battle"
+          grep -F 'this.sandboxMakeButton("PREV UNIT"' "$battle"
+          grep -F 'this.sandboxMakeButton("NEXT UNIT"' "$battle"
+          grep -F 'this.mGF.stageRoot.addChild(this.sandboxToggleButton)' "$battle"
+          grep -F 'this.mGF.stageRoot.addChild(this.sandboxPanel)' "$battle"
+          grep -F 'spawned.commandMove("enemy",group,target)' "$battle"
+          grep -F 'return clip;' "$characters"
+          grep -F 'public function playBgmBattle1()' "$sound"
+          grep -F 'return this.playBgmBattle();' "$sound"
+          grep -F 'lastIndexOf("127.0.0.1") > -1' "$host"
+          grep -F 'clip.init(expansionGame,expansionStageId)' "$world"
+          grep -F 'sandboxMaster:Boolean = false' "$battle"
+          ! grep -F 'getQualifiedClassName(this.bSys.ui.unit1)' "$control"
+          python3 tools/epicwar5/expansion/validate_v34_invariants.py /tmp/v38/verify
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          root = Path('/tmp/v38/verify/scripts/Game/System/Battle')
+          control = (root / 'BattleControlPlayer.as').read_text(encoding='utf-8-sig')
+          unit = (root / 'PlayerUnit.as').read_text(encoding='utf-8-sig')
+          create = re.search(r'(?ms)private function expansionCreateUnitClip.*?(?=private function expansionInitUnits)', control)
+          assert create
+          body = create.group(0)
+          for marker in ('clip.select = selection', 'clip.unitName = unitName', 'clip.expansionSlot = INDEX', 'clip.total = total', 'clip.spawn = spawn', 'spawn.bar = bar'):
+              assert marker in body, marker
+          init = re.search(r'(?ms)private function expansionInitUnits.*?(?=private function expansionDestroyUnits)', control)
+          assert init and 'new PlayerUnit(this.mGF,this.bSys,clip' in init.group(0)
+          assert unit.index('hasOwnProperty("expansionIcon")') < unit.index('this.icoClip.icon.gotoAndStop(this.id)')
+          assert 'this.icoClip.unitName.text = this.name_id.toUpperCase()' in unit
+          PY
+      - name: Verify V3.8 release integration
+        shell: bash
+        run: |
+          set -euxo pipefail
+          grep -F '/assets/epic-war-5-expansion-v38.swf?v=38-ui-sandbox-r7' epicwar5-expansion/index.html
+          grep -F 'parameters:{ew5ExpansionDirect:"1"}' epicwar5-expansion/index.html
+          grep -F '/assets/epic-war-5-expansion-v38.swf?v=iphone-exp-v38-r1' iphone/epicwar5.html
+          grep -F 'params:{ew5ExpansionDirect:"1"}' iphone/epicwar5.html
+          grep -F 'epic-war-5-expansion-v38.swf' desktop/run_native.py desktop/run-native.ps1
+          grep -F 'Expansion V3.8' README.md index.html desktop/README.md
+          grep -F '8601d4cb1e4298e0d601f05e7ba75c05bc3cfbaff612442c47b3773ea2f7a6f8' assets/THREE-GAME-EXPANSION-COMPLETION.txt
+          python3 -m py_compile tools/epicwar5/expansion/patch_ui_sandbox_v38.py desktop/run_native.py
+      - name: Stage build record and checksum
+        shell: bash
+        run: |
+          set -euxo pipefail
+          hash=$(sha256sum /tmp/v38/out/epic-war-5-expansion-v38.swf | cut -d' ' -f1)
+          printf '%s  assets/epic-war-5-expansion-v38.swf\n' "$hash" > /tmp/v38/out/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt
+          cat > /tmp/v38/out/EPICWAR5-EXPANSION-V38-BUILD.txt <<EOF
+          Epic War 5 — Expansion V3.8 — HUD and Sandbox Polish
+          Baseline V3.7 SHA-256: cb78bef6532d1d425d68af15cccff36e5549d45424b8a0f230cd5cc2994b5e03
+          Release SWF SHA-256: $hash
+          Toolchain: FFDec 26.2.1
+
+          - Positions slots 7-12 in the main battle UI coordinate space so timeline masks cannot clip or stack them.
+          - Shows high-contrast slot numbers, equipped unit names, population, spawn progress, and explicit EMPTY/LOCKED states.
+          - Repairs the missing battle-music alias that previously aborted Expansion battle initialization.
+          - Replaces the keyboard-debug banner with a compact clickable sandbox palette positioned above the original HUD while retaining shortcuts.
+          - Gives sandbox allies and enemies explicit forward orders to the opposite side of the battlefield.
+          - Caps sandbox batches at 20 and speed at 4x to reduce accidental battle overload.
+          - Permits loopback only for repeatable certification of the exact production bytes; Pages remains the production whitelist.
+          - Preserves V3.7's world-map teardown before battle initialization and V3.5's save-safe direct Expansion entry.
+          - Expansion stages 27-50 remain sequentially gated by genuine victories.
+          - Sandbox remains default-off; V3.3.1 performance and production site-lock behavior remain intact.
+          - Rebuilt from exact V3.7, freshly re-decompiled, invariant-checked and browser-runtime verified.
+          EOF
+          sed -i 's/^          //' /tmp/v38/out/EPICWAR5-EXPANSION-V38-BUILD.txt
+      - name: Match committed release on pull requests
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sha256sum -c assets/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt
+          cmp /tmp/v38/out/epic-war-5-expansion-v38.swf assets/epic-war-5-expansion-v38.swf
+          cmp /tmp/v38/out/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt assets/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt
+          cmp /tmp/v38/out/EPICWAR5-EXPANSION-V38-BUILD.txt assets/EPICWAR5-EXPANSION-V38-BUILD.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v38-verified
+          retention-days: 7
+          path: /tmp/v38/out
+      - name: Publish verified V3.8 to the branch
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp /tmp/v38/out/epic-war-5-expansion-v38.swf assets/
+          cp /tmp/v38/out/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt assets/
+          cp /tmp/v38/out/EPICWAR5-EXPANSION-V38-BUILD.txt assets/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/epic-war-5-expansion-v38.swf assets/EPICWAR5-EXPANSION-V38-SHA256SUMS.txt assets/EPICWAR5-EXPANSION-V38-BUILD.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish Epic War 5 Expansion V3.8 HUD and sandbox polish'
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi

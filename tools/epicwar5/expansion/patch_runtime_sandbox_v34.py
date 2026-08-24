@@ -88,7 +88,7 @@ w = sub_once(
          this.expansionPendingStage = 100 + id;
          this.expansionDestroyPanel();
       }
-      
+
       private function expansionCloseClick''',
     'WorldMap expansionStageClick',
     re.S
@@ -114,7 +114,7 @@ if 'public function sandboxAddMana' not in bp:
          this.bSys.ui.mana.val.htmlText = String(this.mana);
          this.bSys.ui.mana.bar.scaleX = Math.min(1,this.mana / this.manaMax);
       }
-      
+
 '''
     m = re.search(r'(?m)^      public function setMana\([^\n]+\) : \*$', bp)
     if not m:
@@ -183,7 +183,7 @@ vars_block = '''      public static var sandboxMaster:Boolean = false;
       private var sandboxSpeedIndex:int = 0;
       private var sandboxHud:TextField = null;
       private var sandboxHudVisible:Boolean = true;
-      
+
 '''
 bs = once(
     bs,
@@ -212,12 +212,12 @@ helpers = r'''      private function sandboxInstall() : void
             this.sandboxRefresh("sandbox active");
          }
       }
-      
+
       private function sandboxOnOff(V:Boolean) : String
       {
          return V ? "ON" : "off";
       }
-      
+
       private function sandboxResetToggles() : void
       {
          sandboxFreeSpells = false;
@@ -227,7 +227,7 @@ helpers = r'''      private function sandboxInstall() : void
          this.sandboxSpeedIndex = 0;
          this.mGF.stageRoot.stage.frameRate = 24;
       }
-      
+
       private function sandboxRefresh(MSG:String = "") : void
       {
          if(this.sandboxHud == null)
@@ -242,7 +242,7 @@ helpers = r'''      private function sandboxInstall() : void
          var name:String = String(this.sandboxNames[this.sandboxIndex]);
          this.sandboxHud.text = "EXPANSION SANDBOX | unit:" + name + " batch:" + this.sandboxCount + " mana+:" + this.sandboxManaAmount + "\nFREE:" + sandboxOnOff(sandboxFreeSpells) + " BUILD∞:" + sandboxOnOff(sandboxUnlimitedBuildings) + " FAST:" + sandboxOnOff(sandboxFastUnits) + " POP:" + sandboxOnOff(sandboxPopBoost) + "(" + sandboxPopAmount + ")\n` disable | F1 mana | F2/F3 unit | F4 ally | F5 enemy | F6 batch | F7 speed | F8 wipe | F9 win | F10 heal | F11 free | F12 fast | U buildings | O population | [ ] mana | H HUD" + (MSG == "" ? "" : " | " + MSG);
       }
-      
+
       private function sandboxCycle(DELTA:int) : void
       {
          this.sandboxIndex += DELTA;
@@ -256,7 +256,7 @@ helpers = r'''      private function sandboxInstall() : void
          }
          this.sandboxRefresh();
       }
-      
+
       private function sandboxSpawn(ALLY:Boolean) : void
       {
          var i:int = 0;
@@ -274,7 +274,7 @@ helpers = r'''      private function sandboxInstall() : void
          }
          this.sandboxRefresh((ALLY ? "ally x" : "enemy x") + this.sandboxCount);
       }
-      
+
       private function sandboxWipeEnemies() : void
       {
          var c:* = null;
@@ -289,7 +289,7 @@ helpers = r'''      private function sandboxInstall() : void
          }
          this.sandboxRefresh("enemy wipe");
       }
-      
+
       private function sandboxHealAllies() : void
       {
          var c:* = null;
@@ -304,7 +304,7 @@ helpers = r'''      private function sandboxInstall() : void
          }
          this.sandboxRefresh("allies healed");
       }
-      
+
       private function sandboxKey(e:KeyboardEvent) : void
       {
          if(e.keyCode == 192)
@@ -412,7 +412,7 @@ helpers = r'''      private function sandboxInstall() : void
             this.sandboxRefresh();
          }
       }
-      
+
 '''
 bs = once(
     bs,

@@ -1,0 +1,162 @@
+name: Prove KR1 into Frontiers binary merge
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/extract_class_names.py'
+      - '.github/workflows/prove-kr1-binary-merge.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/merge_swf_xml.py'
+      - 'tools/ultimate/extract_class_names.py'
+      - '.github/workflows/prove-kr1-binary-merge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  merge-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch publisher KR1 source and FFDec
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ultimate /tmp/ffdec
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' \
+            -o /tmp/ultimate/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
+            -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          head -c 3 /tmp/ultimate/kr1.swf | grep -Eq 'FWS|CWS|ZWS'
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V12.1 audio/pop-up polish' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V12 Last Rift' >> "$GITHUB_ENV"
+          else
+            test -s assets/kingdom-rush-frontiers-v11.swf
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'KRF_BASE_LABEL=V11 sandbox' >> "$GITHUB_ENV"
+          fi
+
+      - name: Export KR1 class names
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/kr1scripts
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/kr1scripts /tmp/ultimate/kr1.swf \
+            >/tmp/ultimate/export-kr1.log 2>&1 || true
+          test -d /tmp/kr1scripts/scripts
+          python3 tools/ultimate/extract_class_names.py /tmp/kr1scripts/scripts \
+            --prefix 'KR1__' --output /tmp/ultimate/kr1-class-map.json
+
+      - name: Convert source and enhanced Frontiers base to FFDec XML
+        run: |
+          set -euo pipefail
+          echo "Using $KRF_BASE_LABEL: $KRF_BASE"
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -swf2xml /tmp/ultimate/kr1.swf /tmp/ultimate/kr1.xml
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -swf2xml "$KRF_BASE" /tmp/ultimate/krf.xml
+          test -s /tmp/ultimate/kr1.xml
+          test -s /tmp/ultimate/krf.xml
+
+      - name: Namespace and merge KR1 definitions/code before Frontiers EndTag
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/merge_swf_xml.py \
+            --base /tmp/ultimate/krf.xml \
+            --source /tmp/ultimate/kr1.xml \
+            --class-map /tmp/ultimate/kr1-class-map.json \
+            --output /tmp/ultimate/merged.xml \
+            --report /tmp/ultimate/merge-report.json
+          test -s /tmp/ultimate/merged.xml
+
+      - name: Rebuild merged SWF
+        run: |
+          set -euo pipefail
+          java -Xmx8g -jar /tmp/ffdec/ffdec.jar \
+            -xml2swf /tmp/ultimate/merged.xml /tmp/ultimate/merged.swf
+          test -s /tmp/ultimate/merged.swf
+          head -c 3 /tmp/ultimate/merged.swf | grep -Eq 'FWS|CWS|ZWS'
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -dumpAS3 /tmp/ultimate/merged.swf \
+            >/tmp/ultimate/merged-as3.txt
+          test -s /tmp/ultimate/merged-as3.txt
+
+      - name: Verify enhanced Frontiers and namespaced KR1 classes coexist
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/merged-scripts
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar \
+            -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/merged-scripts /tmp/ultimate/merged.swf \
+            >/tmp/ultimate/export-merged.log 2>&1 || true
+          root=/tmp/merged-scripts/scripts
+          test -f "$root/Level1.as"
+          test -f "$root/Level15.as"
+          test -f "$root/TowerArcherCrossbow.as"
+          grep -R -F -q 'qolTowerClipboard' "$root/Level.as"
+          if [ "$KRF_BASE_LABEL" != 'V11 sandbox' ]; then
+            grep -R -F -q 'THE LAST RIFT' "$root/Level15.as"
+          fi
+          if [ "$KRF_BASE_LABEL" = 'V12.1 audio/pop-up polish' ]; then
+            grep -R -F -q 'qolPopupsEnabled' "$root/Level.as"
+          fi
+          test -f "$root/KR1__Level1.as"
+          test -f "$root/KR1__Level13.as"
+          test -f "$root/KR1__Level19.as"
+          test -f "$root/KR1__TowerArcherRanger.as"
+          test -f "$root/KR1__TowerEngineerTesla.as"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os
+          p=Path('/tmp/ultimate/merged.swf')
+          h=hashlib.sha256(p.read_bytes()).hexdigest()
+          roots=Path('/tmp/merged-scripts/scripts')
+          label=os.environ.get('KRF_BASE_LABEL')
+          report={
+              'frontiers_base': os.environ.get('KRF_BASE'),
+              'frontiers_base_label': label,
+              'merged_swf_size': p.stat().st_size,
+              'merged_swf_sha256': h,
+              'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': label == 'V12.1 audio/pop-up polish',
+              'verified_classes': [
+                  'Level1','Level15','TowerArcherCrossbow',
+                  'KR1__Level1','KR1__Level13','KR1__Level19',
+                  'KR1__TowerArcherRanger','KR1__TowerEngineerTesla',
+              ],
+              'exported_as_file_count': sum(1 for _ in roots.rglob('*.as')),
+              'note': 'Structural proof only; merged SWF is intentionally not uploaded.',
+          }
+          Path('/tmp/ultimate/merge-verification.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+          print(json.dumps(report,indent=2))
+          PY
+
+      - name: Upload structural reports only
+        uses: actions/upload-artifact@v4
+        with:
+          name: kr1-frontiers-binary-merge-proof
+          path: |
+            /tmp/ultimate/merge-report.json
+            /tmp/ultimate/merge-verification.json

@@ -46,4 +46,3 @@ if matches != 1:
 text = text.replace(old, new, 1)
 path.write_text(text, encoding="utf-8", newline="\n")
 print("Epic War 5 Expansion V3.6 map-before-battle cleanup applied")
-

@@ -1,0 +1,138 @@
+name: Validate Kingdom Rush Ultimate foundation
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/**'
+      - 'docs/KINGDOM_RUSH_ULTIMATE.md'
+      - '.github/workflows/validate-kr-ultimate.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/**'
+      - 'docs/KINGDOM_RUSH_ULTIMATE.md'
+      - '.github/workflows/validate-kr-ultimate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile Ultimate tooling
+        run: |
+          set -euo pipefail
+          for f in tools/ultimate/*.py; do python3 -m py_compile "$f"; done
+
+      - name: Validate complete stage scope and source coverage
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/content_manifest.py --json > /tmp/ultimate-manifest.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/ultimate-manifest.json', encoding='utf-8'))
+          s=data['summary']
+          assert s['kr1_main'] == 12
+          assert s['kr1_post_campaign'] == 14
+          assert s['kr1_endless'] == 1
+          assert s['krf_main'] == 15
+          assert s['krf_post_campaign'] == 7
+          assert s['krf_endless'] == 2
+          assert s['original_campaign_and_post'] == 48
+          assert s['original_all_including_endless'] == 51
+          assert s['verified_kr1_publisher_levels'] == 19
+          assert s['missing_or_reconstruction'] == 17
+          ids=[x['id'] for x in data['stages']]
+          assert len(ids) == len(set(ids)) == 51
+          mapped={x['source_locator']: x['id'] for x in data['stages'] if x['game']=='kr1' and x['source_locator']}
+          assert set(mapped) == {f'Level{i}' for i in range(1,20)}
+          assert mapped['Level13'] == 'kr1-sarelgaz-s-lair'
+          assert mapped['Level14'] == 'kr1-ruins-of-acaroth'
+          assert mapped['Level15'] == 'kr1-rotten-forest'
+          assert mapped['Level16'] == 'kr1-hushwood'
+          assert mapped['Level17'] == 'kr1-bandit-s-lair'
+          assert mapped['Level18'] == 'kr1-glacial-heights'
+          assert mapped['Level19'] == 'kr1-ha-kraj-plateau'
+          print('stage manifest verified:', s)
+          PY
+
+      - name: Validate combined tower and hero roster
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/roster_manifest.py > /tmp/ultimate-roster.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/ultimate-roster.json', encoding='utf-8'))
+          s=data['summary']
+          assert s['tier4_towers'] == 16
+          assert s['tier4_choices_per_family'] == 4
+          assert s['selectable_kr1_heroes'] == 13
+          assert s['selectable_krf_heroes'] == 16
+          assert s['selectable_heroes_total'] == 29
+          assert s['krf_secondary_stage_heroes'] == 3
+          print('roster manifest verified:', s)
+          PY
+
+      - name: Validate stable campaign runtime/save routing
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/campaign_registry.py --json > /tmp/ultimate-routes.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/ultimate-routes.json', encoding='utf-8'))
+          s=data['summary']
+          assert s['route_count_including_bonus'] == 52
+          assert s['source_ready_routes'] == 35
+          assert s['blocked_routes'] == 17
+          assert s['kr1_ready_routes'] == 19
+          assert s['krf_ready_routes'] == 16
+          routes={x['stage_id']:x for x in data['routes']}
+          assert routes['kr1-southport']['runtime_class'] == 'KR1__Level1'
+          assert routes['krf-hammerhold']['runtime_class'] == 'Level1'
+          assert routes['krf-v12-the-last-rift']['runtime_mode'] == 'v12_last_rift'
+          assert routes['krf-port-tortuga']['runtime_class'] is None
+          print('campaign routing verified:', s)
+          PY
+
+      - name: Verify existing Frontiers runtime is a valid SWF
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'tools/ultimate')
+          from preflight import inspect_swf, select_frontiers
+          swf=select_frontiers(Path('assets/kingdom-rush-frontiers-v12-1.swf'))
+          assert swf.exists(), 'no V12.1/V12/V11 Frontiers runtime found'
+          result=inspect_swf(swf)
+          assert result['valid_swf'], result
+          print('Frontiers base verified:', result['path'], result['sha256'])
+          PY
+
+      - name: Confirm full merge remains fail-closed without local external source inputs
+        run: |
+          set -euo pipefail
+          set +e
+          python3 tools/ultimate/preflight.py --json > /tmp/preflight.json
+          code=$?
+          set -e
+          test "$code" -eq 2
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/preflight.json', encoding='utf-8'))
+          assert data['frontiers']['valid_swf']
+          assert data['frontiers']['path'].endswith('kingdom-rush-frontiers-v12-1.swf')
+          assert not data['ready_for_full_binary_merge']
+          assert 'kingdom_rush_original' in data['missing_source_groups']
+          assert 'frontiers_post_campaign_and_endless' in data['missing_source_groups']
+          print('fail-closed local-source gating verified on V12.1')
+          PY

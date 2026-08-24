@@ -26,6 +26,7 @@ CACHE = ROOT / ".native" / "ruffle"
 RELEASES_API = "https://api.github.com/repos/ruffle-rs/ruffle/releases?per_page=30"
 
 KRF_CANDIDATES = [
+    ROOT / "assets" / "kingdom-rush-frontiers-v12-2-offline.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v12-1.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v12.swf",
     ROOT / "assets" / "kingdom-rush-frontiers-v11.swf",
@@ -37,7 +38,7 @@ KRF_CANDIDATES = [
 GAME_FILES = {
     "stickwar": ROOT / "assets" / "stick-war-complete-v1.swf",
     "epicwar5": ROOT / "assets" / "epic-war-5-sandbox-v2.swf",
-    "epicwar5-expansion": ROOT / "assets" / "epic-war-5-expansion-v37.swf",
+    "epicwar5-expansion": ROOT / "assets" / "epic-war-5-expansion-v38.swf",
 }
 GAME_ALIASES = {
     "krf": "krf",
@@ -57,7 +58,7 @@ GAME_LABELS = {
     "krf": "Kingdom Rush Frontiers",
     "stickwar": "Super Stick War (SW1 + SW2)",
     "epicwar5": "Epic War 5 (stable V1.05-based build)",
-    "epicwar5-expansion": "Epic War 5 Expansion V3.7",
+    "epicwar5-expansion": "Epic War 5 Expansion V3.8",
 }
 
 
@@ -211,4 +212,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

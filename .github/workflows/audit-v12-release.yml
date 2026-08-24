@@ -1,11 +1,14 @@
-# Final release gate for the generated V12.1 binary and every published launcher path.
-name: Audit KRF V12.1 release surface
+# Final release gate for the offline-clean V12.2 binary and every published launcher path.
+name: Audit KRF V12.2 release surface
 
 on:
   pull_request:
     branches: [main]
     paths:
       - 'assets/kingdom-rush-frontiers-v12-1.swf'
+      - 'assets/kingdom-rush-frontiers-v12-2-offline.swf'
+      - 'assets/KINGDOM-RUSH-FRONTIERS-V12-2-BUILD.txt'
+      - 'assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt'
       - 'assets/V12-1-BUILD.txt'
       - 'assets/V12-1-SHA256SUMS.txt'
       - 'assets/kingdom-rush-frontiers-v12.swf'
@@ -16,6 +19,7 @@ on:
       - 'mod/fast.html'
       - 'mod/index.html'
       - 'iphone/krf.html'
+      - 'ultimate/play.html'
       - 'README.md'
       - '.github/workflows/build-v12-1-audio-popups.yml'
       - '.github/workflows/audit-v12-release.yml'
@@ -23,6 +27,9 @@ on:
     branches: [main]
     paths:
       - 'assets/kingdom-rush-frontiers-v12-1.swf'
+      - 'assets/kingdom-rush-frontiers-v12-2-offline.swf'
+      - 'assets/KINGDOM-RUSH-FRONTIERS-V12-2-BUILD.txt'
+      - 'assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt'
       - 'assets/V12-1-BUILD.txt'
       - 'assets/V12-1-SHA256SUMS.txt'
       - 'assets/kingdom-rush-frontiers-v12.swf'
@@ -33,6 +40,7 @@ on:
       - 'mod/fast.html'
       - 'mod/index.html'
       - 'iphone/krf.html'
+      - 'ultimate/play.html'
       - 'README.md'
       - '.github/workflows/build-v12-1-audio-popups.yml'
       - '.github/workflows/audit-v12-release.yml'
@@ -44,10 +52,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify V12.1 binary, checksum and provenance
+      - name: Verify V12.2 binary, checksum and V12.1 lineage
         shell: bash
         run: |
           set -euo pipefail
+          test -s assets/kingdom-rush-frontiers-v12-2-offline.swf
+          (cd assets && sha256sum -c KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt)
+          head -c 3 assets/kingdom-rush-frontiers-v12-2-offline.swf | grep -Eq 'FWS|CWS|ZWS'
+          grep -F 'Expansion V12.2 offline-clean release' assets/KINGDOM-RUSH-FRONTIERS-V12-2-BUILD.txt
+          grep -F 'retired Mochi and CPMStar startup/upgrades/defeat requests removed' assets/KINGDOM-RUSH-FRONTIERS-V12-2-BUILD.txt
           test -s assets/kingdom-rush-frontiers-v12-1.swf
           sha256sum -c assets/V12-1-SHA256SUMS.txt
           head -c 3 assets/kingdom-rush-frontiers-v12-1.swf | grep -Eq 'FWS|CWS|ZWS'
@@ -71,7 +84,7 @@ jobs:
           grep -F '!Level15.qolV12PostBossActive' tools/v12/run-build-v12.py
           grep -F 'original Level 15 completion' tools/v12/run-build-v12.py
 
-      - name: Verify Python native launcher prefers V12.1
+      - name: Verify Python native launcher prefers V12.2
         shell: bash
         run: |
           set -euo pipefail
@@ -80,23 +93,25 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           text = Path('desktop/run_native.py').read_text(encoding='utf-8')
+          v122 = text.index('kingdom-rush-frontiers-v12-2-offline.swf')
           v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
           v12 = text.index('kingdom-rush-frontiers-v12.swf')
-          assert v121 < v12, 'Python launcher does not prefer V12.1 before V12'
+          assert v122 < v121 < v12, 'Python launcher does not prefer V12.2 before V12.1 and V12'
           assert 'kingdom-rush-frontiers-v5.swf' in text
           assert '"dx12"' in text and '"gl"' in text
           PY
 
-      - name: Verify PowerShell native launcher prefers V12.1
+      - name: Verify PowerShell native launcher prefers V12.2
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
           text = Path('desktop/run-native.ps1').read_text(encoding='utf-8')
+          v122 = text.index('kingdom-rush-frontiers-v12-2-offline.swf')
           v121 = text.index('kingdom-rush-frontiers-v12-1.swf')
           v12 = text.index('kingdom-rush-frontiers-v12.swf')
-          assert v121 < v12, 'PowerShell launcher does not prefer V12.1 before V12'
+          assert v122 < v121 < v12, 'PowerShell launcher does not prefer V12.2 before V12.1 and V12'
           assert 'kingdom-rush-frontiers-v5.swf' in text
           assert "'dx12'" in text and "'gl'" in text
           PY
@@ -104,7 +119,7 @@ jobs:
             pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
           fi
 
-      - name: Verify browser, iPhone and docs target V12.1
+      - name: Verify browser, iPhone and docs target V12.2
         shell: bash
         run: |
           set -euo pipefail
@@ -113,16 +128,17 @@ jobs:
             echo 'Deprecated Ruffle preloader option returned' >&2
             exit 1
           fi
-          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' mod/index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' mod/fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-last-rift-final-r4' iphone/krf.html
+          grep -F '/mod/fast.html?v=12-2-offline-clean' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=iphone-v122-offline-clean' iphone/krf.html
           grep -F '/mod/' index.html
-          grep -F '/iphone/krf.html' index.html
-          grep -F 'V12.1' mod/index.html
-          grep -F 'persists across fresh Ruffle sessions' mod/index.html
-          grep -F 'V12.1' README.md
-          grep -F 'V12.1' desktop/README.md
-          grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
+          grep -F '/ultimate/play.html?campaign=ultimate' index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' ultimate/play.html
+          grep -F 'V12.2' mod/index.html
+          grep -F 'removes the retired online-service startup gate' mod/index.html
+          grep -F 'V12.2' README.md
+          grep -F 'V12.2' desktop/README.md
+          grep -F 'V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
           grep -F 'DX12' desktop/README.md
           grep -F 'OpenGL' desktop/README.md
 
@@ -137,12 +153,12 @@ jobs:
             if curl -fsS http://127.0.0.1:8765/mod/ >/tmp/krf-mod.html; then break; fi
             sleep 0.25
           done
-          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' /tmp/krf-mod.html
-          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-1-last-rift-final-r4' -o /tmp/krf-fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' /tmp/krf-fast.html
-          curl -fsS http://127.0.0.1:8765/assets/kingdom-rush-frontiers-v12-1.swf -o /tmp/krf-v121.swf
-          test -s /tmp/krf-v121.swf
-          head -c 3 /tmp/krf-v121.swf | grep -Eq 'FWS|CWS|ZWS'
-          local_hash=$(sha256sum /tmp/krf-v121.swf | cut -d' ' -f1)
-          manifest_hash=$(cut -d' ' -f1 assets/V12-1-SHA256SUMS.txt)
+          grep -F '/mod/fast.html?v=12-2-offline-clean' /tmp/krf-mod.html
+          curl -fsS 'http://127.0.0.1:8765/mod/fast.html?v=12-2-offline-clean' -o /tmp/krf-fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' /tmp/krf-fast.html
+          curl -fsS http://127.0.0.1:8765/assets/kingdom-rush-frontiers-v12-2-offline.swf -o /tmp/krf-v122.swf
+          test -s /tmp/krf-v122.swf
+          head -c 3 /tmp/krf-v122.swf | grep -Eq 'FWS|CWS|ZWS'
+          local_hash=$(sha256sum /tmp/krf-v122.swf | cut -d' ' -f1)
+          manifest_hash=$(cut -d' ' -f1 assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt)
           test "$local_hash" = "$manifest_hash"

@@ -1,0 +1,18 @@
+Kingdom Rush Frontiers — Expansion V12.2 offline-clean release
+
+Artifact: kingdom-rush-frontiers-v12-2-offline.swf
+Release SWF SHA-256: acfb83589d5efe8aaddecbaf6bebe2bde4403804934ac6de3f8d927756525f2a
+Release SWF size: 58911699 bytes
+
+Verified release path:
+- title screen, new save, Normal difficulty, and world map
+- Hammerhold briefing, tutorial dismissal, first wave, and enemy movement
+- local/offline save handler
+- retired Mochi and CPMStar startup/upgrades/defeat requests removed
+- built-in local promotional panels preserved
+
+Compatibility note:
+Ruffle 0.5.0 reports one MP3 end-of-stream diagnostic when Frontiers reaches
+the map. The untouched publisher-derived standalone build produces the same
+diagnostic at the same transition. It does not interrupt menus, saves, stage
+loading, waves, movement, combat, or audio controls.

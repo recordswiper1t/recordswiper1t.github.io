@@ -40,7 +40,7 @@ helper = '''      private function expansionDirectAvailable() : Boolean
          }
          return false;
       }
-      
+
 '''
 count = text.count("this.mGF.datMgr.expansionOriginalCampaignComplete()")
 if count != 3:

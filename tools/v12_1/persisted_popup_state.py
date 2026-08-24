@@ -72,7 +72,7 @@ level = rep(
             this.game.main.tooltipsStatus = enabled;
          }
       }
-      
+
       public function qolSetPopupPreference(param1:Boolean) : void
       {
          var save:SharedObject = null;
@@ -91,7 +91,7 @@ level = rep(
          {
          }
       }
-      
+
       private function qolTimeAttackKey() : String
 ''',
     'popup preference persistence methods',

@@ -1,0 +1,207 @@
+name: Probe KR1 Level1-Level19 adapter matrix
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/stage_api_matrix.py'
+      - 'tools/ultimate/level_api_diff.py'
+      - 'tools/ultimate/build_level_adapter.py'
+      - 'tools/ultimate/rebind_namespaced_scripts.py'
+      - '.github/workflows/probe-kr1-stage-adapter-matrix.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/stage_api_matrix.py'
+      - 'tools/ultimate/level_api_diff.py'
+      - 'tools/ultimate/build_level_adapter.py'
+      - 'tools/ultimate/rebind_namespaced_scripts.py'
+      - '.github/workflows/probe-kr1-stage-adapter-matrix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage-adapter-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch KR1 publisher source and FFDec
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u /tmp/ffdec
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=1' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          else
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+            echo 'HAS_V121=0' >> "$GITHUB_ENV"
+          fi
+
+      - name: Export source scripts and generate port plan
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/kr1-src /tmp/u/krf-src
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/kr1-src /tmp/u/kr1.swf >/tmp/u/export-kr1.log 2>&1 || true
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/krf-src "$KRF_BASE" >/tmp/u/export-krf.log 2>&1 || true
+          for n in $(seq 1 19); do test -f "/tmp/u/kr1-src/scripts/Level${n}.as"; done
+          python3 tools/ultimate/port_plan.py \
+            --kr1 /tmp/u/kr1-src/scripts --krf /tmp/u/krf-src/scripts \
+            --output /tmp/u/port-plan.json
+          python3 tools/ultimate/extract_class_names.py /tmp/u/kr1-src/scripts \
+            --prefix 'KR1__' --output /tmp/u/class-map.json
+
+      - name: Build fully namespaced binary coexistence SWF
+        run: |
+          set -euo pipefail
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml /tmp/u/kr1.swf /tmp/u/kr1.xml
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -swf2xml "$KRF_BASE" /tmp/u/krf.xml
+          python3 tools/ultimate/merge_swf_xml.py \
+            --base /tmp/u/krf.xml --source /tmp/u/kr1.xml \
+            --class-map /tmp/u/class-map.json \
+            --output /tmp/u/merged.xml --report /tmp/u/merge-report.json
+          java -Xmx8g -jar /tmp/ffdec/ffdec.jar -xml2swf /tmp/u/merged.xml /tmp/u/merged.swf
+          head -c 3 /tmp/u/merged.swf | grep -Eq 'FWS|CWS|ZWS'
+
+      - name: Export merged scripts and build all-stage API matrix
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/u/merged-export /tmp/u/report
+          java -Xmx6g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/merged-export /tmp/u/merged.swf >/tmp/u/export-merged.log 2>&1 || true
+          python3 tools/ultimate/stage_api_matrix.py \
+            --kr1-scripts /tmp/u/kr1-src/scripts \
+            --krf-scripts /tmp/u/krf-src/scripts \
+            --first 1 --last 19 \
+            --output /tmp/u/report/stage-api-matrix.json \
+            --union-contract /tmp/u/report/union-level-adapter-contract.json
+          python3 tools/ultimate/build_level_adapter.py \
+            --contract /tmp/u/report/union-level-adapter-contract.json \
+            --frontiers-level /tmp/u/krf-src/scripts/Level.as \
+            --output /tmp/u/KR1__Level.as \
+            --report /tmp/u/report/union-level-adapter-build.json
+
+      - name: Rebind source-ready KR1 content while retaining Level adapter identity
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/rebind_namespaced_scripts.py \
+            --scripts /tmp/u/merged-export/scripts \
+            --plan /tmp/u/port-plan.json \
+            --exclude-rebind KR1__Level \
+            --output /tmp/u/rebind \
+            --report /tmp/u/report/rebind-report.json
+          mkdir -p /tmp/u/import/scripts
+          cp /tmp/u/KR1__Level.as /tmp/u/import/scripts/KR1__Level.as
+          for n in $(seq 1 19); do
+            src=$(find /tmp/u/rebind/scripts -name "KR1__Level${n}.as" -print -quit)
+            test -n "$src"
+            cp "$src" "/tmp/u/import/scripts/KR1__Level${n}.as"
+            grep -F 'extends KR1__Level' "/tmp/u/import/scripts/KR1__Level${n}.as"
+          done
+
+      - name: Compile one adapter plus all 19 KR1 stage classes
+        id: compile
+        shell: bash
+        run: |
+          set +e
+          java -Xmx10g -jar /tmp/ffdec/ffdec.jar -onerror abort \
+            -importScript /tmp/u/merged.swf /tmp/u/stages-adapted.swf /tmp/u/import \
+            >/tmp/u/import-all-stages.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "$code" >/tmp/u/import.exit
+          tail -200 /tmp/u/import-all-stages.log || true
+          exit 0
+
+      - name: Verify all stage identities after successful compile
+        if: steps.compile.outputs.exit_code == '0'
+        run: |
+          set -euo pipefail
+          test -s /tmp/u/stages-adapted.swf
+          mkdir -p /tmp/u/verify
+          java -Xmx7g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/verify /tmp/u/stages-adapted.swf >/tmp/u/verify.log 2>&1 || true
+          grep -F 'class KR1__Level extends Level' /tmp/u/verify/scripts/KR1__Level.as
+          for n in $(seq 1 19); do
+            test -f "/tmp/u/verify/scripts/KR1__Level${n}.as"
+            grep -F 'extends KR1__Level' "/tmp/u/verify/scripts/KR1__Level${n}.as"
+          done
+          grep -F 'qolTowerClipboard' /tmp/u/verify/scripts/Level.as
+          if [ "$KRF_BASE" != 'assets/kingdom-rush-frontiers-v11.swf' ]; then
+            grep -F 'THE LAST RIFT' /tmp/u/verify/scripts/Level15.as
+          fi
+          if [ "$HAS_V121" = '1' ]; then
+            grep -F 'qolPopupsEnabled' /tmp/u/verify/scripts/Level.as
+          fi
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          m=json.load(open('/tmp/u/report/stage-api-matrix.json',encoding='utf-8'))
+          b=json.load(open('/tmp/u/report/union-level-adapter-build.json',encoding='utf-8'))
+          out={
+              'compile_success': True,
+              'frontiers_base': os.environ.get('KRF_BASE'),
+              'source_ready_kr1_stage_classes_compiled': 19,
+              'union_missing_frontiers_ref_count': m['union_missing_frontiers_ref_count'],
+              'generated_compile_stub_count': b['generated_member_count'],
+              'frontiers_constructor_forwarding': b.get('frontiers_constructor',{}),
+              'frontiers_mod_markers_preserved': True,
+              'v12_1_polish_preserved': os.environ.get('HAS_V121') == '1',
+              'semantic_status': 'compile layer only; adapter stubs still require semantic implementation/runtime testing',
+          }
+          Path('/tmp/u/report/all-stage-adapter-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Record failure for adapter iteration
+        if: steps.compile.outputs.exit_code != '0'
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          log=Path('/tmp/u/import-all-stages.log').read_text(encoding='utf-8',errors='replace')
+          out={
+              'compile_success': False,
+              'exit_code': int(Path('/tmp/u/import.exit').read_text().strip()),
+              'meaning': 'One or more source-ready KR1 stage classes expose further compile/type incompatibilities.',
+              'log_tail': '\n'.join(log.splitlines()[-200:]),
+          }
+          Path('/tmp/u/report/all-stage-adapter-result.json').write_text(json.dumps(out,indent=2),encoding='utf-8')
+          PY
+
+      - name: Upload structural reports only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kr1-level1-19-adapter-matrix
+          path: |
+            /tmp/u/report/stage-api-matrix.json
+            /tmp/u/report/union-level-adapter-contract.json
+            /tmp/u/report/union-level-adapter-build.json
+            /tmp/u/report/rebind-report.json
+            /tmp/u/report/all-stage-adapter-result.json
+            /tmp/u/import-all-stages.log
+          retention-days: 30
+
+      - name: Require source-ready stage compile layer
+        run: test '${{ steps.compile.outputs.exit_code }}' = '0'

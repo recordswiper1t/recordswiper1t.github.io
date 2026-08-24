@@ -1,0 +1,102 @@
+name: Rank KR1 Level adapter semantics on V12.1
+
+on:
+  push:
+    branches: [agent/v13-kingdom-rush-ultimate-clean]
+    paths:
+      - 'tools/ultimate/level_semantic_match.py'
+      - 'tools/ultimate/stage_api_matrix.py'
+      - 'tools/ultimate/level_api_diff.py'
+      - '.github/workflows/probe-kr1-level-semantic-match.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tools/ultimate/level_semantic_match.py'
+      - 'tools/ultimate/stage_api_matrix.py'
+      - 'tools/ultimate/level_api_diff.py'
+      - '.github/workflows/probe-kr1-level-semantic-match.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-rank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch publisher KR1 and select V12.1 Frontiers
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/ultimate/level_api_diff.py tools/ultimate/stage_api_matrix.py tools/ultimate/level_semantic_match.py
+          mkdir -p /tmp/u /tmp/ffdec /tmp/u/kr1-src /tmp/u/krf-src /tmp/u/report
+          curl -fL --retry 4 --retry-all-errors \
+            'https://cache.armorgames.com/files/games/kingdom-rush-12141.swf' \
+            -o /tmp/u/kr1.swf
+          curl -fL --retry 4 \
+            'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' \
+            -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+          if [ -s assets/kingdom-rush-frontiers-v12-1.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12-1.swf' >> "$GITHUB_ENV"
+          elif [ -s assets/kingdom-rush-frontiers-v12.swf ]; then
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v12.swf' >> "$GITHUB_ENV"
+          else
+            echo 'KRF_BASE=assets/kingdom-rush-frontiers-v11.swf' >> "$GITHUB_ENV"
+          fi
+
+      - name: Export KR1 and Frontiers ActionScript
+        run: |
+          set -euo pipefail
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/kr1-src /tmp/u/kr1.swf >/tmp/u/kr1-export.log 2>&1 || true
+          java -Xmx5g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 \
+            -export script /tmp/u/krf-src "$KRF_BASE" >/tmp/u/krf-export.log 2>&1 || true
+          test -f /tmp/u/kr1-src/scripts/Level.as
+          test -f /tmp/u/krf-src/scripts/Level.as
+          for n in $(seq 1 19); do test -f "/tmp/u/kr1-src/scripts/Level${n}.as"; done
+
+      - name: Build union Level contract and semantic rankings
+        run: |
+          set -euo pipefail
+          python3 tools/ultimate/stage_api_matrix.py \
+            --kr1-scripts /tmp/u/kr1-src/scripts \
+            --krf-scripts /tmp/u/krf-src/scripts \
+            --first 1 --last 19 \
+            --output /tmp/u/report/stage-api-matrix.json \
+            --union-contract /tmp/u/report/union-level-adapter-contract.json
+          python3 tools/ultimate/level_semantic_match.py \
+            --kr1-level /tmp/u/kr1-src/scripts/Level.as \
+            --krf-level /tmp/u/krf-src/scripts/Level.as \
+            --contract /tmp/u/report/union-level-adapter-contract.json \
+            --output /tmp/u/report/level-semantic-candidates.json \
+            --top 12
+          python3 - <<'PY'
+          import json
+          p='/tmp/u/report/level-semantic-candidates.json'
+          d=json.load(open(p,encoding='utf-8'))
+          assert d['adapter_member_count'] > 0
+          print('adapter members ranked:', d['adapter_member_count'])
+          for name,row in d['members'].items():
+              c=row.get('frontiers_candidates') or row.get('frontiers_same_type_candidates') or []
+              print(name, '=>', c[:3])
+          PY
+
+      - name: Upload semantic mapping report
+        uses: actions/upload-artifact@v4
+        with:
+          name: kr1-level-v12-1-semantic-candidates
+          path: |
+            /tmp/u/report/stage-api-matrix.json
+            /tmp/u/report/union-level-adapter-contract.json
+            /tmp/u/report/level-semantic-candidates.json
+          retention-days: 30

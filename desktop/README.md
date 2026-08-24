@@ -37,12 +37,12 @@ Python 3 is required for the macOS/Linux bootstrap launcher.
 
 ## Released game selection
 
-- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
+- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring offline-ready V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
 - `epicwar5` launches the stable V1.05-based Sandbox V2 build.
-- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v37.swf`, the released V3.7 Expansion with direct web/mobile entry, clean world-map-to-battle layering, a complete twelve-slot battle HUD and a default-off battle sandbox. Native play keeps the normal campaign unlock requirement.
+- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v38.swf`, the released V3.8 Expansion with direct web/mobile entry, clean world-map-to-battle layering, a readable twelve-slot battle HUD and a compact clickable battle sandbox whose spawned armies advance and fight. Native play keeps the normal campaign unlock requirement.
 
-Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish.
+Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish; V12.2 removes the retired online-service startup gate for deterministic offline play.
 
 ## Windows graphics crash protection
 
@@ -109,4 +109,3 @@ Native Ruffle stores Flash local data separately from browser Ruffle. KRF Time A
 ## Build verification
 
 Release SWFs are built from verified binaries/sources, imported with FFDec where applicable, re-exported, and checked for required gameplay/mod markers before they are published. SHA-256/build records in `assets/` identify the verified binaries.
-
