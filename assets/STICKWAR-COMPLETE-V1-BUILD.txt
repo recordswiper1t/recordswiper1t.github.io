@@ -1,8 +1,8 @@
 Super Stick War — V1 Complete Expansion
-Release SWF SHA-256: 2bd6dfa128473fdb12aad1fab8f975c3b2e08cb2408985e7ded4b910a35c4d85
-Release SWF size: 18588647 bytes
-Verified workflow run: 32583548174
-Verified artifact: 9478809703
+Release SWF SHA-256: 05d68a7a590d334113014ef56ef15d15a53e6fd9f2f8694092bfe3c5f52dd20d
+Release SWF size: 18587878 bytes
+Upstream expansion workflow run: 32583548174
+Upstream expansion artifact: 9478809703
 Canonical SW2 baseline SHA-256: 03aa17bc25851fb14aefbe9a7223c738f427bff22580e16ec93e5e1232b167b5
 SW1 reference baseline SHA-256: 9bff25416c98506ba01493b7e3fa523890632b4963e4f0ac33f5cbbb023c7c0b
 Toolchain: FFDec 26.2.1
@@ -16,5 +16,9 @@ Verified release scope:
 - Performance patches for health bars, spatial queries, projectile/effect cleanup, selection/statue caching and adaptive cosmetic quality.
 - Combat simulation, AI, movement, damage and cooldown cadence remain full-rate.
 - Expansion saves are isolated in stickwarCompleteSaveV1.
+- Offline startup patch removes the retired Stick Empires intro lookup and
+  YouTube Flash API request; choosing a difficulty now enters the campaign map directly.
+- The site launcher opens the in-game new/continue campaign setup directly,
+  bypassing the redundant legacy title-link screen and its unreliable hit area.
 
-This exact SWF passed FFDec import and a fresh re-decompile/marker verification in workflow run 32583548174 before publication.
+This exact SWF passed FFDec import and a fresh 1,348-script re-decompile/marker verification before publication.

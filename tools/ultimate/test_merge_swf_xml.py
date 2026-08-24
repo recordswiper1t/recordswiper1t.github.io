@@ -48,17 +48,37 @@ class MergeSwfXmlTests(unittest.TestCase):
         self.assertEqual([x.text for x in elem.find("names").findall("item")], ["KR1__Level"])
         self.assertEqual(stats["linkage_text_ids_remapped"], 1)
 
-    def test_document_symbol_block_drops_its_preloader_bindings(self) -> None:
+    def test_document_symbol_block_drops_only_document_class(self) -> None:
         elem = ET.fromstring('''<item type="SymbolClassTag">
   <tags><item>26</item><item>0</item></tags>
   <names><item>Preloader</item><item>Defense</item></names>
 </item>''')
         stats = Counter()
         merge.drop_source_document_class(elem, stats)
-        self.assertEqual(list(elem.find("tags")), [])
-        self.assertEqual(list(elem.find("names")), [])
+        self.assertEqual([x.text for x in elem.find("tags").findall("item")], ["26"])
+        self.assertEqual([x.text for x in elem.find("names").findall("item")], ["Preloader"])
         self.assertEqual(stats["document_class_entries_removed"], 1)
-        self.assertEqual(stats["document_preloader_linkage_entries_removed"], 2)
+        self.assertEqual(stats["document_preloader_linkage_entries_removed"], 0)
+
+    def test_named_timeline_child_tracks_renamed_abc_trait(self) -> None:
+        elem = ET.fromstring('''<item type="DefineSpriteTag">
+  <subTags>
+    <item type="PlaceObject2Tag" name="Arrow" forceWriteAsLong="false"/>
+    <item type="PlaceObject3Tag" name="Arrow" placeFlagHasName="true"/>
+  </subTags>
+</item>''')
+        stats = Counter()
+        merge.transform_tree(
+            elem,
+            {},
+            merge.ClassRenamer({"Arrow": "KR1__Arrow", "false": "KR1__false"}),
+            stats,
+        )
+
+        placements = list(elem.find("subTags"))
+        self.assertEqual([item.attrib["name"] for item in placements], ["KR1__Arrow", "KR1__Arrow"])
+        self.assertEqual(placements[0].attrib["forceWriteAsLong"], "false")
+        self.assertEqual(stats["timeline_instance_names_renamed"], 2)
 
 
 if __name__ == "__main__":

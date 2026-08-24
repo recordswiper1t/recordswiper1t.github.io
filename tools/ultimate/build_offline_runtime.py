@@ -15,6 +15,8 @@ from pathlib import Path
 
 MAIN_CLASS = "§each const each§.as"
 HANDLER_CLASS = "AgiV2Handler.as"
+UPGRADES_CLASS = "MenuUpgrades.as"
+DEFEAT_CLASS = "§native for var§.as"
 
 OFFLINE_HANDLER = """package
 {
@@ -98,6 +100,8 @@ def patch_source(source_root: Path) -> None:
     scripts = source_root / "scripts"
     main_path = scripts / MAIN_CLASS
     handler_path = scripts / HANDLER_CLASS
+    upgrades_path = scripts / UPGRADES_CLASS
+    defeat_path = scripts / DEFEAT_CLASS
 
     main = main_path.read_text(encoding="utf-8")
     if "new UltimateOfflineHandler()" in main:
@@ -139,8 +143,81 @@ def patch_source(source_root: Path) -> None:
     )
     if "MochiServices.connect(" in main:
         raise SystemExit("obsolete Mochi startup: unsupported connect call remains")
+
+    ad_branch = '''         if(!this.§static const super§(_loc2_))
+         {
+            this.§override do§.§dynamic const import§.removeChild(this.§override do§.§dynamic const import§.mobile_add_intro);
+            _loc3_ = "10016QAA25A02F";
+            _loc4_ = new §var const class§(_loc3_);
+            this.§override do§.§_-EY§(_loc4_);
+         }
+         else
+         {
+            this.§override do§.§dynamic const import§.mobile_add_intro.visible = true;
+         }
+'''
+    if ad_branch in main:
+        main = replace_once(
+            main,
+            ad_branch,
+            "         this.§override do§.§dynamic const import§.mobile_add_intro.visible = true;\n",
+            "obsolete CPMStar startup",
+        )
+    elif "10016QAA25A02F" in main or "new §var const class§" in main:
+        raise SystemExit("obsolete CPMStar startup: unsupported ad branch remains")
+
+    upgrades = upgrades_path.read_text(encoding="utf-8")
+    upgrades_ad_branch = '''         var _loc2_:Array = ["armorgames.com","kongregate.com"];
+         if(!this.game.main.§static const super§(_loc2_))
+         {
+            trace("load CPM Stars Ads inside Upgrades");
+            _loc3_ = "10017Q8F664641";
+            _loc4_ = new §var const class§(_loc3_);
+            this.§_-EY§(_loc4_);
+         }
+         else
+         {
+            this.addChild(new §in package§(new Point(108,98)));
+         }
+'''
+    if upgrades_ad_branch in upgrades:
+        upgrades = replace_once(
+            upgrades,
+            upgrades_ad_branch,
+            "         this.addChild(new §in package§(new Point(108,98)));\n",
+            "obsolete CPMStar upgrades panel",
+        )
+    elif "10017Q8F664641" in upgrades or "CPM Stars Ads inside Upgrades" in upgrades:
+        raise SystemExit("obsolete CPMStar upgrades panel: unsupported ad branch remains")
+
+    defeat = defeat_path.read_text(encoding="utf-8")
+    defeat_ad_branch = '''         var _loc2_:Array = ["armorgames.com","kongregate.com"];
+         if(!this.cRoot.game.main.§static const super§(_loc2_))
+         {
+            trace("load CPM Stars Ads inside Defeat");
+            _loc3_ = "10017Q8F664641";
+            _loc4_ = new §var const class§(_loc3_);
+            this.§_-EY§(_loc4_);
+         }
+         else
+         {
+            this.addChild(new §_-Cu§(new Point(46,188)));
+         }
+'''
+    if defeat_ad_branch in defeat:
+        defeat = replace_once(
+            defeat,
+            defeat_ad_branch,
+            "         this.addChild(new §_-Cu§(new Point(46,188)));\n",
+            "obsolete CPMStar defeat panel",
+        )
+    elif "10017Q8F664641" in defeat or "CPM Stars Ads inside Defeat" in defeat:
+        raise SystemExit("obsolete CPMStar defeat panel: unsupported ad branch remains")
+
     main_path.write_text(main, encoding="utf-8", newline="\n")
     handler_path.write_text(OFFLINE_HANDLER, encoding="utf-8", newline="\n")
+    upgrades_path.write_text(upgrades, encoding="utf-8", newline="\n")
+    defeat_path.write_text(defeat, encoding="utf-8", newline="\n")
 
 
 def main() -> int:

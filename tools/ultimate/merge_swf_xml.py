@@ -247,6 +247,17 @@ def transform_tree(elem: ET.Element, id_map: dict[int, int], renamer: ClassRenam
                     node.attrib[key] = str(id_map[number])
                     stats["id_values_remapped"] += 1
                     continue
+            if key == "name" and node.attrib.get("type") in {"PlaceObject2Tag", "PlaceObject3Tag"}:
+                # A named timeline child is assigned to a same-named AS3
+                # property when its SymbolClass is constructed. If that name
+                # also happens to be a source class name (for example the KR
+                # WaveFlag child named ``Arrow``), the ABC trait is namespaced
+                # by the class renamer. Keep the placement name in lock-step or
+                # Flash attempts to assign the old property and raises #1056.
+                new_value, count = renamer.replace(value)
+                if count:
+                    node.attrib[key] = new_value
+                    stats["timeline_instance_names_renamed"] += count
             # Do not globally rewrite scalar attributes. Obfuscated AS3 class
             # names can be raw words such as "false" or "dynamic"; replacing
             # those values corrupts ordinary SWF XML flags. ABC/linkage names
@@ -267,15 +278,14 @@ def drop_source_document_class(symbol_tag: ET.Element, stats: Counter) -> None:
         name_items = list(names.findall("item"))
         if len(tag_items) != len(name_items):
             raise SystemExit("source SymbolClass tag/name arrays have different lengths")
-        if any((item.text or "").strip() == "0" for item in tag_items):
-            # The document-class SymbolClass block also binds the source
-            # preloader shell. None of those launch-only bindings belong in the
-            # Frontiers runtime, and retaining them can instantiate KR1's sealed
-            # preloader clips during KRF frame construction.
-            removed = len(tag_items)
-            tags.clear()
-            names.clear()
-            stats["document_preloader_linkage_entries_removed"] += removed
+        # Character ID 0 is the source movie's document class. The other
+        # entries are ordinary SymbolClass bindings and must survive the merge;
+        # deleting the whole block leaves imported sprites without their code.
+        for index in range(len(tag_items) - 1, -1, -1):
+            if (tag_items[index].text or "").strip() != "0":
+                continue
+            tags.remove(tag_items[index])
+            names.remove(name_items[index])
             stats["document_class_entries_removed"] += 1
 
     # Retain compatibility with FFDec variants that serialize bindings as

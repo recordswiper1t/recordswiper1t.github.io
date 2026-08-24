@@ -1,14 +1,15 @@
-Three-Game Expansion Completion Manifest
-Published: 2026-08-23
+Three-Game Expansion Release Verification
+Verified: 2026-08-23
 
-Kingdom Rush Ultimate — Original KR + Frontiers V12.2
+Kingdom Rush Ultimate — Combined KR + Frontiers V12.2
+Combined SHA-256: e03afa8d8da8e1855fac2c1e099820f09326f93a830b84bc05ea7a5574d83626
 KR SHA-256: 7b5467a3eccc17f6dd001ff2d41bdf1b03d79fd515a2a9586c42bfd982bb1e23
-KRF SHA-256: f3dde7ab176e67e384d747aa7100df9a4123b300f6c4c129d19b9ee0b75817af
-Artifacts: assets/kingdom-rush-original-12141.swf; assets/kingdom-rush-frontiers-v12-2-offline.swf
-Completion: one launcher, isolated campaign/save runtimes, original KR campaign, Frontiers 30-wave Last Rift act, scoring, popup/audio controls, sandbox/performance systems, and deterministic offline startup.
+KRF SHA-256: acfb83589d5efe8aaddecbaf6bebe2bde4403804934ac6de3f8d927756525f2a
+Artifacts: assets/kingdom-rush-ultimate-v13.swf; assets/kingdom-rush-original-12141.swf; assets/kingdom-rush-frontiers-v12-2-offline.swf
+Completion: central launcher, combined 34-stage selector, standalone recovery launchers, isolated saves, live KR and Frontiers battle routing, deterministic offline startup, and retired ad-service cleanup. The inherited non-blocking Frontiers/Ruffle MP3 diagnostic is documented in the build manifest.
 
 Super Stick War — Complete Expansion V1
-SHA-256: 29655254eeba6d761ace518aa4e5372ac06dfd286760767947ec9488501a7653
+SHA-256: 05d68a7a590d334113014ef56ef15d15a53e6fd9f2f8694092bfe3c5f52dd20d
 Artifact: assets/stick-war-complete-v1.swf
 Completion: repaired web startup, 65-stage campaign/war games, Battle Lab, Order/Chaos systems, mastery, possession, sandbox and performance release.
 

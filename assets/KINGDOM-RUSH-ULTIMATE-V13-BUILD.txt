@@ -1,0 +1,25 @@
+Kingdom Rush Ultimate V13 native combined runtime
+
+Artifact: kingdom-rush-ultimate-v13.swf
+Release SWF SHA-256: e03afa8d8da8e1855fac2c1e099820f09326f93a830b84bc05ea7a5574d83626
+Release SWF size: 91075163 bytes
+Build lineage: native KR engine embedded in the offline Frontiers V12.2 runtime
+Selector: 34 playable sourced stages (19 Kingdom Rush + 15 Frontiers)
+Fallbacks: the launcher retains standalone Kingdom Rush and Frontiers engines
+
+Verified native Kingdom Rush path:
+- Southport setup, all four base tower types, enemy movement, kills and leaks
+- reinforcements and Rain of Fire
+- all seven waves, victory screen, and return to the shared Frontiers map
+
+Verified Frontiers path:
+- offline local-save startup
+- all five selector pages and their Kingdom Rush/Frontiers routing
+- Emberspike Depths and Hammerhold setup, wave start, and enemy movement
+
+Offline cleanup:
+- removed retired Mochi startup and CPMStar intro/upgrades/defeat ad requests
+- preserved the built-in local promotional panels used in their place
+- the sole remaining Ruffle MP3 end-of-stream diagnostic is inherited unchanged
+  from the untouched standalone Frontiers build and does not interrupt menus,
+  stage loading, waves, movement, combat, saves, or campaign switching

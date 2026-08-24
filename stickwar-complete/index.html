@@ -31,7 +31,7 @@
 <script src="https://unpkg.com/@ruffle-rs/ruffle@0.5.0"></script>
 <script>
 (()=>{'use strict';
-const SWF='/assets/stick-war-complete-v1.swf?v=1-super';
+const SWF='/assets/stick-war-complete-v1.swf?v=1-super-offline-direct';
 const status=document.getElementById('status'),shell=document.getElementById('playerShell'),host=document.getElementById('player');
 let hasSwf=false,player=null;
 async function exists(){try{const r=await fetch(SWF,{method:'HEAD',cache:'no-store'});hasSwf=r.ok}catch(_){hasSwf=false}
