@@ -15,9 +15,10 @@ This is the highest-performance laptop path for the released Flash mods. It runs
 desktop\run-native.bat --game krf
 desktop\run-native.bat --game stickwar
 desktop\run-native.bat --game epicwar5
+desktop\run-native.bat --game epicwar5-expansion
 ```
 
-Windows also accepts the shortcuts `--krf`, `--stickwar` and `--epicwar5`.
+Windows also accepts the shortcuts `--krf`, `--stickwar`, `--epicwar5` and `--epicwar5-expansion`.
 
 No Python installation is required on Windows.
 
@@ -29,15 +30,17 @@ Run:
 sh desktop/run-native.sh --game krf
 sh desktop/run-native.sh --game stickwar
 sh desktop/run-native.sh --game epicwar5
+sh desktop/run-native.sh --game epicwar5-expansion
 ```
 
 Python 3 is required for the macOS/Linux bootstrap launcher.
 
 ## Released game selection
 
-- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring offline-ready V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V7 fallback.
+- `krf` selects the newest verified Kingdom Rush Frontiers release present, currently preferring offline-ready V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback.
 - `stickwar` launches `assets/stick-war-complete-v1.swf`, the released 65-stage SW1+SW2 expansion.
-- `epicwar5` launches `assets/epic-war-5-expansion-v38.swf`, the released V3.8 HUD/sandbox-polish build.
+- `epicwar5` launches the stable V1.05-based Sandbox V2 build.
+- `epicwar5-expansion` launches `assets/epic-war-5-expansion-v38.swf`, the released V3.8 Expansion with direct web/mobile entry, clean world-map-to-battle layering, a readable twelve-slot battle HUD and a compact clickable battle sandbox whose spawned armies advance and fight. Native play keeps the normal campaign unlock requirement.
 
 Kingdom Rush Frontiers V12 keeps every V11 sandbox/performance feature and adds The Last Rift, post-boss scoring, renderer hardening and additional performance work. V12.1 adds the current audio/pop-up polish; V12.2 removes the retired online-service startup gate for deterministic offline play.
 

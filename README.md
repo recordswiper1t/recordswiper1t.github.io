@@ -13,11 +13,13 @@ For the highest laptop performance, download/extract the repository and use nati
 desktop\run-native.bat --game krf
 desktop\run-native.bat --game stickwar
 desktop\run-native.bat --game epicwar5
+desktop\run-native.bat --game epicwar5-expansion
 
 # macOS / Linux
 sh desktop/run-native.sh --game krf
 sh desktop/run-native.sh --game stickwar
 sh desktop/run-native.sh --game epicwar5
+sh desktop/run-native.sh --game epicwar5-expansion
 ```
 
 The launcher downloads native Ruffle on first use and reuses the cached executable. See [`desktop/README.md`](desktop/README.md) for renderer fallback, stable/nightly selection and performance notes.
@@ -26,7 +28,7 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 
 | Project | Current state | Main features |
 | --- | --- | --- |
-| **Kingdom Rush Ultimate (KR + KRF)** | **Release-ready two-campaign launcher** | Complete original KR publisher runtime plus offline-ready Frontiers V12.2, separate saves, campaign switching, sandbox/performance systems and **The Last Rift** |
+| **Kingdom Rush Ultimate (KR + KRF)** | **Released combined 34-stage campaign** | One selector with 19 sourced Kingdom Rush stages plus all 15 Frontiers campaign stages, with standalone recovery launchers and isolated saves |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
 | **Epic War 5** | **Released Expansion V3.8** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
 
@@ -40,9 +42,9 @@ The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, rec
 
 ## Kingdom Rush Ultimate — KR + KRF
 
-The browser launcher under `ultimate/` exposes both complete, tested campaigns from one access point. Original Kingdom Rush runs in its publisher engine and Frontiers runs in the enhanced V12.2 engine; the two runtimes and save namespaces stay isolated so switching campaigns cannot trigger the class collisions found in the abandoned single-SWF experiments.
+The browser launcher under `ultimate/` defaults to the verified V13 combined runtime. Its in-game ULTIMATE panel exposes 34 playable stages across five pages: 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available from the same launcher as isolated-save recovery paths.
 
-The earlier shared-engine V13 work remains documented under `docs/` as development history, but no broken composed SWF is exposed by the site.
+The combined release was verified through Southport's complete seven-wave victory loop, Frontiers stage launches and enemy movement, shared-map return routing, and all five selector pages. Retired Mochi and CPMStar requests are removed from the combined and standalone Frontiers startup paths.
 
 ## Super Stick War — SW1 + SW2
 

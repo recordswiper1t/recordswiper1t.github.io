@@ -52,6 +52,7 @@ jobs:
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/engine/UserInterface.as
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/Campaign.as
           test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/CampaignGameScreen.as
+          test -f /tmp/stickwar/export/scripts/com/brockw/stickwar/campaign/CampaignMenuScreen.as
       - name: Apply all Super Stick War V1 systems
         shell: bash
         run: |
@@ -62,6 +63,7 @@ jobs:
           python3 tools/stickwar/patches/patch_mastery_v1.py "$S"
           python3 tools/stickwar/patches/patch_ui_super_v1.py "$S"
           python3 tools/stickwar/patches/patch_objectives_lab_v1.py "$S"
+          python3 tools/stickwar/patches/patch_web_runtime_v1.py "$S"
           cd "$S"
           for f in \
             'com/brockw/stickwar/engine/HealthBar.as' \
@@ -75,7 +77,8 @@ jobs:
             'com/brockw/stickwar/GameScreen.as' \
             'com/brockw/stickwar/campaign/Campaign.as' \
             'com/brockw/stickwar/campaign/CampaignScreen.as' \
-            'com/brockw/stickwar/campaign/CampaignGameScreen.as'; do
+            'com/brockw/stickwar/campaign/CampaignGameScreen.as' \
+            'com/brockw/stickwar/campaign/CampaignMenuScreen.as'; do
             mkdir -p "/tmp/stickwar/import/scripts/$(dirname "$f")"
             cp "$f" "/tmp/stickwar/import/scripts/$f"
           done
@@ -125,6 +128,11 @@ jobs:
           grep -F 'superStickWarLabTimesV1' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
           grep -F 'applyBattleLabPreset' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
           grep -F 'Boss Rush' "$S/com/brockw/stickwar/campaign/CampaignGameScreen.as"
+          # Web runtime must stay self-contained: no dead Flash-era intro loaders.
+          grep -F 'this.youtubeLoader = null;' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
+          grep -F 'this.main.showScreen("campaignMap",false,true);' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
+          ! grep -F 'urlLoader.load(urlRequest);' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
+          ! grep -F 'new YoutubeLoader("w6q9EoFmu0w")' "$S/com/brockw/stickwar/campaign/CampaignMenuScreen.as"
           sha256sum /tmp/stickwar/out/stick-war-complete-v1.swf | tee /tmp/stickwar/RELEASE-SHA256SUMS.txt
       - name: Upload verified Super Stick War build
         uses: actions/upload-artifact@v4
@@ -136,6 +144,22 @@ jobs:
             /tmp/stickwar/RELEASE-SHA256SUMS.txt
             /tmp/stickwar/import.log
             /tmp/stickwar/verify.log
+      - name: Publish repaired V1 asset to repair branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'fix/super-stick-war-runtime'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git fetch origin "$GITHUB_HEAD_REF"
+          git checkout "$GITHUB_HEAD_REF"
+          cp /tmp/stickwar/out/stick-war-complete-v1.swf assets/stick-war-complete-v1.swf
+          sha256sum assets/stick-war-complete-v1.swf > assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- assets/stick-war-complete-v1.swf assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish repaired Super Stick War V1 [skip ci]'
+            git push origin "HEAD:$GITHUB_HEAD_REF"
+          fi
       - name: Publish verified V1 asset to branch
         if: github.event_name == 'push' && github.ref_name == 'stickwar-complete-v1-foundation'
         shell: bash
@@ -160,6 +184,7 @@ jobs:
           - F1 live diagnostics reports FPS, actor/projectile/effect counts, population, render quality and active modes.
           - Adaptive render quality degrades cosmetics under heavy load; combat/AI/movement/damage/cooldowns remain full-rate.
           - Low-level engine optimization covers health-bar redraws, spatial queries/buckets, depth ordering, projectile cleanup, garrison allocation, selection/statue caching, distance math and effect/corpse recycling.
+          - Web runtime removes dead Flash-era StickEmpires/YouTube intro loaders and continues directly to the campaign map after difficulty selection.
           - Expansion saves are isolated in stickwarCompleteSaveV1.
 
           Built from the pinned official SW2 baseline, imported with FFDec, then freshly re-decompiled and structurally verified before publication.

@@ -1,0 +1,136 @@
+name: Verify Epic War 5 Expansion V3.4
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-epicwar5-expansion-v34.yml'
+      - 'tools/epicwar5/expansion/patch_runtime_sandbox_v34.py'
+      - 'tools/epicwar5/expansion/validate_v34_invariants.py'
+      - 'assets/epic-war-5-expansion-v34.swf'
+      - 'assets/EPICWAR5-EXPANSION-V34-BUILD.txt'
+      - 'assets/EPICWAR5-EXPANSION-V34-SHA256SUMS.txt'
+      - 'epicwar5-expansion/index.html'
+      - 'iphone/epicwar5.html'
+      - 'desktop/run_native.py'
+      - 'desktop/run-native.ps1'
+      - 'desktop/README.md'
+      - 'index.html'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-v34:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epicwar5-expansion-runtime-sandbox
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Freeze V3.3.1 baseline and download FFDec
+        shell: bash
+        run: |
+          set -euxo pipefail
+          EXPECTED='40712cc3685861ee93a97ad49cd4ff71c2ebc55c9959a1d9f160fcf39e8d6577'
+          test "$(sha256sum assets/epic-war-5-expansion-v331.swf | cut -d' ' -f1)" = "$EXPECTED"
+          mkdir -p /tmp/ffdec /tmp/v34/src /tmp/v34/out /tmp/v34/verify
+          curl -fL --retry 3 'https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version26.2.1/ffdec_26.2.1.zip' -o /tmp/ffdec.zip
+          unzip -q /tmp/ffdec.zip -d /tmp/ffdec
+      - name: Decompile and patch exact V3.3.1
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v34/src assets/epic-war-5-expansion-v331.swf >/tmp/v34/export.log 2>&1 || true
+          python3 tools/epicwar5/expansion/patch_runtime_sandbox_v34.py /tmp/v34/src
+      - name: Rebuild patched V3.4
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror abort -importScript assets/epic-war-5-expansion-v331.swf /tmp/v34/out/epic-war-5-expansion-v34.swf /tmp/v34/src >/tmp/v34/import.log 2>&1; then
+            cat /tmp/v34/import.log
+            exit 1
+          fi
+          test -s /tmp/v34/out/epic-war-5-expansion-v34.swf
+      - name: Re-decompile and verify V3.4 invariants
+        shell: bash
+        run: |
+          set -euxo pipefail
+          java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/v34/verify /tmp/v34/out/epic-war-5-expansion-v34.swf >/tmp/v34/verify.log 2>&1 || true
+          game=/tmp/v34/verify/scripts/Game
+          wm=$game/Interface/WorldMap.as
+          bs=$game/System/Battle/BattleSystem.as
+          bp=$game/System/Battle/BattleControlPlayer.as
+          ps=$game/System/Battle/PlayerSpell.as
+          pu=$game/System/Battle/PlayerUnit.as
+          hm=$game/Manager/HostManager.as
+          be=$game/System/Battle/BattleControlEnemy.as
+          cb=$game/System/GameObject/Character/CharacterBase.as
+
+          grep -F 'expansionPendingStage:int = 0' "$wm"
+          grep -F 'this.expansionPendingStage = 100 + id' "$wm"
+          grep -F 'if(this.expansionPendingStage > 0)' "$wm"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          t=Path('/tmp/v34/verify/scripts/Game/Interface/WorldMap.as').read_text(encoding='utf-8-sig')
+          m=re.search(r'(?ms)private function expansionStageClick.*?(?=private function expansionCloseClick)',t)
+          if not m: raise SystemExit('missing expansionStageClick')
+          if 'new battle_mc' in m.group(0) or 'this.destroy();' in m.group(0):
+              raise SystemExit('synchronous expansion scene swap survived rebuild')
+          PY
+
+          grep -F 'sandboxMaster:Boolean = false' "$bs"
+          grep -F 'sandboxFreeSpells:Boolean = false' "$bs"
+          grep -F 'sandboxUnlimitedBuildings:Boolean = false' "$bs"
+          grep -F 'sandboxFastUnits:Boolean = false' "$bs"
+          grep -F 'sandboxPopBoost:Boolean = false' "$bs"
+          grep -F 'if(!sandboxMaster)' "$bs"
+          grep -F 'EXPANSION SANDBOX' "$bs"
+          grep -F 'sandboxAddMana' "$bp"
+          grep -F 'sandboxMaster && BattleSystem.sandboxFreeSpells' "$ps"
+          grep -F 'sandboxMaster && BattleSystem.sandboxPopBoost' "$pu"
+          grep -F 'sandboxMaster && BattleSystem.sandboxFastUnits' "$pu"
+
+          grep -F 'recordswiper1t.github.io' "$hm"
+          grep -F 'public function initExpansion(ID:int)' "$be"
+          grep -F 'Math.abs(myClip.x - child.x) <= 900' "$cb"
+          grep -F 'var myDepth:int = this.getZDepth()' "$cb"
+          if grep -Fq 'children.sort(this.zSorting)' "$cb"; then
+            echo 'full battlefield sort regression returned' >&2
+            exit 1
+          fi
+          grep -F 'load >= 175' "$bs"
+
+          python3 tools/epicwar5/expansion/validate_v34_invariants.py /tmp/v34/verify
+      - name: Verify published V3.4 release surface
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sha256sum -c assets/EPICWAR5-EXPANSION-V34-SHA256SUMS.txt
+          head -c 3 assets/epic-war-5-expansion-v34.swf | grep -Eq 'FWS|CWS|ZWS'
+          grep -F '/assets/epic-war-5-expansion-v34.swf?v=34-runtime-r1' epicwar5-expansion/index.html
+          grep -F '/assets/epic-war-5-expansion-v34.swf?v=iphone-exp-v34-r1' iphone/epicwar5.html
+          grep -F 'epic-war-5-expansion-v34.swf' desktop/run_native.py
+          grep -F 'epic-war-5-expansion-v34.swf' desktop/run-native.ps1
+          grep -F '/epicwar5-expansion/' index.html
+          grep -F 'Expansion V3.4' README.md
+          python3 -m py_compile desktop/run_native.py
+          if command -v pwsh >/dev/null 2>&1; then
+            pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
+          fi
+      - name: Upload verified candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: epicwar5-expansion-v34-pr-verified
+          retention-days: 7
+          path: |
+            /tmp/v34/out/epic-war-5-expansion-v34.swf
+            /tmp/v34/import.log
+            /tmp/v34/verify.log

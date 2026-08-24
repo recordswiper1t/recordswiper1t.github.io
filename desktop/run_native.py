@@ -37,7 +37,8 @@ KRF_CANDIDATES = [
 ]
 GAME_FILES = {
     "stickwar": ROOT / "assets" / "stick-war-complete-v1.swf",
-    "epicwar5": ROOT / "assets" / "epic-war-5-expansion-v38.swf",
+    "epicwar5": ROOT / "assets" / "epic-war-5-sandbox-v2.swf",
+    "epicwar5-expansion": ROOT / "assets" / "epic-war-5-expansion-v38.swf",
 }
 GAME_ALIASES = {
     "krf": "krf",
@@ -49,11 +50,15 @@ GAME_ALIASES = {
     "epicwar5": "epicwar5",
     "epic-war-5": "epicwar5",
     "ew5": "epicwar5",
+    "epicwar5-expansion": "epicwar5-expansion",
+    "epic-war-5-expansion": "epicwar5-expansion",
+    "ew5-expansion": "epicwar5-expansion",
 }
 GAME_LABELS = {
     "krf": "Kingdom Rush Frontiers",
     "stickwar": "Super Stick War (SW1 + SW2)",
-    "epicwar5": "Epic War 5 Expansion",
+    "epicwar5": "Epic War 5 (stable V1.05-based build)",
+    "epicwar5-expansion": "Epic War 5 Expansion V3.8",
 }
 
 
@@ -156,7 +161,7 @@ def install(channel: str) -> Path:
 def choose_game(value: str) -> tuple[str, Path]:
     key = GAME_ALIASES.get(value.lower())
     if not key:
-        raise SystemExit(f"Unknown game {value!r}. Choose krf, stickwar, or epicwar5.")
+        raise SystemExit(f"Unknown game {value!r}. Choose krf, stickwar, epicwar5, or epicwar5-expansion.")
     if key == "krf":
         swf = next((p for p in KRF_CANDIDATES if p.exists()), KRF_CANDIDATES[0])
     else:
@@ -178,7 +183,7 @@ def run_ruffle(exe: Path, swf: Path, backend: str | None, extra: list[str]) -> i
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the released strategy mods in native Ruffle")
-    parser.add_argument("--game", default="krf", help="krf, stickwar, or epicwar5 (default: krf)")
+    parser.add_argument("--game", default="krf", help="krf, stickwar, epicwar5, or epicwar5-expansion (default: krf)")
     parser.add_argument("--stable", action="store_true")
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--vulkan", action="store_true", help="Explicitly test Vulkan on Windows")

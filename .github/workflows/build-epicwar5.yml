@@ -48,6 +48,7 @@ jobs:
           java -Xmx4g -jar /tmp/ffdec/ffdec.jar -onerror ignore -timeout 90 -exportFileTimeout 180 -export script /tmp/ew5/export /tmp/ew5/original.swf > /tmp/ew5/export.log 2>&1 || true
           test -f /tmp/ew5/export/scripts/Game/Manager/DataManager.as
           test -f /tmp/ew5/export/scripts/Game/System/Battle/BattleSystem.as
+          test -f /tmp/ew5/export/scripts/Game/Manager/HostManager.as
           python3 - <<'PY'
           from pathlib import Path
           p=Path('tools/epicwar5/build_source_mod_v2.py')
@@ -58,6 +59,7 @@ jobs:
           p.write_text(s.replace(old,new,1))
           PY
           python3 tools/epicwar5/build_source_mod_v2.py /tmp/ew5/export
+          python3 tools/epicwar5/patch_pages_host.py /tmp/ew5/export
 
       - name: Import patched scripts
         shell: bash
@@ -80,6 +82,11 @@ jobs:
           grep -F 'sandboxFastUnits ? BattleSystem.sandboxSpawnDelay' /tmp/ew5/verify/scripts/Game/System/Battle/PlayerUnit.as
           grep -F 'sandboxFreeSpells:Boolean = false' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
           grep -F 'vanilla defaults' /tmp/ew5/verify/scripts/Game/System/Battle/BattleSystem.as
+          grep -F 'lastIndexOf("recordswiper1t.github.io") > -1' /tmp/ew5/verify/scripts/Game/Manager/HostManager.as
+          grep -F 'this._host_name = "github-pages"' /tmp/ew5/verify/scripts/Game/Manager/HostManager.as
+          grep -F 'this._block_site = false' /tmp/ew5/verify/scripts/Game/Manager/HostManager.as
+          grep -F 'this._enable_mochibot = false' /tmp/ew5/verify/scripts/Game/Manager/HostManager.as
+          grep -F 'this._enable_ads = false' /tmp/ew5/verify/scripts/Game/Manager/HostManager.as
 
       - name: Stage V2 build files
         shell: bash
@@ -87,10 +94,11 @@ jobs:
           set -euxo pipefail
           cp /tmp/ew5/out/epic-war-5-sandbox-v2.swf assets/epic-war-5-sandbox-v2.swf
           cat > assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt <<'EOF'
-          Epic War 5 — Optional Sandbox V2
+          Epic War 5 — Optional Sandbox V2 — GitHub Pages Hotfix
           Source: Armor Games Epic War 5 v1.05, SHA-256 848d173b5cba7ebc321ba6dc374389e038924e32cb4a42b0d1b31f51c0b71bb8
           Built and re-decompile verified with FFDec 26.2.1.
           Vanilla-by-default: loading the mod no longer maxes or rewrites progression and battle cheats start disabled.
+          GitHub Pages host fix: HostManager explicitly authorizes recordswiper1t.github.io and disables legacy ads/Mochi there without importing expansion gameplay code.
           F1 adds the selected mana amount instead of filling to a hard-coded maximum. [ and ] halve/double the amount from 10 to 5000.
           F11 toggles free spells. F12 toggles rapid unit production for newly initialized unit spawners.
           B toggles the building cap between vanilla 4 and 999. P toggles population boost for newly initialized unit spawners.
@@ -122,5 +130,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/epic-war-5-sandbox-v2.swf assets/EPIC-WAR-5-SANDBOX-V2-BUILD.txt assets/EPIC-WAR-5-V2-SHA256SUMS.txt
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Publish Epic War 5 optional sandbox v2 [skip ci]'
+          git commit -m 'Publish Epic War 5 stable Pages hotfix [skip ci]'
           git push origin HEAD:main

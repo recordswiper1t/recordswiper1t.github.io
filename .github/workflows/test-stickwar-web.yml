@@ -1,0 +1,56 @@
+name: Test Super Stick War web runtime
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'stickwar-complete/**'
+      - 'iphone/stickwar.html'
+      - 'assets/stick-war-complete-v1.swf'
+      - 'tools/stickwar/**'
+      - '.github/workflows/test-stickwar-web.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    # Browser-level regression coverage for the repaired published SWF.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser harness
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve repository
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/stickwar-http.log 2>&1 &
+          echo $! > /tmp/stickwar-http.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/stickwar-complete/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/stickwar-http.log
+          exit 1
+      - name: Verify every web player targets the repaired binary
+        run: |
+          grep -F '/assets/stick-war-complete-v1.swf?v=1-runtime-r1' stickwar-complete/index.html
+          grep -F '/assets/stick-war-complete-v1.swf?v=iphone-v1-runtime-r1' iphone/stickwar.html
+          sha256sum -c assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+      - name: Run campaign startup smoke test
+        env:
+          STICKWAR_URL: http://127.0.0.1:8000/stickwar-complete/
+        run: node tools/stickwar/web_smoke_test.mjs
+      - name: Upload startup screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: super-stick-war-web-smoke
+          path: /tmp/super-stick-war-*.png
+          if-no-files-found: ignore
+      - name: Show server log
+        if: always()
+        run: cat /tmp/stickwar-http.log || true

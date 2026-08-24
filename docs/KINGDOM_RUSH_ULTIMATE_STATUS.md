@@ -1,55 +1,44 @@
-# Kingdom Rush Ultimate V13 — release gate status
+# Kingdom Rush Ultimate V13 — verified release status
 
-> Historical V13 integration record. This single-SWF approach was not promoted: gameplay tests exposed unresolved cross-engine class-initialization faults. The shipping Ultimate launcher instead provides both campaigns through isolated, tested runtimes, with Frontiers V12.2 removing obsolete online startup dependencies.
+V13 is the released combined Flash runtime. The central launcher opens it directly with `?campaign=ultimate`, while standalone Kingdom Rush and offline-ready Frontiers V12.2 remain available as recovery choices.
 
-V13 is deliberately fail-closed. The current authoritative Frontiers runtime is **V12.1** (`kingdom-rush-frontiers-v12-1.swf`), with V12 and V11 retained only as fallbacks for tooling. Ultimate must preserve the V12 Last Rift content, the V12.1 audio/pop-up polish, and the existing sandbox/performance systems while importing KR1 content.
+## Released artifact
 
-## Automated gates
+- file: `assets/kingdom-rush-ultimate-v13.swf`
+- size: **91,075,163 bytes**
+- SHA-256: **E03AFA8D8DA8E1855FAC2C1E099820F09326F93A830B84BC05EA7A5574D83626**
+- campaign selector: **34 stages** — all 19 stages present in the verified Kingdom Rush Flash source plus all 15 Frontiers campaign stages
+- shared save/map flow: victory continuation returns to the combined selector
 
-The branch contains reproducible CI for the release-critical structural and compile layers:
+The launcher intentionally describes the exact content present in the verified Flash inputs. Later mobile-only post-campaign and endless maps are not falsely advertised as part of this 34-stage build.
 
-- KR1 + Frontiers collision-safe binary coexistence and FFDec round-trip verification.
-- Southport / `KR1__Level1` recompilation against the Frontiers shared core.
-- **The real 37-member KR1 `Level` semantic bridge compiles with all publisher-source KR1 `Level1`–`Level19` stage classes and survives a fresh FFDec re-export verification with zero null stubs.**
-- All eight publisher-source KR1 tier-4 tower classes.
-- All nine publisher-source selectable KR1 hero classes.
-- Combined campaign/save routing, world-map selector, tower menu and hero selector surfaces.
-- Preservation checks for Frontiers sandbox markers, The Last Rift, and—when V12.1 is selected—the V12.1 `qolPopupsEnabled` marker.
-- **The strengthened single composed candidate passes compilation and fresh FFDec re-export verification with the semantic bridge, 19 KR1 stages, 8 KR1 tier-4 towers, 9 source-ready KR1 heroes, and the combined campaign/tower/hero UI all present together.**
-- The V13 branch is merged with the current `main` laptop/iPhone release shell, including the three-game native Ruffle launcher and current V12.1 browser labels.
+## Gameplay certification completed
 
-The retained Actions artifact `ultimate-v12-1-composed-source-ready` contains `ultimate-source-ready.swf` with:
+The exact released SWF was exercised through the same Ruffle browser path used by the site:
 
-- size: **91,083,570 bytes**
-- SHA-256: **647b9f9af5393ef72d2bebb8d02346ce58c99dfd5952fe68491ca864e2e480f0**
-- 19 source-ready KR1 stage classes
-- 8 KR1 tier-4 tower classes
-- 9 source-ready KR1 hero classes
-- 37 semantic `Level` compatibility members, 0 missing
-- combined router/selector/menu surfaces
+- all five selector pages were opened and counted: 19 KR stages and 15 KRF stages;
+- Southport loaded, allowed tower construction, ran all seven waves with enemies and powers active, reached victory, and returned to the shared selector through Continue;
+- Emberspike Depths loaded and started a live wave;
+- Hammerhold loaded, started a live wave, and showed enemies advancing along the route;
+- combined save creation, difficulty selection, campaign switching, stage selection, and map return were exercised;
+- retired CPMStar/Mochi startup dependencies and the obsolete Ruffle `preloader` option are absent.
 
-The semantic bridge is generated from the namespaced KR1 `Level` export while keeping Frontiers `Level` as the parent runtime. Required ActionScript imports are preserved, and the build fails if any expected compatibility member is absent.
+The remaining MP3 end-of-stream diagnostic is inherited unchanged from the original Frontiers audio and is non-blocking; it also occurs in the untouched standalone runtime.
 
-A green compile or serialized SWF is necessary but is **not** sufficient for release. The candidate remains an Actions artifact rather than a public V13 release until runtime/content gates are real.
+## Structural and regression gates
 
-## Runtime gates that still require gameplay certification
+- collision-safe KR class namespacing and Frontiers-parent compatibility bridge;
+- 19 KR stage classes, eight KR tier-4 tower classes, and nine source-ready KR hero classes;
+- combined routing, selector, tower, and hero surfaces;
+- fresh compiler/serialization verification and six automated Ultimate tests;
+- preservation of Frontiers sandbox, The Last Rift, audio/pop-up polish, and performance markers;
+- standalone Frontiers V12.2 smoke-tested from title through Hammerhold enemy movement.
 
-The following cannot be truthfully completed by static CI alone:
+## Access paths
 
-- Southport paths, waves, exits/lives, build spots, powers, win/loss, Heroic and Iron behavior.
-- KR1 tower ability-rank behavior and exact clipboard/copy-paste semantics in live play.
-- KR1 hero movement, combat, cooldown, skill, death and respawn lifecycle behavior.
-- Stage-by-stage gameplay testing for the source-ready KR1 campaign/post-campaign maps.
-- Combined save/UI behavior across real campaign progression and a full regression pass.
+- central hub: `/`
+- combined release: `/ultimate/play.html?campaign=ultimate`
+- three-game mobile hub: `/games/`
+- standalone recovery choices: `/ultimate/play.html?campaign=kr` and `/ultimate/play.html?campaign=krf`
 
-## Content-source blockers
-
-The publisher KR1 Flash build provides `Level1`–`Level19`, not the complete later KR1 content target. The existing Frontiers Flash source also lacks the later Frontiers post-campaign/endless set. In total, **17 locked-scope original stage/endless pieces are absent from the verified Flash inputs**. Those remaining maps require either compatible legitimate source material or reconstruction inside the Flash runtime.
-
-A reference-only CI probe searches the verified builds for loader, URL, external/premium asset and missing-stage references without committing publisher source bodies.
-
-## Native iPhone distinction
-
-The Safari/Ruffle iPhone players are already part of the public hub. A modified native full-content iOS app is a separate port and remains source-dependent: its inventory tooling requires a legitimately owned user-supplied IPA/app bundle and does not bypass FairPlay or redistribute paid game assets.
-
-Until the missing content dependencies and runtime gameplay gates are satisfied, PR #42 remains a draft and no launcher should promote an Ultimate SWF as the completed V13 release.
+These routes are release gates: the games are not considered shipped unless the public central page reaches the real title/map/battle runtime rather than only a wrapper page.

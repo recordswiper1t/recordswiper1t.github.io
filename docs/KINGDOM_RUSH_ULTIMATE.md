@@ -1,6 +1,6 @@
 # Kingdom Rush Ultimate
 
-> Historical shared-engine design record. The released launcher now keeps the original KR and enhanced KRF V12.2 runtimes isolated behind one campaign chooser because live testing proved the composed AVM2 runtime unsafe. No experimental combined SWF is exposed.
+> Historical design target. It has been superseded by the verified V13 combined release: one 34-stage selector containing the 19 Kingdom Rush and 15 Frontiers campaign stages available in the audited Flash sources. See `KINGDOM_RUSH_ULTIMATE_STATUS.md` for the released artifact and gameplay evidence.
 
 Goal: one Frontiers-based runtime containing the original **Kingdom Rush** and **Kingdom Rush: Frontiers** campaigns, their post-campaign stages, both games' towers and heroes, and the complete V11/V12 sandbox/performance feature set.
 
