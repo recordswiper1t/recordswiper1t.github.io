@@ -23,13 +23,13 @@
   <div class="choose-inner">
     <div class="kicker">KINGDOM RUSH ULTIMATE</div>
     <h1 id="choose-title">Choose a campaign.</h1>
-    <p class="intro">Play the combined campaign, or use either original standalone engine as a recovery option. Switch at any time from the menu.</p>
+    <p class="intro">Play both native campaign maps in one runtime, or use either original standalone engine as a recovery option. Switch maps inside the combined game at any time.</p>
     <div class="campaigns">
-      <button class="campaign shared" data-campaign="ultimate"><span class="tag">RECOMMENDED • COMBINED CAMPAIGN</span><h2>Kingdom Rush + Frontiers</h2><p>One shared map with 34 playable stages: all 19 sourced Kingdom Rush stages plus all 15 Frontiers campaign stages. The in-game ULTIMATE button opens the combined stage selector.</p><span class="go">Play the combined game</span></button>
+      <button class="campaign shared" data-campaign="ultimate"><span class="tag">RECOMMENDED • TWO NATIVE MAPS + SHARED SYSTEMS</span><h2>Kingdom Rush + Frontiers</h2><p>Use the real Kingdom Rush and Frontiers maps and switch between them in-game. A shared hub connects heroes, upgrades, achievements and encyclopedias, while one shared star wallet follows both campaigns.</p><span class="go">Play the combined game</span></button>
       <button class="campaign kr" data-campaign="kr"><span class="tag">THE ORIGINAL CAMPAIGN</span><h2>Kingdom Rush</h2><p>The complete publisher Flash campaign, including its available bonus stages and original progression.</p><span class="go">Play Kingdom Rush</span></button>
       <button class="campaign krf" data-campaign="krf"><span class="tag">EXPANDED V12.2</span><h2>Kingdom Rush Frontiers</h2><p>The polished expansion build with reliable offline startup, sandbox, performance systems, The Last Rift, and quality-of-life upgrades.</p><span class="go">Play Frontiers</span></button>
     </div>
-    <p class="privacy">Campaign progress stays separate. Choosing or switching a campaign does not erase either save.</p>
+    <p class="privacy">The combined runtime preserves each campaign's stage progress and synchronizes earned upgrade stars. The standalone recovery games keep their existing saves separate.</p>
   </div>
 </section>
 <div id="loading" class="hidden"><div class="loader-card"><strong id="loading-title">Loading campaign…</strong><span id="loading-detail">Preparing the game runtime.</span><div class="bar"></div></div></div>
@@ -48,7 +48,7 @@
 (()=>{
 'use strict';
 const CAMPAIGNS={
-  ultimate:{name:'Kingdom Rush + Frontiers — Combined Ultimate',url:'/assets/kingdom-rush-ultimate-v13.swf?v=13-native-56-offline',file:'kingdom-rush-ultimate-v13.swf',base:location.origin+'/ultimate/',detail:'Loading the combined 34-stage campaign…'},
+  ultimate:{name:'Kingdom Rush + Frontiers — Combined Ultimate V14',url:'/assets/kingdom-rush-ultimate-v14.swf?v=14-native-maps-shared-instant-r4',file:'kingdom-rush-ultimate-v14.swf',base:location.origin+'/ultimate/',detail:'Loading both native maps, shared systems and battle sandboxes…'},
   kr:{name:'Kingdom Rush',url:'/assets/kingdom-rush-original-12141.swf?v=12141',file:'kingdom-rush-12141.swf',base:'https://armorgames.com/',detail:'Loading the original campaign…'},
   krf:{name:'Kingdom Rush Frontiers — Expansion V12.2',url:'/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean',file:'kingdom-rush-frontiers.swf',base:location.origin+'/mod/',detail:'Loading the expanded Frontiers campaign…'}
 };

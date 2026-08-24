@@ -34,6 +34,6 @@ Combat, movement, targeting, projectiles and cooldowns stay full-rate. Under loa
 
 When the baseline is mapped and patched, the build publishes:
 
-`assets/stick-war-complete-v1.swf`
+`assets/stick-war-complete-v2.swf`
 
 plus a build manifest and SHA-256 file. The player shell automatically tries that asset.

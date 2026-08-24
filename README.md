@@ -30,7 +30,7 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 | --- | --- | --- |
 | **Kingdom Rush Ultimate (KR + KRF)** | **Released combined 34-stage campaign** | One selector with 19 sourced Kingdom Rush stages plus all 15 Frontiers campaign stages, with standalone recovery launchers and isolated saves |
 | **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | **Released Expansion V3.8** | 12 readable unit slots, redesigned sandbox dashboard, moving spawned armies, expanded campaign/equipment/progression and large-battle performance work |
+| **Epic War 5** | **Released Expansion V3.9** | Compact circular slots 7–12, redesigned sandbox dashboard, moving spawned armies, adaptive 8× speed, immediate Instant Win, expanded progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -48,7 +48,7 @@ The combined release was verified through Southport's complete seven-wave victor
 
 ## Super Stick War — SW1 + SW2
 
-**V1 is released on `main`.** The verified binary is `assets/stick-war-complete-v1.swf`, with matching `STICKWAR-COMPLETE-V1-BUILD.txt` and SHA-256 manifest in `assets/`. The playable web shell is under `stickwar-complete/`.
+**V2 is released on `main`.** The verified binary is `assets/stick-war-complete-v2.swf`, with matching `STICKWAR-COMPLETE-V2-BUILD.txt` and SHA-256 manifest in `assets/`. The playable web shell is under `stickwar-complete/`.
 
 V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery nodes, direct possession, authored expansion objectives, Battle Lab presets, sandbox controls, diagnostics and performance optimization without lowering combat simulation rate. The release SWF passed FFDec import and fresh re-decompile verification before publication.
 

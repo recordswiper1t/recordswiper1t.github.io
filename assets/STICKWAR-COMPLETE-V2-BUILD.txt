@@ -1,0 +1,16 @@
+Super Stick War Complete Expansion V2
+
+Output: stick-war-complete-v2.swf
+Size: 18590248 bytes
+SHA-256: 7ca1ba4b46c677ae9100b1251fd55f64079e64d4230a0abe01a1317e8ae1610a
+Baseline: stick-war-complete-v1.swf
+Reproducible patch: tools/stickwar/patches/patch_clickable_sandbox_speed_v2.py
+
+V2 adds an always-visible in-battle SANDBOX button and clickable palette,
+1x/2x/4x/8x/12x simulation speed with adaptive actor-load limits, and retains
+the original keyboard controls. The web player is centered at the native
+850:700 aspect ratio so StageAlign.TOP_LEFT no longer leaves a large side gap.
+
+Verification: FFDec import completed with -onerror abort. A fresh full script
+export confirmed the visible palette, speed engine, spawn controls and F2
+synchronization in the rebuilt SWF.

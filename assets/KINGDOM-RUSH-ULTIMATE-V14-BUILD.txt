@@ -1,0 +1,18 @@
+Kingdom Rush Ultimate V14
+
+Output: kingdom-rush-ultimate-v14.swf
+Size: 91082091 bytes
+SHA-256: 938d42e985f96875c9aae7c90ca8c0fcc63f3bfb2939750e5c39082208907fcc
+Baseline: kingdom-rush-ultimate-v13.swf
+Reproducible patch: tools/ultimate/patch_shared_runtime_v14.py
+
+V14 adds native KR/KRF map switching, a shared star wallet and shared systems
+hub, readable KR locale names, clickable KR battle sandbox controls, adaptive
+1x/2x/4x/8x/12x speed, and direct victory-screen Instant Win paths for KR,
+KRF, and the custom final KRF stage. Only the active native map is rendered,
+preventing the wider Frontiers map from showing behind the KR map. The native
+700-pixel KR canvas is centered inside the 800-pixel combined stage.
+
+Verification: FFDec import completed with -onerror abort. The rebuilt SWF was
+freshly decompiled and all V14 runtime markers, both direct victory jumps, and
+the final-stage bypass were present in the rebuilt bytecode.

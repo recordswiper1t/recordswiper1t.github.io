@@ -1,0 +1,15 @@
+Epic War 5 Expansion V3.9
+
+Output: epic-war-5-expansion-v39.swf
+Size: 18328894 bytes
+SHA-256: 4efc930562f1d82f3df32bc63a379f7fc58d8a79415596658396b38840869e2d
+Baseline: epic-war-5-expansion-v38.swf
+Reproducible patch: tools/epicwar5/expansion/patch_hud_speed_v39.py
+
+V3.9 replaces slots 7-12 with compact circular alternating sockets, adds
+adaptive 1x/2x/4x/6x/8x battle speed, and makes Instant Win remove battle
+control and open the result screen directly.
+
+Verification: FFDec import completed with -onerror abort. A fresh full script
+export confirmed the circular HUD, adaptive speed routine, one-shot victory
+guard, and direct showBattleResult call in the rebuilt SWF.
