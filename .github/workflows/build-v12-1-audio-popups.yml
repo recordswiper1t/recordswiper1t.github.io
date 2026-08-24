@@ -117,16 +117,24 @@ jobs:
           grep -F 'THE LAST RIFT' /tmp/verify/scripts/Level15.as
           sha256sum /tmp/out/kingdom-rush-frontiers-v12-1.swf > /tmp/out/V12-1-SHA256SUMS.txt
 
-      - name: Verify release integration targets
+      - name: Verify retained V12.1 fallback and current V12.2 integration targets
         shell: bash
         run: |
           set -euo pipefail
-          grep -F '/mod/fast.html?v=12-1-last-rift-final-r4' mod/index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4' mod/fast.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-1.swf?v=iphone-v121-last-rift-final-r4' iphone/krf.html
+          # V12.1 is still rebuilt and retained as the first desktop fallback.
+          # Browser and iPhone launchers intentionally point at its V12.2
+          # offline-ready successor, so this older build must not require the
+          # live launchers to regress to V12.1.
+          test -s assets/kingdom-rush-frontiers-v12-1.swf
+          sha256sum -c assets/V12-1-SHA256SUMS.txt
+          grep -F '/mod/fast.html?v=12-2-offline-clean' mod/index.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' mod/fast.html
+          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=iphone-v122-offline-clean' iphone/krf.html
+          grep -F 'kingdom-rush-frontiers-v12-2-offline.swf' desktop/run_native.py
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run_native.py
+          grep -F 'kingdom-rush-frontiers-v12-2-offline.swf' desktop/run-native.ps1
           grep -F 'kingdom-rush-frontiers-v12-1.swf' desktop/run-native.ps1
-          grep -F 'V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
+          grep -F 'V12.2 → V12.1 → V12 → V11 → V10 → V9 → V8 → V5 fallback' desktop/README.md
 
       - uses: actions/upload-artifact@v4
         with:
