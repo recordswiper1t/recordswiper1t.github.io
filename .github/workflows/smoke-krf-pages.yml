@@ -21,6 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt
+            mod/index.html
+            mod/fast.html
+          sparse-checkout-cone-mode: false
 
       - name: Verify live /mod/ -> fast.html -> V12.2 offline SWF
         shell: bash
