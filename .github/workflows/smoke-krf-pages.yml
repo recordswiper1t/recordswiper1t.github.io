@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'assets/kingdom-rush-frontiers-v12-2-offline.swf'
+      - 'assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt'
       - 'assets/kingdom-rush-frontiers-v12-1.swf'
       - 'assets/V12-1-SHA256SUMS.txt'
       - 'mod/**'
@@ -20,15 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify live /mod/ -> fast.html -> V12.1 SWF
+      - name: Verify live /mod/ -> fast.html -> V12.2 offline SWF
         shell: bash
         run: |
           set -euo pipefail
 
           site='https://recordswiper1t.github.io'
-          expected_fast='/mod/fast.html?v=12-1-last-rift-final-r4'
-          expected_swf='/assets/kingdom-rush-frontiers-v12-1.swf?v=12-1-last-rift-final-r4'
-          expected_hash=$(cut -d' ' -f1 assets/V12-1-SHA256SUMS.txt)
+          expected_fast='/mod/fast.html?v=12-2-offline-clean'
+          expected_swf='/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean'
+          expected_hash=$(cut -d' ' -f1 assets/KINGDOM-RUSH-FRONTIERS-V12-2-SHA256SUMS.txt)
 
           # GitHub Pages can deploy a few moments after the source commit. Retry
           # the lightweight HTML checks until the live site exposes this exact
@@ -36,11 +38,13 @@ jobs:
           matched=0
           for attempt in $(seq 1 48); do
             nonce="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}"
-            if curl -fsSL --retry 2 --connect-timeout 10 --max-time 30 \
+            if curl -A 'OpenAI File Downloader, XaiImageApiFetch/1.0' \
+              -fsSL --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 \
               -H 'Cache-Control: no-cache' \
               "${site}/mod/?smoke=${nonce}" -o /tmp/krf-mod.html \
               && grep -Fq "$expected_fast" /tmp/krf-mod.html; then
-              if curl -fsSL --retry 2 --connect-timeout 10 --max-time 30 \
+              if curl -A 'OpenAI File Downloader, XaiImageApiFetch/1.0' \
+                -fsSL --retry 2 --retry-all-errors --connect-timeout 10 --max-time 30 \
                 -H 'Cache-Control: no-cache' \
                 "${site}${expected_fast}&smoke=${nonce}" -o /tmp/krf-fast.html \
                 && grep -Fq "$expected_swf" /tmp/krf-fast.html; then
@@ -52,19 +56,20 @@ jobs:
           done
 
           if [ "$matched" -ne 1 ]; then
-            echo 'Live GitHub Pages did not expose the expected KRF r3 launcher chain.' >&2
+            echo 'Live GitHub Pages did not expose the expected KRF V12.2 launcher chain.' >&2
             echo 'Last /mod/ response:' >&2
             sed -n '1,80p' /tmp/krf-mod.html >&2 2>/dev/null || true
             exit 1
           fi
 
           nonce="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-swf"
-          curl -fsSL --retry 3 --connect-timeout 15 --max-time 180 \
+          curl -A 'OpenAI File Downloader, XaiImageApiFetch/1.0' \
+            -fsSL --retry 3 --retry-all-errors --connect-timeout 15 --max-time 180 \
             -H 'Cache-Control: no-cache' \
-            "${site}${expected_swf}&smoke=${nonce}" -o /tmp/krf-v121.swf
-          test -s /tmp/krf-v121.swf
-          head -c 3 /tmp/krf-v121.swf | grep -Eq 'FWS|CWS|ZWS'
-          deployed_hash=$(sha256sum /tmp/krf-v121.swf | cut -d' ' -f1)
+            "${site}${expected_swf}&smoke=${nonce}" -o /tmp/krf-v122.swf
+          test -s /tmp/krf-v122.swf
+          head -c 3 /tmp/krf-v122.swf | grep -Eq 'FWS|CWS|ZWS'
+          deployed_hash=$(sha256sum /tmp/krf-v122.swf | cut -d' ' -f1)
           test "$deployed_hash" = "$expected_hash"
 
           echo "Live KRF Pages SWF verified: $deployed_hash"
