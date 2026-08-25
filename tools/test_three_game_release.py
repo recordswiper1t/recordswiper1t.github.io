@@ -90,6 +90,8 @@ class ThreeGameReleaseTests(unittest.TestCase):
         self.assertIn("Visible SANDBOX button", stick)
         self.assertIn("12×", stick)
         self.assertIn("31-direct-lab", stick)
+        self.assertNotIn("if(!hasSwf)", stick)
+        self.assertIn("press Play to retry", stick)
 
         ew5 = self.text("epicwar5-expansion/index.html")
         self.assertIn("Animated soldier cards", ew5)
