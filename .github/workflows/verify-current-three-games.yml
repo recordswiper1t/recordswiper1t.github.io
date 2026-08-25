@@ -1,0 +1,66 @@
+name: Verify current three-game release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify assets, launchers, access routes, versions and gameplay contracts
+        run: python tools/test_three_game_release.py
+      - name: Verify published checksums
+        run: |
+          cd assets
+          sha256sum -c KINGDOM-RUSH-ULTIMATE-V17-SHA256SUMS.txt
+          sha256sum -c STICKWAR-COMPLETE-V31-SHA256SUMS.txt
+          sha256sum -c EPICWAR5-EXPANSION-V43-SHA256SUMS.txt
+      - name: Reject stale public release references
+        run: |
+          ! grep -R -E 'kingdom-rush-ultimate-v1[56]|stick-war-complete-v(2|3\.swf)|epic-war-5-expansion-v4[012]|unpkg.com/@ruffle-rs/ruffle' \
+            index.html games ultimate stickwar-complete epicwar5-expansion iphone
+
+  browser-startup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser harness
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve release
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/three-game-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Load every current game in Ruffle
+        env:
+          THREE_GAME_ORIGIN: http://127.0.0.1:8000
+        run: node tools/three_game_web_smoke.mjs
+      - name: Upload startup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: three-game-browser-smoke
+          path: /tmp/three-game-*.png
+          if-no-files-found: error
+      - name: Show server log
+        if: always()
+        run: cat /tmp/three-game-http.log || true

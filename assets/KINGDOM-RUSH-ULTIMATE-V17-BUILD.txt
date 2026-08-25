@@ -1,0 +1,18 @@
+Kingdom Rush Ultimate V17 — Direct Native Map Release
+
+Release asset: kingdom-rush-ultimate-v17.swf
+Release size: 91,103,485 bytes
+Release SHA-256: 5c7bee6a283d3f2ff5b5e23a9fe73d57ff64a3c6051b7148fc4d012c4779c26e
+Build tool: JPEXS Free Flash Decompiler 26.2.1, strict abort-on-error import
+
+Patch stack:
+- V16 stateful bidirectional KR/KRF guest towers and heroes
+- unified KR/KRF star-delta ledger and native system hub
+- adaptive 1x/2x/4x/8x/12x speed and immediate result-screen Instant Win
+- V17 ultimateDirect root-loader bypass into the existing krslot1 native map
+
+Verification:
+- strict ActionScript import completed successfully
+- the final 91 MB SWF was freshly re-decompiled
+- fresh output contains ultimateDirect, krslot1 direct boot, UNIFIED WAR TABLE,
+  CLEAR GUESTS, cached guest targeting, guest health/respawn, and both native maps

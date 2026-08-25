@@ -1,6 +1,8 @@
-# Stick War Complete V1 foundation
+# Super Stick War V3.1 release and reproducible patch stack
 
-This branch creates the expansion framework and data model. It does **not** contain a Stick War game binary because none exists in the repository yet.
+The published release is `assets/stick-war-complete-v31.swf`. It opens the
+Battle Lab directly, automatically exposes the in-game War Council sandbox,
+and retains the normal campaign as a separate launch choice.
 
 ## Required baseline
 
@@ -30,10 +32,14 @@ python3 tools/stickwar/build_v1.py
 
 Combat, movement, targeting, projectiles and cooldowns stay full-rate. Under load, the game reduces cosmetic cadence, UI redraws and transient effects first.
 
-## Expected release artifact
+## Current release artifact
 
-When the baseline is mapped and patched, the build publishes:
+The checked and published files are:
 
-`assets/stick-war-complete-v2.swf`
+- `assets/stick-war-complete-v31.swf`
+- `assets/STICKWAR-COMPLETE-V31-BUILD.txt`
+- `assets/STICKWAR-COMPLETE-V31-SHA256SUMS.txt`
 
-plus a build manifest and SHA-256 file. The player shell automatically tries that asset.
+V3.1 is produced from the mapped baseline with the V3 gameplay/interface
+passes followed by `patch_entry_v31.py`. The repository release tests pin the
+exact SHA-256 and reject stale player references.

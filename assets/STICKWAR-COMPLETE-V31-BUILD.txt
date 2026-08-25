@@ -1,0 +1,21 @@
+Super Stick War V3.1 — Direct Battle Lab Release
+
+Release asset: stick-war-complete-v31.swf
+Release size: 18,594,968 bytes
+Release SHA-256: dc20743d230b221d09e9cce599df1ca02ebff7de9dfd7f6fd0b72997bfa4b342
+Build tool: JPEXS Free Flash Decompiler 26.2.1, strict abort-on-error import
+
+Patch stack:
+- 65-stage seven-chapter Campaign Atlas
+- objective-specific escort, siege, assassinate, interrupt, defend, economy,
+  survival, boss, possession, and benchmark state machines
+- nine clickable soldier cards, bidirectional deployment, advance orders,
+  adaptive 1x/2x/4x/8x/12x speed, and requested/effective speed feedback
+- V3.1 direct swcLab entry, automatically opened soldier-card panel, plus visible
+  Clear Enemies, population safety, and Close controls; diagnostics remain optional
+
+Verification:
+- strict ActionScript import completed successfully
+- the final SWF was freshly re-decompiled
+- fresh output contains launchDirectBattleLab, swcDifficulty, swcStage,
+  enableSandbox, CLEAR ENEMIES, sandbox_wipe, sandbox_close, and the V3 gameplay markers

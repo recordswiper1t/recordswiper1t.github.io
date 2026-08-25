@@ -6,7 +6,7 @@ on:
     paths:
       - 'stickwar-complete/**'
       - 'iphone/stickwar.html'
-      - 'assets/stick-war-complete-v1.swf'
+      - 'assets/stick-war-complete-v31.swf'
       - 'tools/stickwar/**'
       - '.github/workflows/test-stickwar-web.yml'
 
@@ -37,9 +37,9 @@ jobs:
           exit 1
       - name: Verify every web player targets the repaired binary
         run: |
-          grep -F '/assets/stick-war-complete-v1.swf?v=1-runtime-r1' stickwar-complete/index.html
-          grep -F '/assets/stick-war-complete-v1.swf?v=iphone-v1-runtime-r1' iphone/stickwar.html
-          sha256sum -c assets/STICKWAR-COMPLETE-V1-SHA256SUMS.txt
+          grep -F '/assets/stick-war-complete-v31.swf?v=31-direct-lab-forge-r2' stickwar-complete/index.html
+          grep -F '/assets/stick-war-complete-v31.swf?v=iphone-v31-direct-lab-r2' iphone/stickwar.html
+          (cd assets && sha256sum -c STICKWAR-COMPLETE-V31-SHA256SUMS.txt)
       - name: Run campaign startup smoke test
         env:
           STICKWAR_URL: http://127.0.0.1:8000/stickwar-complete/

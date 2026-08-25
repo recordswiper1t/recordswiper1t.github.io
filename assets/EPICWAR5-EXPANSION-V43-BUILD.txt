@@ -1,0 +1,20 @@
+Epic War 5 Expansion V4.3 — Polished Battle Forge Release
+
+Release asset: epic-war-5-expansion-v43.swf
+Release size: 18,332,320 bytes
+Release SHA-256: 8f5b1cde585868205b62b44c606be6073d6cd709868bf5a69d0c36224e7eab74
+Build tool: JPEXS Free Flash Decompiler 26.2.1, strict abort-on-error import
+
+Patch stack:
+- all V4.2 repaired Continue/direct campaign access work
+- all V4.1 authored warfront, spatial targeting, Battle Forge, 12-slot, speed,
+  forward-order, progression, performance, and immediate-result work
+- corrected the Forge's accidental neon-green panel constant
+- dark iron/wood surfaces, bronze framing, crimson selection and parchment text
+
+Verification:
+- strict ActionScript import completed successfully
+- the final SWF was freshly re-decompiled
+- fresh output retains ew5ExpansionDirect and the working Continue handler
+- fresh BattleSystem output contains the corrected panel, card, border, title,
+  and status-text palette constants

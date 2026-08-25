@@ -28,9 +28,9 @@ The launcher downloads native Ruffle on first use and reuses the cached executab
 
 | Project | Current state | Main features |
 | --- | --- | --- |
-| **Kingdom Rush Ultimate (KR + KRF)** | **Released V15 combined runtime** | 19 sourced Kingdom Rush stages plus 15 Frontiers stages, native map switching, shared systems, game-styled war rooms and bidirectional guest tower/hero armories |
-| **Super Stick War (SW1 + SW2)** | **Released V1 on `main`** | 65-stage combined campaign, Order/Chaos progression, 108 mastery nodes, possession, Battle Lab, F2 sandbox, F1 diagnostics and performance patches |
-| **Epic War 5** | **Released Expansion V4.0** | Compact circular slots 7–12, animated soldier-card Battle Forge, moving spawned armies, adaptive 8× speed, immediate Instant Win, expanded progression and large-battle performance work |
+| **Kingdom Rush Ultimate (KR + KRF)** | **Released V17 combined runtime** | Direct native-map entry, 19 sourced Kingdom Rush stages plus 15 Frontiers stages, map switching, unified stars/system access, game-styled war rooms and bidirectional guest tower/hero armories |
+| **Super Stick War (SW1 + SW2)** | **Released V3.1** | 65-stage combined campaign, seven-chapter atlas, real objective state machines, direct Battle Lab, soldier-card sandbox, 108 mastery nodes, possession and adaptive performance patches |
+| **Epic War 5** | **Released Expansion V4.3** | Repaired direct access and Continue flow, polished bronze/crimson soldier-card Battle Forge, compact circular slots 7–12, moving spawned armies, adaptive 8× speed, immediate Instant Win, expanded progression and large-battle performance work |
 
 The repository is deliberately fail-closed: a generated SWF is not described as a release merely because it serializes. Build pipelines re-decompile and verify required gameplay/mod markers before publication.
 
@@ -42,19 +42,19 @@ The in-level sandbox includes heroes, enemy spawning, Send All, Time Attack, rec
 
 ## Kingdom Rush Ultimate — KR + KRF
 
-The browser launcher under `ultimate/` defaults to the verified V15 combined runtime. It exposes 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages on their native maps. Each campaign now has a game-styled armory that deploys the other game's eight tier-four towers and source-ready hero roster through an explicit host-compatible guest combat mode. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available as isolated-save recovery paths.
+The browser launcher under `ultimate/` defaults to the verified V17 combined runtime and enters the saved native map directly, bypassing the obsolete promotional and slot-selection gates. It exposes 19 sourced Kingdom Rush stages and all 15 Frontiers campaign stages on their native maps. Each campaign has a game-styled armory that deploys the other game's eight tier-four towers and source-ready hero roster through an explicit host-compatible guest combat mode. The original Kingdom Rush and cleaned Frontiers V12.2 engines remain available as isolated-save recovery paths.
 
 The combined release was verified through Southport's complete seven-wave victory loop, Frontiers stage launches and enemy movement, shared-map return routing, and all five selector pages. Retired Mochi and CPMStar requests are removed from the combined and standalone Frontiers startup paths.
 
 ## Super Stick War — SW1 + SW2
 
-**V2 is released on `main`.** The verified binary is `assets/stick-war-complete-v2.swf`, with matching `STICKWAR-COMPLETE-V2-BUILD.txt` and SHA-256 manifest in `assets/`. The playable web shell is under `stickwar-complete/`.
+**V3.1 is the current release.** The verified binary is `assets/stick-war-complete-v31.swf`, with matching V3.1 build and SHA-256 records in `assets/`. The playable web shell is under `stickwar-complete/`; its Battle Lab button now enters a battle directly instead of hiding the sandbox behind the original title and difficulty screens.
 
-V1 includes a 65-stage campaign, playable Order/Chaos progression, 108 mastery nodes, direct possession, authored expansion objectives, Battle Lab presets, sandbox controls, diagnostics and performance optimization without lowering combat simulation rate. The release SWF passed FFDec import and fresh re-decompile verification before publication.
+V3.1 includes a 65-stage campaign, playable Order/Chaos progression, seven chapter atlas, objective-specific escort/siege/assassination/interruption/defense logic, 108 mastery nodes, direct possession, Battle Lab presets, explicit sandbox controls, diagnostics and performance optimization without lowering combat simulation rate. The release SWF passed strict FFDec import and fresh re-decompile verification before publication.
 
 ## Epic War 5
 
-Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V4.0 keeps the wider battlefield and compact slots 7–12, replaces the old debug palette with an animated roster-card Battle Forge, and gives spawned armies explicit forward orders.
+Released assets and build records live under `assets/`; the game pages are under `epicwar5/` and `epicwar5-expansion/`. V4.3 repairs the original empty Continue handler, routes the dedicated Expansion launcher directly to hero/save selection, opens the authored 25-stage panel automatically, keeps the wider battlefield and compact slots 7–12, replaces the old debug palette with a dark bronze/crimson animated roster-card Battle Forge, and gives spawned armies explicit forward orders.
 
 The V3.x toolchain lives under `tools/epicwar5/expansion/`, including the V3.8 UI/sandbox patch, frozen invariant checks, and reproducible FFDec rebuild workflow.
 

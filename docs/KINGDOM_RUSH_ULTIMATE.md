@@ -1,6 +1,6 @@
 # Kingdom Rush Ultimate
 
-> Historical design target. It has been superseded by the verified V15 combined release: two native campaign maps containing the 19 Kingdom Rush and 15 Frontiers stages available in the audited Flash sources, shared progression surfaces, game-styled war rooms, and bidirectional guest armories. See `KINGDOM_RUSH_ULTIMATE_STATUS.md` for the released artifact and verification evidence.
+> Historical design target. It has been superseded by the verified V17 combined release: direct native-map entry, two native campaign maps containing the 19 Kingdom Rush and 15 Frontiers stages available in the audited Flash sources, unified progression surfaces, game-styled war rooms, and bidirectional guest armories. See `KINGDOM_RUSH_ULTIMATE_STATUS.md` for the released artifact and verification evidence.
 
 Goal: one Frontiers-based runtime containing the original **Kingdom Rush** and **Kingdom Rush: Frontiers** campaigns, their post-campaign stages, both games' towers and heroes, and the complete V11/V12 sandbox/performance feature set.
 
