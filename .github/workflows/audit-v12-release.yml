@@ -1,5 +1,5 @@
-# Final release gate for the offline-clean V12.2 binary and every published launcher path.
-name: Audit KRF V12.2 release surface
+# Archive/fallback gate for V12.2 plus the current combined KR/KRF surface.
+name: Audit KRF V12.2 archive and current combined surface
 
 on:
   pull_request:
@@ -119,21 +119,22 @@ jobs:
             pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("desktop/run-native.ps1",[ref]$tokens,[ref]$errors) | Out-Null; if($errors.Count -gt 0){$errors | ForEach-Object { Write-Error $_ }; exit 1}'
           fi
 
-      - name: Verify browser, iPhone and docs target V12.2
+      - name: Verify archived V12.2 and current V17 browser surfaces
         shell: bash
         run: |
           set -euo pipefail
-          grep -F 'https://unpkg.com/@ruffle-rs/ruffle@0.5.0' mod/fast.html
-          if grep -Fq 'preloader:false' mod/fast.html iphone/krf.html; then
+          grep -F '/vendor/ruffle/0.5.0/ruffle.js' mod/fast.html iphone/krf.html ultimate/play.html
+          if grep -Fq 'preloader:false' mod/fast.html iphone/krf.html ultimate/play.html; then
             echo 'Deprecated Ruffle preloader option returned' >&2
             exit 1
           fi
           grep -F '/mod/fast.html?v=12-2-offline-clean' mod/index.html
           grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' mod/fast.html
           grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=iphone-v122-offline-clean' iphone/krf.html
-          grep -F '/mod/' index.html
+          grep -F '/assets/kingdom-rush-ultimate-v17.swf?v=17-direct-map-r1' ultimate/play.html
+          grep -F 'ultimateDirect:"1"' ultimate/play.html
           grep -F '/ultimate/play.html?campaign=ultimate' index.html
-          grep -F '/assets/kingdom-rush-frontiers-v12-2-offline.swf?v=12-2-offline-clean' ultimate/play.html
+          grep -F 'KR + KRF V17' index.html
           grep -F 'V12.2' mod/index.html
           grep -F 'removes the retired online-service startup gate' mod/index.html
           grep -F 'V12.2' README.md
